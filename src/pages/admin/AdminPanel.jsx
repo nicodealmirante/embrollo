@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit } from "lucide-react";
+import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,14 +24,16 @@ function UsuariosTab() {
   const [users, setUsers] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
-  const [editValues, setEditValues] = useState({});
-  const [savingId, setSavingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [pagoDialog, setPagoDialog] = useState(null);
   const [pagoForm, setPagoForm] = useState({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" });
   const [historialUser, setHistorialUser] = useState(null);
-  const [saldoDialog, setSaldoDialog] = useState(null);
-  const [ajusteSaldo, setAjusteSaldo] = useState("");
+  const [editDialog, setEditDialog] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [inviteDialog, setInviteDialog] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -45,11 +47,6 @@ function UsuariosTab() {
     setUsers(usersData);
     setPedidos(pedidosData);
     setPagos(pagosData);
-    const vals = {};
-    usersData.forEach(u => {
-      vals[u.id] = { valor_contado: u.valor_contado || 0, valor_cuenta: u.valor_cuenta || 0, link_titulo: u.link_titulo || "" };
-    });
-    setEditValues(vals);
   }
 
   const getSaldo = (email) => {
@@ -58,16 +55,32 @@ function UsuariosTab() {
     return totalPedido - totalPagado;
   };
 
-  const saveUser = async (user) => {
-    setSavingId(user.id);
-    const vals = editValues[user.id] || {};
-    await base44.entities.User.update(user.id, {
-      valor_contado: parseFloat(vals.valor_contado) || 0,
-      valor_cuenta: parseFloat(vals.valor_cuenta) || 0,
-      link_titulo: vals.link_titulo || "",
+  const openEdit = (user) => {
+    setEditDialog(user);
+    setEditForm({ link_titulo: user.link_titulo || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "" });
+  };
+
+  const saveEdit = async () => {
+    setSaving(true);
+    await base44.entities.User.update(editDialog.id, {
+      link_titulo: editForm.link_titulo,
+      valor_contado: parseFloat(editForm.valor_contado) || 0,
+      valor_cuenta: parseFloat(editForm.valor_cuenta) || 0,
     });
-    setSavingId(null);
+    if (editForm.ajuste && parseFloat(editForm.ajuste) !== 0) {
+      await base44.entities.Pago.create({
+        usuario_email: editDialog.email,
+        usuario_nombre: editDialog.full_name,
+        fecha: new Date().toISOString(),
+        monto: parseFloat(editForm.ajuste),
+        metodo: "otro",
+        referencia: "Ajuste manual de saldo",
+        observaciones: "",
+      });
+    }
+    setSaving(false);
     toast({ title: "Guardado" });
+    setEditDialog(null);
     loadData();
   };
 
@@ -103,30 +116,26 @@ function UsuariosTab() {
     loadData();
   };
 
-  const saveAjusteSaldo = async () => {
-    const monto = parseFloat(ajusteSaldo);
-    if (!monto) { toast({ title: "Error", description: "Ingrese un monto", variant: "destructive" }); return; }
-    await base44.entities.Pago.create({
-      usuario_email: saldoDialog.email,
-      usuario_nombre: saldoDialog.full_name,
-      fecha: new Date().toISOString(),
-      monto,
-      metodo: "otro",
-      referencia: "Ajuste manual de saldo",
-      observaciones: "",
-    });
-    toast({ title: "Saldo ajustado" });
-    setSaldoDialog(null);
-    setAjusteSaldo("");
+  const inviteUser = async () => {
+    if (!inviteEmail) return;
+    setInviting(true);
+    await base44.users.inviteUser(inviteEmail, "user");
+    toast({ title: "Invitación enviada", description: inviteEmail });
+    setInviteEmail("");
+    setInviting(false);
+    setInviteDialog(false);
     loadData();
   };
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setInviteDialog(true); setInviteEmail(""); }}>
+          <UserPlus className="w-3 h-3" /> Crear usuario
+        </Button>
+      </div>
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
-        const vals = editValues[user.id] || {};
-        const hasLink = !!user.link_token;
 
         return (
           <div key={user.id} className="bg-card rounded-xl border border-border p-4">
@@ -143,38 +152,7 @@ function UsuariosTab() {
               </div>
             </div>
 
-            <div className="mb-3">
-              <Label className="text-xs text-muted-foreground">Título del enlace</Label>
-              <Input
-                value={vals.link_titulo || ""}
-                placeholder={user.full_name || user.email}
-                onChange={(e) => setEditValues(ev => ({ ...ev, [user.id]: { ...vals, link_titulo: e.target.value } }))}
-                className="mt-1 h-8 text-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <Label className="text-xs text-green-700">Valor Contado</Label>
-                <Input
-                  type="number"
-                  value={vals.valor_contado}
-                  onChange={(e) => setEditValues(ev => ({ ...ev, [user.id]: { ...vals, valor_contado: e.target.value } }))}
-                  className="mt-1 h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-blue-700">Valor a Cuenta</Label>
-                <Input
-                  type="number"
-                  value={vals.valor_cuenta}
-                  onChange={(e) => setEditValues(ev => ({ ...ev, [user.id]: { ...vals, valor_cuenta: e.target.value } }))}
-                  className="mt-1 h-8 text-sm"
-                />
-              </div>
-            </div>
-
-            {hasLink && (
+            {user.link_token && (
               <div className="mb-3 flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                 <Link className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 <p className="text-xs text-muted-foreground truncate flex-1">{getPublicLink(user.link_token)}</p>
@@ -185,14 +163,8 @@ function UsuariosTab() {
             )}
 
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" className="h-8 text-xs gap-1" onClick={() => saveUser(user)} disabled={savingId === user.id}>
-                <Save className="w-3 h-3" /> {savingId === user.id ? "Guardando..." : "Guardar"}
-              </Button>
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1"
-                onClick={() => hasLink ? copyLink(user.link_token, user.id) : generateLink(user)}>
-                {hasLink
-                  ? (copiedId === user.id ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar enlace</>)
-                  : <><Link className="w-3 h-3" /> Generar enlace</>}
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => openEdit(user)}>
+                <Edit className="w-3 h-3" /> Editar
               </Button>
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => { setPagoDialog(user); setPagoForm({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" }); }}>
                 <Plus className="w-3 h-3" /> Registrar pago
@@ -200,13 +172,49 @@ function UsuariosTab() {
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setHistorialUser(user)}>
                 <History className="w-3 h-3" /> Ver historial
               </Button>
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50" onClick={() => { setSaldoDialog(user); setAjusteSaldo(""); }}>
-                <Edit className="w-3 h-3" /> Editar saldo
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1"
+                onClick={() => user.link_token ? copyLink(user.link_token, user.id) : generateLink(user)}>
+                {user.link_token
+                  ? (copiedId === user.id ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar enlace</>)
+                  : <><Link className="w-3 h-3" /> Generar enlace</>}
               </Button>
             </div>
           </div>
         );
       })}
+
+      {/* Editar usuario dialog */}
+      <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Editar — {editDialog?.full_name || editDialog?.email}</DialogTitle></DialogHeader>
+          {editDialog && (
+            <div className="space-y-3 mt-2">
+              <div><Label className="text-xs">Título del enlace</Label><Input value={editForm.link_titulo} onChange={e => setEditForm(f => ({ ...f, link_titulo: e.target.value }))} placeholder={editDialog.full_name || editDialog.email} className="mt-1" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs text-green-700">Valor Contado</Label><Input type="number" value={editForm.valor_contado} onChange={e => setEditForm(f => ({ ...f, valor_contado: e.target.value }))} className="mt-1" /></div>
+                <div><Label className="text-xs text-blue-700">Valor a Cuenta</Label><Input type="number" value={editForm.valor_cuenta} onChange={e => setEditForm(f => ({ ...f, valor_cuenta: e.target.value }))} className="mt-1" /></div>
+              </div>
+              <div>
+                <Label className="text-xs text-red-600">Ajuste de saldo</Label>
+                <p className="text-[10px] text-muted-foreground mb-1">Positivo para abonar, negativo para agregar deuda. Saldo actual: <strong>${getSaldo(editDialog.email).toLocaleString()}</strong></p>
+                <Input type="number" value={editForm.ajuste} onChange={e => setEditForm(f => ({ ...f, ajuste: e.target.value }))} placeholder="Ej: 5000 o -2000" className="mt-1" />
+              </div>
+              <Button onClick={saveEdit} disabled={saving} className="w-full">{saving ? "Guardando..." : "Guardar cambios"}</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite user dialog */}
+      <Dialog open={inviteDialog} onOpenChange={setInviteDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div><Label className="text-xs">Email *</Label><Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="usuario@email.com" className="mt-1" /></div>
+            <Button onClick={inviteUser} disabled={inviting || !inviteEmail} className="w-full">{inviting ? "Enviando..." : "Enviar invitación"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!pagoDialog} onOpenChange={() => setPagoDialog(null)}>
         <DialogContent className="max-w-sm">
@@ -274,20 +282,6 @@ function UsuariosTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Editar saldo dialog */}
-      <Dialog open={!!saldoDialog} onOpenChange={() => setSaldoDialog(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Editar Saldo — {saldoDialog?.full_name || saldoDialog?.email}</DialogTitle></DialogHeader>
-          {saldoDialog && (
-            <div className="space-y-3 mt-2">
-              <p className="text-sm text-muted-foreground">Saldo actual: <strong>${getSaldo(saldoDialog.email).toLocaleString()}</strong></p>
-              <p className="text-xs text-muted-foreground">Ingrese un monto positivo para abonar, o negativo para agregar deuda.</p>
-              <div><Label className="text-xs">Ajuste de saldo</Label><Input type="number" value={ajusteSaldo} onChange={(e) => setAjusteSaldo(e.target.value)} placeholder="Ej: 5000 o -2000" className="mt-1" /></div>
-              <Button onClick={saveAjusteSaldo} className="w-full">Aplicar ajuste</Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
