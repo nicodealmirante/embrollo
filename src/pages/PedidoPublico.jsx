@@ -253,20 +253,18 @@ export default function PedidoPublico() {
                     .map((m, i) => {
                       const isPago = m._tipo === "pago";
                       const isContado = m._tipo === "contado";
-                      const isAumento = isPago && m.referencia === "Aumento 10%";
-                      const bgClass = isAumento ? "bg-gray-900 border-gray-700" : isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
-                      const labelClass = isAumento ? "text-white" : isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                      const label = isAumento ? "Aumento 10%" : isPago ? "Pago" : isContado ? "Contado" : "Debe";
-                      const monto = isPago ? m.monto : m.total;
-                      const signo = isPago ? "+" : "-";
-                      return (
-                        <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
+                      const montoVal = isPago ? m.monto : m.total;
+                      const isDebe = (!isPago && !isContado) || (isPago && m.monto < 0);
+                      const bgClass = isContado ? "bg-yellow-50 border-yellow-200" : isDebe ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200";
+                      const labelClass = isContado ? "text-yellow-700" : isDebe ? "text-red-700" : "text-green-700";
+                      const label = isContado ? "Contado" : isDebe ? "Debe" : "Pago";
+                      const monto = montoVal;
                           <div>
-                            <p className={`text-xs ${isAumento ? "text-gray-300" : "text-muted-foreground"}`}>{moment(m._fecha).format("DD/MM/YY")}</p>
+                            <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
                             <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
                             {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                           </div>
-                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>}
+                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>${`${Math.abs(monto || 0).toLocaleString()}`}</p>}
                         </div>
                       );
                     })}
