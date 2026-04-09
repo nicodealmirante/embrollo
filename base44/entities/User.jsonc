@@ -29,6 +29,10 @@
     "link_token": {
       "type": "string",
       "title": "Token de Enlace"
+    },
+    "link_titulo": {
+      "type": "string",
+      "title": "T\u00edtulo del Enlace"
     }
   }
 }

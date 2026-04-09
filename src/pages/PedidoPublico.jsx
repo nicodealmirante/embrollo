@@ -1,18 +1,13 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { Banknote, CreditCard, ClipboardList, TrendingDown, Loader2 } from "lucide-react";
+import { getUserByToken } from "@/functions/getUserByToken";
+import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
+import { Banknote, CreditCard, ClipboardList, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { useParams } from "react-router-dom";
 import moment from "moment";
-
-const estadoLabels = {
-  pendiente: "Pendiente",
-  confirmado: "Confirmado",
-  entregado: "Entregado",
-  cancelado: "Cancelado",
-};
 
 const estadoColors = {
   pendiente: "bg-amber-100 text-amber-700",
@@ -21,10 +16,15 @@ const estadoColors = {
   cancelado: "bg-red-100 text-red-700",
 };
 
-export default function PedidoPublico() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = window.location.pathname.split("/p/")[1]?.split("?")[0] || urlParams.get("token");
+const estadoLabels = {
+  pendiente: "Pendiente",
+  confirmado: "Confirmado",
+  entregado: "Entregado",
+  cancelado: "Cancelado",
+};
 
+export default function PedidoPublico() {
+  const { token } = useParams();
   const [userData, setUserData] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
@@ -41,17 +41,16 @@ export default function PedidoPublico() {
   }, [token]);
 
   async function loadData() {
-    const users = await base44.entities.User.filter({ link_token: token });
-    if (!users.length) { setNotFound(true); setLoading(false); return; }
-    const user = users[0];
-    setUserData(user);
-
-    const [pedidosData, pagosData] = await Promise.all([
-      base44.entities.Pedido.filter({ usuario_email: user.email }, "-created_date"),
-      base44.entities.Pago.filter({ usuario_email: user.email }),
-    ]);
-    setPedidos(pedidosData);
-    setPagos(pagosData);
+    setLoading(true);
+    const res = await getUserByToken({ token });
+    if (res.data?.error || !res.data?.user) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+    setUserData(res.data.user);
+    setPedidos(res.data.pedidos || []);
+    setPagos(res.data.pagos || []);
     setLoading(false);
   }
 
@@ -66,33 +65,7 @@ export default function PedidoPublico() {
       return;
     }
     setSubmitting(true);
-    const valor = tipoPago === "contado" ? (userData.valor_contado || 0) : (userData.valor_cuenta || 0);
-    const total = cant * valor;
-
-    await base44.entities.Pedido.create({
-      usuario_email: userData.email,
-      usuario_nombre: userData.full_name,
-      fecha: new Date().toISOString(),
-      estado: "pendiente",
-      tipo_pago: tipoPago,
-      cantidad: cant,
-      valor_usado: valor,
-      total,
-      observaciones,
-    });
-
-    // Notify admin
-    try {
-      const admins = await base44.entities.User.filter({ role: "admin" });
-      for (const admin of admins) {
-        await base44.integrations.Core.SendEmail({
-          to: admin.email,
-          subject: `Nuevo pedido de ${userData.full_name || userData.email}`,
-          body: `Se generó un nuevo pedido:\n\nUsuario: ${userData.full_name || userData.email}\nCantidad: ${cant}\nTipo: ${tipoPago === "contado" ? "Contado" : "A Cuenta"}\nValor unitario: $${valor.toLocaleString()}\nTotal: $${total.toLocaleString()}\n${observaciones ? `\nObservaciones: ${observaciones}` : ""}`,
-        });
-      }
-    } catch {}
-
+    await crearPedidoPublico({ token, cantidad: cant, tipoPago, observaciones });
     toast({ title: "Pedido enviado", description: "Tu pedido fue registrado exitosamente" });
     setCantidad("");
     setObservaciones("");
@@ -112,12 +85,14 @@ export default function PedidoPublico() {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center">
-          <h1 className="text-xl font-bold text-foreground">Enlace no válido</h1>
+          <h1 className="text-xl font-bold">Enlace no válido</h1>
           <p className="text-muted-foreground mt-2 text-sm">Este enlace no existe o fue desactivado.</p>
         </div>
       </div>
     );
   }
+
+  const titulo = userData.link_titulo || userData.full_name || userData.email;
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,7 +100,10 @@ export default function PedidoPublico() {
         {/* Header */}
         <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
           <p className="text-sm opacity-80">Bienvenido/a</p>
-          <h1 className="text-2xl font-bold mt-0.5">{userData.full_name || userData.email}</h1>
+          <h1 className="text-2xl font-bold mt-0.5">{titulo}</h1>
+          {userData.link_titulo && (
+            <p className="text-sm opacity-70 mt-0.5">{userData.full_name}</p>
+          )}
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="bg-white/10 rounded-xl p-3 text-center">
               <p className="text-[10px] opacity-70">Pedido</p>
@@ -192,21 +170,23 @@ export default function PedidoPublico() {
             <Button
               onClick={() => handlePedido("contado")}
               disabled={submitting}
-              className="h-12 gap-2 bg-green-600 hover:bg-green-700 text-white"
+              className="h-12 gap-2 bg-green-600 hover:bg-green-700 text-white flex-col"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
-              <span className="text-xs font-bold">Contado<br />
-                <span className="text-[10px] opacity-80">${(userData.valor_contado || 0).toLocaleString()}/u</span>
+              <span className="text-xs font-bold leading-tight">
+                Contado
+                <br /><span className="text-[10px] opacity-80">${(userData.valor_contado || 0).toLocaleString()}/u</span>
               </span>
             </Button>
             <Button
               onClick={() => handlePedido("cuenta")}
               disabled={submitting}
-              className="h-12 gap-2"
+              className="h-12 gap-2 flex-col"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-              <span className="text-xs font-bold">A Cuenta<br />
-                <span className="text-[10px] opacity-80">${(userData.valor_cuenta || 0).toLocaleString()}/u</span>
+              <span className="text-xs font-bold leading-tight">
+                A Cuenta
+                <br /><span className="text-[10px] opacity-80">${(userData.valor_cuenta || 0).toLocaleString()}/u</span>
               </span>
             </Button>
           </div>

@@ -57,7 +57,7 @@ export default function GestionUsuarios() {
     // Init edit values
     const vals = {};
     usersData.forEach(u => {
-      vals[u.id] = { valor_contado: u.valor_contado || 0, valor_cuenta: u.valor_cuenta || 0 };
+      vals[u.id] = { valor_contado: u.valor_contado || 0, valor_cuenta: u.valor_cuenta || 0, link_titulo: u.link_titulo || '' };
     });
     setEditValues(vals);
     setLoading(false);
@@ -77,6 +77,7 @@ export default function GestionUsuarios() {
     await base44.entities.User.update(user.id, {
       valor_contado: parseFloat(vals.valor_contado) || 0,
       valor_cuenta: parseFloat(vals.valor_cuenta) || 0,
+      link_titulo: vals.link_titulo || '',
     });
     setSavingId(null);
     toast({ title: "Guardado", description: "Valores actualizados" });
@@ -163,6 +164,15 @@ export default function GestionUsuarios() {
               </div>
 
               {/* Values */}
+              <div className="mb-3">
+                <Label className="text-xs text-muted-foreground">Título del enlace (opcional)</Label>
+                <Input
+                  value={vals.link_titulo || ''}
+                  placeholder={user.full_name || user.email}
+                  onChange={(e) => setEditValues(ev => ({ ...ev, [user.id]: { ...vals, link_titulo: e.target.value } }))}
+                  className="mt-1 h-9 text-sm"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <Label className="text-xs text-green-700">Valor Contado</Label>
