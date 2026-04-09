@@ -5,6 +5,14 @@
     "token": {
       "type": "string",
       "title": "Token"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email del usuario"
+    },
+    "nombre": {
+      "type": "string",
+      "title": "Nombre del usuario"
     }
   },
   "required": [

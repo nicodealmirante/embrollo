@@ -37,6 +37,7 @@ export default function PedidoPublico() {
   const [historialOpen, setHistorialOpen] = useState(false);
   const [pendiente, setPendiente] = useState(false);
   const [emailReclamo, setEmailReclamo] = useState("");
+  const [nombreReclamo, setNombreReclamo] = useState("");
   const [reclamando, setReclamando] = useState(false);
   const { toast } = useToast();
 
@@ -93,9 +94,9 @@ export default function PedidoPublico() {
   }
 
   const handleReclamo = async () => {
-    if (!emailReclamo) return;
+    if (!emailReclamo || !nombreReclamo) return;
     setReclamando(true);
-    const res = await reclamarEnlace({ token, email: emailReclamo });
+    const res = await reclamarEnlace({ token, email: emailReclamo, nombre: nombreReclamo });
     if (res.data?.error) {
       toast({ title: "Error", description: res.data.error, variant: "destructive" });
       setReclamando(false);
@@ -122,8 +123,18 @@ export default function PedidoPublico() {
       <div className="flex items-center justify-center min-h-screen p-4 bg-background">
         <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 space-y-4">
           <div className="text-center">
-            <h1 className="text-xl font-bold">Activar mi enlace</h1>
-            <p className="text-sm text-muted-foreground mt-1">Ingresá tu email para vincular este enlace a tu cuenta.</p>
+            <h1 className="text-xl font-bold">Identificate</h1>
+            <p className="text-sm text-muted-foreground mt-1">Ingresá tu nombre y email para activar tu enlace personal.</p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground font-medium">Tu nombre</label>
+            <Input
+              type="text"
+              placeholder="Juan Pérez"
+              value={nombreReclamo}
+              onChange={e => setNombreReclamo(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <label className="text-xs text-muted-foreground font-medium">Tu email</label>
@@ -136,7 +147,7 @@ export default function PedidoPublico() {
               onKeyDown={e => e.key === 'Enter' && handleReclamo()}
             />
           </div>
-          <Button onClick={handleReclamo} disabled={reclamando || !emailReclamo} className="w-full">
+          <Button onClick={handleReclamo} disabled={reclamando || !emailReclamo || !nombreReclamo} className="w-full">
             {reclamando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Activar enlace"}
           </Button>
         </div>
