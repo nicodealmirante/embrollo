@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard } from "lucide-react";
+import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, LinkIcon } from "lucide-react";
 import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,9 @@ function UsuariosTab() {
   const [editDialog, setEditDialog] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [crearEnlaceDialog, setCrearEnlaceDialog] = useState(false);
+  const [nuevoEmail, setNuevoEmail] = useState("");
+  const [creando, setCreando] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -82,6 +85,17 @@ function UsuariosTab() {
     loadData();
   };
 
+  const crearEnlace = async () => {
+    if (!nuevoEmail) return;
+    setCreando(true);
+    await base44.users.inviteUser(nuevoEmail, "user");
+    toast({ title: "Invitación enviada", description: "El usuario podrá registrarse y luego podrás generar su enlace." });
+    setNuevoEmail("");
+    setCreando(false);
+    setCrearEnlaceDialog(false);
+    loadData();
+  };
+
   const generateLink = async (user) => {
     const token = generateToken();
     await base44.entities.User.update(user.id, { link_token: token });
@@ -118,6 +132,11 @@ function UsuariosTab() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setCrearEnlaceDialog(true); setNuevoEmail(""); }}>
+          <LinkIcon className="w-3 h-3" /> Crear enlace
+        </Button>
+      </div>
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
 
@@ -190,6 +209,18 @@ function UsuariosTab() {
       </Dialog>
 
 
+
+      {/* Crear enlace dialog */}
+      <Dialog open={crearEnlaceDialog} onOpenChange={setCrearEnlaceDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Crear enlace para usuario</DialogTitle></DialogHeader>
+          <div className="space-y-3 mt-2">
+            <p className="text-xs text-muted-foreground">Ingresá el email del usuario. Recibirá una invitación para registrarse, luego podés generar su enlace desde su tarjeta.</p>
+            <div><Label className="text-xs">Email *</Label><Input type="email" value={nuevoEmail} onChange={e => setNuevoEmail(e.target.value)} placeholder="usuario@email.com" className="mt-1" /></div>
+            <Button onClick={crearEnlace} disabled={creando || !nuevoEmail} className="w-full">{creando ? "Enviando..." : "Enviar invitación"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!pagoDialog} onOpenChange={() => setPagoDialog(null)}>
         <DialogContent className="max-w-sm">
