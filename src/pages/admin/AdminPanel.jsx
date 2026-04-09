@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X } from "lucide-react";
+import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,9 @@ function UsuariosTab() {
   const [copiedId, setCopiedId] = useState(null);
   const [pagoDialog, setPagoDialog] = useState(null);
   const [pagoForm, setPagoForm] = useState({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" });
+  const [historialUser, setHistorialUser] = useState(null);
+  const [saldoDialog, setSaldoDialog] = useState(null);
+  const [ajusteSaldo, setAjusteSaldo] = useState("");
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -97,6 +100,24 @@ function UsuariosTab() {
     });
     toast({ title: "Pago registrado" });
     setPagoDialog(null);
+    loadData();
+  };
+
+  const saveAjusteSaldo = async () => {
+    const monto = parseFloat(ajusteSaldo);
+    if (!monto) { toast({ title: "Error", description: "Ingrese un monto", variant: "destructive" }); return; }
+    await base44.entities.Pago.create({
+      usuario_email: saldoDialog.email,
+      usuario_nombre: saldoDialog.full_name,
+      fecha: new Date().toISOString(),
+      monto,
+      metodo: "otro",
+      referencia: "Ajuste manual de saldo",
+      observaciones: "",
+    });
+    toast({ title: "Saldo ajustado" });
+    setSaldoDialog(null);
+    setAjusteSaldo("");
     loadData();
   };
 
@@ -176,6 +197,12 @@ function UsuariosTab() {
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => { setPagoDialog(user); setPagoForm({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" }); }}>
                 <Plus className="w-3 h-3" /> Registrar pago
               </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setHistorialUser(user)}>
+                <History className="w-3 h-3" /> Ver historial
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50" onClick={() => { setSaldoDialog(user); setAjusteSaldo(""); }}>
+                <Edit className="w-3 h-3" /> Editar saldo
+              </Button>
             </div>
           </div>
         );
@@ -187,12 +214,8 @@ function UsuariosTab() {
           {pagoDialog && (
             <div className="space-y-3 mt-2">
               <p className="text-sm text-muted-foreground">{pagoDialog.full_name || pagoDialog.email}</p>
-              <div>
-                <Label className="text-xs">Monto *</Label>
-                <Input type="number" value={pagoForm.monto} onChange={(e) => setPagoForm(f => ({ ...f, monto: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Método</Label>
+              <div><Label className="text-xs">Monto *</Label><Input type="number" value={pagoForm.monto} onChange={(e) => setPagoForm(f => ({ ...f, monto: e.target.value }))} className="mt-1" /></div>
+              <div><Label className="text-xs">Método</Label>
                 <Select value={pagoForm.metodo} onValueChange={(v) => setPagoForm(f => ({ ...f, metodo: v }))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -203,15 +226,64 @@ function UsuariosTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-xs">Referencia</Label>
-                <Input value={pagoForm.referencia} onChange={(e) => setPagoForm(f => ({ ...f, referencia: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Observaciones</Label>
-                <Textarea value={pagoForm.observaciones} onChange={(e) => setPagoForm(f => ({ ...f, observaciones: e.target.value }))} className="mt-1" rows={2} />
-              </div>
+              <div><Label className="text-xs">Referencia</Label><Input value={pagoForm.referencia} onChange={(e) => setPagoForm(f => ({ ...f, referencia: e.target.value }))} className="mt-1" /></div>
+              <div><Label className="text-xs">Observaciones</Label><Textarea value={pagoForm.observaciones} onChange={(e) => setPagoForm(f => ({ ...f, observaciones: e.target.value }))} className="mt-1" rows={2} /></div>
               <Button onClick={savePago} className="w-full">Registrar</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Historial dialog */}
+      <Dialog open={!!historialUser} onOpenChange={() => setHistorialUser(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Historial — {historialUser?.full_name || historialUser?.email}</DialogTitle></DialogHeader>
+          {historialUser && (() => {
+            const userPedidos = pedidos.filter(p => p.usuario_email === historialUser.email && p.estado === "entregado");
+            const userPagos = pagos.filter(p => p.usuario_email === historialUser.email);
+            const movimientos = [
+              ...userPedidos.map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
+              ...userPagos.map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
+            ].sort((a, b) => new Date(b._fecha) - new Date(a._fecha));
+            return (
+              <div className="space-y-2 mt-2">
+                {movimientos.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos</p>}
+                {movimientos.map((m, i) => {
+                  const isPago = m._tipo === "pago";
+                  const isContado = m._tipo === "contado";
+                  const bg = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
+                  const txt = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
+                  const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
+                  const monto = isPago ? m.monto : m.total;
+                  const signo = isPago ? "+" : "-";
+                  return (
+                    <div key={i} className={`flex justify-between items-center p-3 rounded-lg border ${bg}`}>
+                      <div>
+                        <p className={`text-xs font-semibold ${txt}`}>{label}</p>
+                        <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY HH:mm")}</p>
+                        {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
+                        {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
+                      </div>
+                      <p className={`font-bold text-sm ${txt}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar saldo dialog */}
+      <Dialog open={!!saldoDialog} onOpenChange={() => setSaldoDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Editar Saldo — {saldoDialog?.full_name || saldoDialog?.email}</DialogTitle></DialogHeader>
+          {saldoDialog && (
+            <div className="space-y-3 mt-2">
+              <p className="text-sm text-muted-foreground">Saldo actual: <strong>${getSaldo(saldoDialog.email).toLocaleString()}</strong></p>
+              <p className="text-xs text-muted-foreground">Ingrese un monto positivo para abonar, o negativo para agregar deuda.</p>
+              <div><Label className="text-xs">Ajuste de saldo</Label><Input type="number" value={ajusteSaldo} onChange={(e) => setAjusteSaldo(e.target.value)} placeholder="Ej: 5000 o -2000" className="mt-1" /></div>
+              <Button onClick={saveAjusteSaldo} className="w-full">Aplicar ajuste</Button>
             </div>
           )}
         </DialogContent>

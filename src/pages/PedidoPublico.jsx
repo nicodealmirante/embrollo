@@ -172,29 +172,36 @@ export default function PedidoPublico() {
             <ClipboardList className="w-4 h-4 text-muted-foreground" />
             <h2 className="font-semibold text-sm">Últimos movimientos</h2>
           </div>
-          {pedidos.length === 0 ? (
+          {pedidos.length === 0 && pagos.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
           ) : (
             <div className="space-y-0">
-              {pedidos.slice(0, 5).map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
-                  <div>
-                    <p className="text-xs text-muted-foreground">{moment(p.fecha).format("DD/MM/YY")}</p>
-                    <p className="font-medium text-sm">{p.cantidad} unidades</p>
-                    {p.estado === "entregado" && p.tipo_pago && (
-                      <p className="text-xs text-muted-foreground">{p.tipo_pago === "contado" ? "Contado" : "A Cuenta"}</p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    {p.estado === "entregado" && p.total > 0 && (
-                      <p className="font-bold text-sm">${p.total.toLocaleString()}</p>
-                    )}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${estadoColors[p.estado] || "bg-muted text-muted-foreground"}`}>
-                      {estadoLabels[p.estado] || p.estado}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {[
+                ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
+                ...pagos.map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
+              ]
+                .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
+                .slice(0, 8)
+                .map((m, i) => {
+                  const isPago = m._tipo === "pago";
+                  const isContado = m._tipo === "contado";
+                  const bgClass = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
+                  const labelClass = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
+                  const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
+                  const monto = isPago ? m.monto : m.total;
+                  const signo = isPago ? "+" : "-";
+                  return (
+                    <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
+                        <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
+                        {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
+                        {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
+                      </div>
+                      <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
