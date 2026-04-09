@@ -178,7 +178,7 @@ export default function PedidoPublico() {
             <div className="space-y-0">
               {[
                 ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
-                ...pagos.map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
+                ...pagos.filter(p => p.referencia !== "Pago contado automático").map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
               ]
                 .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
                 .slice(0, 8)
