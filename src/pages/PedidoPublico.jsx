@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getUserByToken } from "@/functions/getUserByToken";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
-import { Banknote, CreditCard, ClipboardList, Loader2 } from "lucide-react";
+import { ClipboardList, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,14 +11,12 @@ import moment from "moment";
 
 const estadoColors = {
   pendiente: "bg-amber-100 text-amber-700",
-  confirmado: "bg-blue-100 text-blue-700",
   entregado: "bg-green-100 text-green-700",
   cancelado: "bg-red-100 text-red-700",
 };
 
 const estadoLabels = {
   pendiente: "Pendiente",
-  confirmado: "Confirmado",
   entregado: "Entregado",
   cancelado: "Cancelado",
 };
@@ -58,15 +56,15 @@ export default function PedidoPublico() {
   const totalPagado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
   const saldo = totalPedido - totalPagado;
 
-  const handlePedido = async (tipoPago) => {
+  const handlePedido = async () => {
     const cant = parseFloat(cantidad);
     if (!cant || cant <= 0) {
       toast({ title: "Error", description: "Ingrese una cantidad válida", variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    await crearPedidoPublico({ token, cantidad: cant, tipoPago, observaciones });
-    toast({ title: "Pedido enviado", description: "Tu pedido fue registrado exitosamente" });
+    await crearPedidoPublico({ token, cantidad: cant, observaciones });
+    toast({ title: "Pedido enviado", description: "Tu pedido fue registrado" });
     setCantidad("");
     setObservaciones("");
     setSubmitting(false);
@@ -101,9 +99,6 @@ export default function PedidoPublico() {
         <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
           <p className="text-sm opacity-80">Bienvenido/a</p>
           <h1 className="text-2xl font-bold mt-0.5">{titulo}</h1>
-          {userData.link_titulo && (
-            <p className="text-sm opacity-70 mt-0.5">{userData.full_name}</p>
-          )}
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="bg-white/10 rounded-xl p-3 text-center">
               <p className="text-[10px] opacity-70">Pedido</p>
@@ -124,8 +119,7 @@ export default function PedidoPublico() {
 
         {/* Order form */}
         <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-          <h2 className="font-semibold text-sm">Generar Pedido</h2>
-
+          <h2 className="font-semibold">Generar Pedido</h2>
           <div>
             <label className="text-xs text-muted-foreground font-medium">Cantidad</label>
             <Input
@@ -133,28 +127,10 @@ export default function PedidoPublico() {
               placeholder="0"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
-              className="mt-1 text-lg font-semibold h-12 text-center"
+              className="mt-1 text-xl font-bold h-14 text-center"
               min="1"
             />
           </div>
-
-          {cantidad && parseFloat(cantidad) > 0 && (
-            <div className="grid grid-cols-2 gap-2 text-xs text-center">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-                <p className="text-muted-foreground">Contado</p>
-                <p className="font-bold text-green-700 text-sm">
-                  ${(parseFloat(cantidad) * (userData.valor_contado || 0)).toLocaleString()}
-                </p>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
-                <p className="text-muted-foreground">A Cuenta</p>
-                <p className="font-bold text-blue-700 text-sm">
-                  ${(parseFloat(cantidad) * (userData.valor_cuenta || 0)).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          )}
-
           <div>
             <label className="text-xs text-muted-foreground font-medium">Observaciones (opcional)</label>
             <Textarea
@@ -165,34 +141,17 @@ export default function PedidoPublico() {
               rows={2}
             />
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={() => handlePedido("contado")}
-              disabled={submitting}
-              className="h-12 gap-2 bg-green-600 hover:bg-green-700 text-white flex-col"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
-              <span className="text-xs font-bold leading-tight">
-                Contado
-                <br /><span className="text-[10px] opacity-80">${(userData.valor_contado || 0).toLocaleString()}/u</span>
-              </span>
-            </Button>
-            <Button
-              onClick={() => handlePedido("cuenta")}
-              disabled={submitting}
-              className="h-12 gap-2 flex-col"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-              <span className="text-xs font-bold leading-tight">
-                A Cuenta
-                <br /><span className="text-[10px] opacity-80">${(userData.valor_cuenta || 0).toLocaleString()}/u</span>
-              </span>
-            </Button>
-          </div>
+          <Button
+            onClick={handlePedido}
+            disabled={submitting}
+            className="w-full h-12 text-sm font-semibold gap-2"
+          >
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {submitting ? "Enviando..." : "Enviar Pedido"}
+          </Button>
         </div>
 
-        {/* Last 5 movements */}
+        {/* Last movements */}
         <div className="bg-card rounded-2xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <ClipboardList className="w-4 h-4 text-muted-foreground" />
@@ -201,19 +160,22 @@ export default function PedidoPublico() {
           {pedidos.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-0">
               {pedidos.slice(0, 5).map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
+                <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                   <div>
                     <p className="text-xs text-muted-foreground">{moment(p.fecha).format("DD/MM/YY")}</p>
-                    <p className="font-medium">
-                      {p.cantidad} u · {p.tipo_pago === "contado" ? "Contado" : "A Cuenta"}
-                    </p>
+                    <p className="font-medium text-sm">{p.cantidad} unidades</p>
+                    {p.estado === "entregado" && p.tipo_pago && (
+                      <p className="text-xs text-muted-foreground">{p.tipo_pago === "contado" ? "Contado" : "A Cuenta"}</p>
+                    )}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">${(p.total || 0).toLocaleString()}</p>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${estadoColors[p.estado] || ""}`}>
-                      {estadoLabels[p.estado]}
+                    {p.estado === "entregado" && p.total > 0 && (
+                      <p className="font-bold text-sm">${p.total.toLocaleString()}</p>
+                    )}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${estadoColors[p.estado] || "bg-muted text-muted-foreground"}`}>
+                      {estadoLabels[p.estado] || p.estado}
                     </span>
                   </div>
                 </div>

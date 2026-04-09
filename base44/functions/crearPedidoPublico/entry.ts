@@ -1,9 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
-  const { token, cantidad, tipoPago, observaciones } = await req.json();
+  const { token, cantidad, observaciones } = await req.json();
 
-  if (!token || !cantidad || !tipoPago) {
+  if (!token || !cantidad) {
     return Response.json({ error: 'Faltan datos' }, { status: 400 });
   }
 
@@ -15,18 +15,16 @@ Deno.serve(async (req) => {
   }
 
   const user = users[0];
-  const valor = tipoPago === 'contado' ? (user.valor_contado || 0) : (user.valor_cuenta || 0);
-  const total = cantidad * valor;
 
   const pedido = await base44.asServiceRole.entities.Pedido.create({
     usuario_email: user.email,
     usuario_nombre: user.full_name,
     fecha: new Date().toISOString(),
     estado: 'pendiente',
-    tipo_pago: tipoPago,
+    tipo_pago: 'cuenta',
     cantidad,
-    valor_usado: valor,
-    total,
+    valor_usado: 0,
+    total: 0,
     observaciones: observaciones || '',
   });
 
@@ -37,7 +35,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: admin.email,
         subject: `Nuevo pedido de ${user.full_name || user.email}`,
-        body: `Nuevo pedido registrado:\n\nUsuario: ${user.full_name || user.email}\nCantidad: ${cantidad}\nTipo: ${tipoPago === 'contado' ? 'Contado' : 'A Cuenta'}\nValor unitario: $${valor.toLocaleString()}\nTotal: $${total.toLocaleString()}${observaciones ? `\nObservaciones: ${observaciones}` : ''}`,
+        body: `Nuevo pedido registrado:\n\nUsuario: ${user.full_name || user.email}\nCantidad: ${cantidad}${observaciones ? `\nObservaciones: ${observaciones}` : ''}`,
       });
     }
   } catch {}

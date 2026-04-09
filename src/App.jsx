@@ -15,8 +15,8 @@ import AdminDashboard from './pages/admin/Dashboard';
 import GestionUsuarios from './pages/admin/GestionUsuarios';
 import GestionItems from './pages/admin/GestionItems';
 import GestionPedidos from './pages/admin/GestionPedidos';
-import GestionPagos from './pages/admin/GestionPagos';
 import PedidoPublico from './pages/PedidoPublico';
+import AdminPanel from './pages/admin/AdminPanel';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -51,13 +51,7 @@ const AuthenticatedApp = () => {
         <Route path="/mis-pedidos" element={<MisPedidos />} />
         <Route path="/mis-pagos" element={<MisPagos />} />
       </Route>
-      <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/usuarios" element={<GestionUsuarios />} />
-        <Route path="/admin/items" element={<GestionItems />} />
-        <Route path="/admin/pedidos" element={<GestionPedidos />} />
-        <Route path="/admin/pagos" element={<GestionPagos />} />
-      </Route>
+      <Route path="/admin" element={<AdminPanel />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
