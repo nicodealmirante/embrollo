@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, LinkIcon } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck } from "lucide-react";
 import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
@@ -26,16 +26,12 @@ function UsuariosTab() {
   const [users, setUsers] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
-  const [copiedId, setCopiedId] = useState(null);
   const [pagoDialog, setPagoDialog] = useState(null);
   const [pagoForm, setPagoForm] = useState({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" });
   const [historialUser, setHistorialUser] = useState(null);
   const [editDialog, setEditDialog] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
-  const [enlaceGenerado, setEnlaceGenerado] = useState(null);
-  const [copiedNew, setCopiedNew] = useState(false);
-  const [creando, setCreando] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -103,32 +99,10 @@ function UsuariosTab() {
     loadData();
   };
 
-  const crearEnlaceNuevo = async () => {
-    setCreando(true);
-    const token = generateToken();
-    await base44.entities.EnlacePendiente.create({ token });
-    const link = getPublicLink(token);
-    setEnlaceGenerado(link);
-    setCreando(false);
-  };
-
-  const copyNewLink = () => {
-    navigator.clipboard.writeText(enlaceGenerado);
-    setCopiedNew(true);
-    setTimeout(() => setCopiedNew(false), 2000);
-  };
-
-  const generateLink = async (user) => {
-    const token = generateToken();
-    await base44.entities.User.update(user.id, { link_token: token });
-    toast({ title: "Enlace generado" });
+  const aprobarUsuario = async (user) => {
+    await base44.entities.User.update(user.id, { estado: "activo" });
+    toast({ title: "Usuario aprobado" });
     loadData();
-  };
-
-  const copyLink = (token, userId) => {
-    navigator.clipboard.writeText(getPublicLink(token));
-    setCopiedId(userId);
-    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const savePago = async () => {
@@ -154,19 +128,7 @@ function UsuariosTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button size="sm" className="h-8 text-xs gap-1" onClick={crearEnlaceNuevo} disabled={creando}>
-          <LinkIcon className="w-3 h-3" /> {creando ? "Generando..." : "Crear enlace"}
-        </Button>
-      </div>
-      {enlaceGenerado && (
-        <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-          <p className="text-xs text-muted-foreground truncate flex-1">{enlaceGenerado}</p>
-          <button onClick={copyNewLink} className="shrink-0">
-            {copiedNew ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-          </button>
-        </div>
-      )}
+
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
 
@@ -190,13 +152,9 @@ function UsuariosTab() {
               </div>
             </div>
 
-            {user.link_token && (
-              <div className="mb-3 flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-                <Link className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <p className="text-xs text-muted-foreground truncate flex-1">{getPublicLink(user.link_token)}</p>
-                <button onClick={() => copyLink(user.link_token, user.id)}>
-                  {copiedId === user.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-                </button>
+            {user.estado !== "activo" && (
+              <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-xs text-amber-700 font-semibold">⏳ Pendiente de aprobación</p>
               </div>
             )}
 
@@ -215,12 +173,11 @@ function UsuariosTab() {
                   +10%
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1"
-                onClick={() => user.link_token ? copyLink(user.link_token, user.id) : generateLink(user)}>
-                {user.link_token
-                  ? (copiedId === user.id ? <><Check className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar enlace</>)
-                  : <><Link className="w-3 h-3" /> Generar enlace</>}
-              </Button>
+              {user.estado !== "activo" && (
+                <Button size="sm" className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => aprobarUsuario(user)}>
+                  <UserCheck className="w-3 h-3" /> Aprobar
+                </Button>
+              )}
             </div>
           </div>
         );

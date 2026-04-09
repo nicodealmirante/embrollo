@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import PedidoPublico from './pages/PedidoPublico';
+import Portal from './pages/Portal';
 import AdminPanel from './pages/admin/AdminPanel';
 
 const AuthenticatedApp = () => {
@@ -34,9 +34,9 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/p/:token" element={<PedidoPublico />} />
+      <Route path="/portal" element={<Portal />} />
       <Route path="/admin" element={<AdminPanel />} />
-      <Route path="/" element={<Navigate to="/admin" replace />} />
+      <Route path="/" element={<Navigate to="/portal" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
