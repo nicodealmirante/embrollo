@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react";
@@ -18,6 +19,7 @@ export default function Portal() {
   const [submitting, setSubmitting] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
 
@@ -25,6 +27,10 @@ export default function Portal() {
     setLoading(true);
     try {
       const me = await base44.auth.me();
+      if (me.role === "admin") {
+        navigate("/admin");
+        return;
+      }
       setUser(me);
       if (me.estado === "activo") {
         const [ped, pag] = await Promise.all([
