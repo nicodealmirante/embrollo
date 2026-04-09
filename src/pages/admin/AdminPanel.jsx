@@ -165,6 +165,11 @@ function UsuariosTab() {
                 <p className={`text-lg font-bold ${saldo > 0 ? "text-red-600" : "text-green-600"}`}>
                   ${saldo.toLocaleString()}
                 </p>
+                {saldo > 0 && (
+                  <p className="text-xs text-amber-600 font-semibold mt-0.5">
+                    +10% = ${Math.round(saldo * 1.1).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
 

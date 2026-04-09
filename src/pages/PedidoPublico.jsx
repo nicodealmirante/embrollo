@@ -158,6 +158,11 @@ export default function PedidoPublico() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 py-6 space-y-5">
+        {/* Aviso aumento */}
+        <div className="bg-amber-400 text-amber-900 font-bold text-center rounded-xl py-2 px-4 text-sm tracking-wide animate-pulse">
+          ⚠️ AUMENTO 10% EL LUNES
+        </div>
+
         {/* Header */}
         <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
           <p className="text-sm opacity-80">Bienvenido/a</p>
