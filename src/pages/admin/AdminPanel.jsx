@@ -293,11 +293,11 @@ function UsuariosTab() {
                 {movimientos.map((m, i) => {
                   const isPago = m._tipo === "pago";
                   const isContado = m._tipo === "contado";
-                  const isNegativo = isPago && m.monto < 0;
-                  const bg = isNegativo ? "bg-red-50 border-red-200" : isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
-                  const txt = isNegativo ? "text-red-700" : isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                  const label = isNegativo ? "Debe" : isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
+                  const bg = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
+                  const txt = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
+                  const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
                   const monto = isPago ? m.monto : m.total;
+                  const signo = isPago ? "+" : "-";
                   return (
                     <div key={i} className={`flex justify-between items-center p-3 rounded-lg border ${bg}`}>
                       <div>
@@ -306,7 +306,7 @@ function UsuariosTab() {
                         {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                         {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
                       </div>
-                      <p className={`font-bold text-sm ${txt}`}>${Math.abs(monto || 0).toLocaleString()}</p>
+                      <p className={`font-bold text-sm ${txt}`}>{signo}${(monto || 0).toLocaleString()}</p>
                     </div>
                   );
                 })}
