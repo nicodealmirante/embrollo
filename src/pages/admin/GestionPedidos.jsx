@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, Eye, ChevronDown } from "lucide-react";
+import { Trash2, CheckCircle, Pencil, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,21 +12,14 @@ import {
 } from "@/components/ui/select";
 import EstadoBadge from "../../components/EstadoBadge";
 import moment from "moment";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function GestionPedidos() {
   const [pedidos, setPedidos] = useState([]);
-  const [detalles, setDetalles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState("todos");
-  const [filtroUsuario, setFiltroUsuario] = useState("");
-  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editCantidad, setEditCantidad] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,26 +32,43 @@ export default function GestionPedidos() {
     setLoading(false);
   }
 
-  const openDetails = async (pedido) => {
-    const det = await base44.entities.DetallePedido.filter({ pedido_id: pedido.id });
-    setDetalles(det);
-    setSelectedPedido(pedido);
-  };
-
   const changeEstado = async (pedidoId, nuevoEstado) => {
     await base44.entities.Pedido.update(pedidoId, { estado: nuevoEstado });
-    toast({ title: "Estado actualizado", description: `Pedido marcado como ${nuevoEstado}` });
-    if (selectedPedido?.id === pedidoId) {
-      setSelectedPedido((p) => ({ ...p, estado: nuevoEstado }));
-    }
+    toast({ title: "Estado actualizado" });
     loadPedidos();
   };
 
-  const filtered = pedidos.filter((p) => {
-    if (filtroEstado !== "todos" && p.estado !== filtroEstado) return false;
-    if (filtroUsuario && !(p.usuario_nombre || p.usuario_email || "").toLowerCase().includes(filtroUsuario.toLowerCase())) return false;
-    return true;
-  });
+  const confirmEntrega = async (pedido) => {
+    await base44.entities.Pedido.update(pedido.id, { estado: "entregado" });
+    toast({ title: "Entrega confirmada" });
+    loadPedidos();
+  };
+
+  const deletePedido = async (id) => {
+    if (!confirm("¿Eliminar este pedido?")) return;
+    await base44.entities.Pedido.delete(id);
+    toast({ title: "Pedido eliminado" });
+    loadPedidos();
+  };
+
+  const startEdit = (pedido) => {
+    setEditingId(pedido.id);
+    setEditCantidad(String(pedido.cantidad));
+  };
+
+  const saveEdit = async (pedido) => {
+    const cant = parseFloat(editCantidad);
+    if (!cant || cant <= 0) return;
+    const newTotal = cant * (pedido.valor_usado || 0);
+    await base44.entities.Pedido.update(pedido.id, { cantidad: cant, total: newTotal });
+    setEditingId(null);
+    toast({ title: "Pedido actualizado" });
+    loadPedidos();
+  };
+
+  const filtered = pedidos.filter((p) =>
+    filtroEstado === "todos" || p.estado === filtroEstado
+  );
 
   if (loading) {
     return (
@@ -70,16 +80,14 @@ export default function GestionPedidos() {
 
   return (
     <div>
-      <div className="mb-6 pt-2 lg:pt-0">
-        <h1 className="text-2xl font-bold">Gestión de Pedidos</h1>
-        <p className="text-sm text-muted-foreground">{pedidos.length} pedidos en total</p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="flex items-center justify-between mb-6 pt-2 lg:pt-0">
+        <div>
+          <h1 className="text-2xl font-bold">Pedidos</h1>
+          <p className="text-sm text-muted-foreground">{pedidos.length} en total</p>
+        </div>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-40 h-9 text-sm">
-            <SelectValue placeholder="Estado" />
+          <SelectTrigger className="w-36 h-9 text-sm">
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
@@ -89,142 +97,115 @@ export default function GestionPedidos() {
             <SelectItem value="cancelado">Cancelado</SelectItem>
           </SelectContent>
         </Select>
-        <Input
-          placeholder="Buscar usuario..."
-          value={filtroUsuario}
-          onChange={(e) => setFiltroUsuario(e.target.value)}
-          className="w-48 h-9 text-sm"
-        />
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-3 font-semibold">Fecha</th>
-                <th className="text-left p-3 font-semibold">Usuario</th>
-                <th className="text-left p-3 font-semibold">Estado</th>
-                <th className="text-right p-3 font-semibold">Total</th>
-                <th className="text-right p-3 font-semibold">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border last:border-0">
-                  <td className="p-3 text-muted-foreground">
-                    {moment(p.fecha).format("DD/MM/YY HH:mm")}
-                  </td>
-                  <td className="p-3 font-medium">
-                    {p.usuario_nombre || p.usuario_email}
-                  </td>
-                  <td className="p-3">
-                    <Select
-                      value={p.estado}
-                      onValueChange={(v) => changeEstado(p.id, v)}
-                    >
-                      <SelectTrigger className="w-32 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pendiente">Pendiente</SelectItem>
-                        <SelectItem value="confirmado">Confirmado</SelectItem>
-                        <SelectItem value="entregado">Entregado</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="p-3 text-right font-semibold">
-                    ${(p.total || 0).toLocaleString()}
-                  </td>
-                  <td className="p-3 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs gap-1"
-                      onClick={() => openDetails(p)}
-                    >
-                      <Eye className="w-3 h-3" /> Ver
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-3">
+        {filtered.map((p) => (
+          <div key={p.id} className="bg-card rounded-xl border border-border p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p className="font-semibold text-sm">{p.usuario_nombre || p.usuario_email}</p>
+                <p className="text-xs text-muted-foreground">{moment(p.fecha).format("DD/MM/YYYY HH:mm")}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <EstadoBadge estado={p.estado} />
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  p.tipo_pago === "contado" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                }`}>
+                  {p.tipo_pago === "contado" ? "Contado" : "A Cuenta"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 mb-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Cantidad: </span>
+                {editingId === p.id ? (
+                  <Input
+                    type="number"
+                    value={editCantidad}
+                    onChange={(e) => setEditCantidad(e.target.value)}
+                    className="inline-block w-24 h-7 text-sm ml-1"
+                  />
+                ) : (
+                  <span className="font-semibold">{p.cantidad}</span>
+                )}
+              </div>
+              <div>
+                <span className="text-muted-foreground">Valor/u: </span>
+                <span className="font-semibold">${(p.valor_usado || 0).toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Total: </span>
+                <span className="font-bold text-base">
+                  ${(editingId === p.id
+                    ? (parseFloat(editCantidad) || 0) * (p.valor_usado || 0)
+                    : (p.total || 0)
+                  ).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {p.observaciones && (
+              <p className="text-xs text-muted-foreground mb-3 italic">{p.observaciones}</p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {p.estado !== "entregado" && p.estado !== "cancelado" && (
+                <Button
+                  size="sm"
+                  className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => confirmEntrega(p)}
+                >
+                  <CheckCircle className="w-3 h-3" /> Confirmar entrega
+                </Button>
+              )}
+
+              {editingId === p.id ? (
+                <>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => saveEdit(p)}>
+                    <Save className="w-3 h-3" /> Guardar
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => setEditingId(null)}>
+                    <X className="w-3 h-3" /> Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => startEdit(p)}>
+                  <Pencil className="w-3 h-3" /> Modificar cantidad
+                </Button>
+              )}
+
+              <Select value={p.estado} onValueChange={(v) => changeEstado(p.id, v)}>
+                <SelectTrigger className="h-7 text-xs w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendiente">Pendiente</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                  <SelectItem value="entregado">Entregado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs text-destructive hover:text-destructive gap-1 ml-auto"
+                onClick={() => deletePedido(p.id)}
+              >
+                <Trash2 className="w-3 h-3" /> Eliminar
+              </Button>
+            </div>
+          </div>
+        ))}
+
         {filtered.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            No se encontraron pedidos
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            No hay pedidos
           </div>
         )}
       </div>
-
-      {/* Detail Dialog */}
-      <Dialog open={!!selectedPedido} onOpenChange={() => setSelectedPedido(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Detalle del Pedido</DialogTitle>
-          </DialogHeader>
-          {selectedPedido && (
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Usuario</p>
-                  <p className="font-medium">{selectedPedido.usuario_nombre || selectedPedido.usuario_email}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Fecha</p>
-                  <p className="font-medium">{moment(selectedPedido.fecha).format("DD/MM/YYYY HH:mm")}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Estado</p>
-                  <EstadoBadge estado={selectedPedido.estado} />
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Tipo de Pago</p>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    selectedPedido.tipo_pago === "contado"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {selectedPedido.tipo_pago === "contado" ? "Contado" : "A Cuenta"}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Multiplicador</p>
-                  <p className="font-medium">×{selectedPedido.multiplicador_usado || 1}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-3">
-                <h4 className="text-sm font-semibold mb-2">Ítems</h4>
-                <div className="space-y-2">
-                  {detalles.map((d) => (
-                    <div key={d.id} className="flex justify-between text-sm">
-                      <span>
-                        {d.item_nombre} × {d.cantidad}
-                      </span>
-                      <span className="font-semibold">{d.valor_calculado}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-border pt-2 flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>${(selectedPedido.total || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {selectedPedido.observaciones && (
-                <div className="border-t border-border pt-3">
-                  <p className="text-xs text-muted-foreground">Observaciones</p>
-                  <p className="text-sm mt-1">{selectedPedido.observaciones}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -35,14 +35,20 @@
       "title": "Tipo de Pago",
       "default": "cuenta"
     },
+    "cantidad": {
+      "type": "number",
+      "title": "Cantidad",
+      "default": 1
+    },
+    "valor_usado": {
+      "type": "number",
+      "title": "Valor Unitario Usado",
+      "default": 0
+    },
     "total": {
       "type": "number",
       "title": "Total",
       "default": 0
-    },
-    "multiplicador_usado": {
-      "type": "number",
-      "title": "Multiplicador Usado"
     },
     "observaciones": {
       "type": "string",
@@ -52,6 +58,8 @@
   "required": [
     "usuario_email",
     "fecha",
-    "estado"
+    "estado",
+    "cantidad",
+    "tipo_pago"
   ]
 }

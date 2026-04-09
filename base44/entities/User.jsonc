@@ -15,6 +15,20 @@
       "type": "number",
       "title": "Multiplicador",
       "default": 1
+    },
+    "valor_contado": {
+      "type": "number",
+      "title": "Valor Contado",
+      "default": 0
+    },
+    "valor_cuenta": {
+      "type": "number",
+      "title": "Valor a Cuenta",
+      "default": 0
+    },
+    "link_token": {
+      "type": "string",
+      "title": "Token de Enlace"
     }
   }
 }

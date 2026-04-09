@@ -16,6 +16,7 @@ import GestionUsuarios from './pages/admin/GestionUsuarios';
 import GestionItems from './pages/admin/GestionItems';
 import GestionPedidos from './pages/admin/GestionPedidos';
 import GestionPagos from './pages/admin/GestionPagos';
+import PedidoPublico from './pages/PedidoPublico';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -43,6 +44,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/p/:token" element={<PedidoPublico />} />
       <Route element={<ClientLayout />}>
         <Route path="/" element={<Catalogo />} />
         <Route path="/carrito" element={<Carrito />} />
