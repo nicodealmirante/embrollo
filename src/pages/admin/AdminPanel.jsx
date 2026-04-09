@@ -86,6 +86,23 @@ function UsuariosTab() {
     loadData();
   };
 
+  const aplicarAumento = async (user) => {
+    const saldo = getSaldo(user.email);
+    if (saldo <= 0) return;
+    const aumento = Math.round(saldo * 0.1);
+    await base44.entities.Pago.create({
+      usuario_email: user.email,
+      usuario_nombre: user.full_name,
+      fecha: new Date().toISOString(),
+      monto: -aumento,
+      metodo: "otro",
+      referencia: "Aumento 10%",
+      observaciones: "",
+    });
+    toast({ title: `+10% aplicado: $${aumento.toLocaleString()}` });
+    loadData();
+  };
+
   const crearEnlaceNuevo = async () => {
     setCreando(true);
     const token = generateToken();
@@ -193,6 +210,11 @@ function UsuariosTab() {
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setHistorialUser(user)}>
                 <History className="w-3 h-3" /> Ver historial
               </Button>
+              {getSaldo(user.email) > 0 && (
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => aplicarAumento(user)}>
+                  +10%
+                </Button>
+              )}
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1"
                 onClick={() => user.link_token ? copyLink(user.link_token, user.id) : generateLink(user)}>
                 {user.link_token
