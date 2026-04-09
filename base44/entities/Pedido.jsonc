@@ -1,0 +1,48 @@
+{
+  "name": "Pedido",
+  "type": "object",
+  "properties": {
+    "usuario_email": {
+      "type": "string",
+      "title": "Email del Usuario"
+    },
+    "usuario_nombre": {
+      "type": "string",
+      "title": "Nombre del Usuario"
+    },
+    "fecha": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Fecha"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "confirmado",
+        "entregado",
+        "cancelado"
+      ],
+      "title": "Estado",
+      "default": "pendiente"
+    },
+    "total": {
+      "type": "number",
+      "title": "Total",
+      "default": 0
+    },
+    "multiplicador_usado": {
+      "type": "number",
+      "title": "Multiplicador Usado"
+    },
+    "observaciones": {
+      "type": "string",
+      "title": "Observaciones"
+    }
+  },
+  "required": [
+    "usuario_email",
+    "fecha",
+    "estado"
+  ]
+}

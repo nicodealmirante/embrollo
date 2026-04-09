@@ -1,0 +1,33 @@
+{
+  "name": "DetallePedido",
+  "type": "object",
+  "properties": {
+    "pedido_id": {
+      "type": "string",
+      "title": "ID del Pedido"
+    },
+    "item_id": {
+      "type": "string",
+      "title": "ID del \u00cdtem"
+    },
+    "item_nombre": {
+      "type": "string",
+      "title": "Nombre del \u00cdtem"
+    },
+    "cantidad": {
+      "type": "number",
+      "title": "Cantidad",
+      "default": 1
+    },
+    "valor_calculado": {
+      "type": "number",
+      "title": "Valor Calculado",
+      "default": 0
+    }
+  },
+  "required": [
+    "pedido_id",
+    "item_id",
+    "cantidad"
+  ]
+}

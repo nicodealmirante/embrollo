@@ -1,0 +1,47 @@
+{
+  "name": "Pago",
+  "type": "object",
+  "properties": {
+    "usuario_email": {
+      "type": "string",
+      "title": "Email del Usuario"
+    },
+    "usuario_nombre": {
+      "type": "string",
+      "title": "Nombre del Usuario"
+    },
+    "fecha": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Fecha"
+    },
+    "monto": {
+      "type": "number",
+      "title": "Monto"
+    },
+    "metodo": {
+      "type": "string",
+      "enum": [
+        "efectivo",
+        "transferencia",
+        "tarjeta",
+        "otro"
+      ],
+      "title": "M\u00e9todo de Pago"
+    },
+    "referencia": {
+      "type": "string",
+      "title": "Referencia"
+    },
+    "observaciones": {
+      "type": "string",
+      "title": "Observaciones"
+    }
+  },
+  "required": [
+    "usuario_email",
+    "fecha",
+    "monto",
+    "metodo"
+  ]
+}

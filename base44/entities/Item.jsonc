@@ -1,0 +1,36 @@
+{
+  "name": "Item",
+  "type": "object",
+  "properties": {
+    "nombre": {
+      "type": "string",
+      "title": "Nombre"
+    },
+    "descripcion": {
+      "type": "string",
+      "title": "Descripci\u00f3n"
+    },
+    "precio_base": {
+      "type": "number",
+      "title": "Precio Base",
+      "default": 0
+    },
+    "activo": {
+      "type": "boolean",
+      "title": "Activo",
+      "default": true
+    },
+    "imagen": {
+      "type": "string",
+      "title": "Imagen URL"
+    },
+    "orden": {
+      "type": "number",
+      "title": "Orden",
+      "default": 0
+    }
+  },
+  "required": [
+    "nombre"
+  ]
+}
