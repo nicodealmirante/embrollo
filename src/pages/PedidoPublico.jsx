@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { getUserByToken } from "@/functions/getUserByToken";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
-import { ClipboardList, Loader2, Send } from "lucide-react";
+import { ClipboardList, Loader2, Send, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +32,7 @@ export default function PedidoPublico() {
   const [cantidad, setCantidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -166,22 +168,36 @@ export default function PedidoPublico() {
           </Button>
         </div>
 
-        {/* Last movements */}
-        <div className="bg-card rounded-2xl border border-border p-5">
-          <div className="flex items-center gap-2 mb-3">
+        {/* Last movements button */}
+        <button
+          onClick={() => setHistorialOpen(true)}
+          className="w-full bg-card rounded-2xl border border-border p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
             <ClipboardList className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-semibold text-sm">Últimos movimientos</h2>
+            <span className="font-semibold text-sm">Ver historial de movimientos</span>
           </div>
+          <span className="text-xs text-muted-foreground">{pedidos.length + pagos.filter(p => p.referencia !== "Pago contado automático").length} movimientos</span>
+        </button>
+      </div>
+
+      {/* Historial modal */}
+      <Dialog open={historialOpen} onOpenChange={setHistorialOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" /> Historial de movimientos
+            </DialogTitle>
+          </DialogHeader>
           {pedidos.length === 0 && pagos.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
           ) : (
-            <div className="space-y-0">
+            <div className="space-y-0 mt-2">
               {[
                 ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
                 ...pagos.filter(p => p.referencia !== "Pago contado automático").map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
               ]
                 .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
-                .slice(0, 8)
                 .map((m, i) => {
                   const isPago = m._tipo === "pago";
                   const isContado = m._tipo === "contado";
@@ -204,8 +220,8 @@ export default function PedidoPublico() {
                 })}
             </div>
           )}
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
