@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { getUserByToken } from "@/functions/getUserByToken";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
-import { ClipboardList, Loader2, Send, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -168,60 +168,56 @@ export default function PedidoPublico() {
           </Button>
         </div>
 
-        {/* Last movements button */}
-        <button
-          onClick={() => setHistorialOpen(true)}
-          className="w-full bg-card rounded-2xl border border-border p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-muted-foreground" />
-            <span className="font-semibold text-sm">Ver historial de movimientos</span>
-          </div>
-          <span className="text-xs text-muted-foreground">{pedidos.length + pagos.filter(p => p.referencia !== "Pago contado automático").length} movimientos</span>
-        </button>
-      </div>
+        {/* Last movements toggle */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <button
+            onClick={() => setHistorialOpen(o => !o)}
+            className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-muted-foreground" />
+              <span className="font-semibold text-sm">Últimos movimientos</span>
+            </div>
+            {historialOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </button>
 
-      {/* Historial modal */}
-      <Dialog open={historialOpen} onOpenChange={setHistorialOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" /> Historial de movimientos
-            </DialogTitle>
-          </DialogHeader>
-          {pedidos.length === 0 && pagos.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
-          ) : (
-            <div className="space-y-0 mt-2">
-              {[
-                ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
-                ...pagos.filter(p => p.referencia !== "Pago contado automático").map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
-              ]
-                .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
-                .map((m, i) => {
-                  const isPago = m._tipo === "pago";
-                  const isContado = m._tipo === "contado";
-                  const bgClass = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
-                  const labelClass = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                  const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
-                  const monto = isPago ? m.monto : m.total;
-                  const signo = isPago ? "+" : "-";
-                  return (
-                    <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
-                        <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
-                        {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
-                        {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
-                      </div>
-                      <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>
-                    </div>
-                  );
-                })}
+          {historialOpen && (
+            <div className="px-4 pb-4">
+              {pedidos.length === 0 && pagos.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
+              ) : (
+                <div className="space-y-0">
+                  {[
+                    ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
+                    ...pagos.filter(p => p.referencia !== "Pago contado automático").map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
+                  ]
+                    .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
+                    .map((m, i) => {
+                      const isPago = m._tipo === "pago";
+                      const isContado = m._tipo === "contado";
+                      const bgClass = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
+                      const labelClass = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
+                      const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
+                      const monto = isPago ? m.monto : m.total;
+                      const signo = isPago ? "+" : "-";
+                      return (
+                        <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
+                          <div>
+                            <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
+                            <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
+                            {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
+                            {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
+                          </div>
+                          <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

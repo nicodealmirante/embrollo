@@ -463,7 +463,7 @@ function PedidosTab() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState("pedidos");
 
   return (
     <div className="min-h-screen bg-background">
