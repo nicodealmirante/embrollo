@@ -241,15 +241,32 @@ function PedidosTab() {
 
   const confirmarEntrega = async () => {
     const p = entregaDialog;
-    const valor = tipoPagoEntrega === "contado" ? (p.valor_usado_contado || p.valor_usado || 0) : (p.valor_usado_cuenta || p.valor_usado || 0);
+    const users = await base44.entities.User.filter({ email: p.usuario_email });
+    const user = users[0] || {};
+    const valor = tipoPagoEntrega === 'contado' ? (user.valor_contado || 0) : (user.valor_cuenta || 0);
     const total = p.cantidad * valor;
+
     await base44.entities.Pedido.update(p.id, {
-      estado: "entregado",
+      estado: 'entregado',
       tipo_pago: tipoPagoEntrega,
       valor_usado: valor,
       total,
     });
-    toast({ title: "Entrega confirmada" });
+
+    // Si es contado: registrar pago automático para que saldo quede en 0
+    if (tipoPagoEntrega === 'contado') {
+      await base44.entities.Pago.create({
+        usuario_email: p.usuario_email,
+        usuario_nombre: p.usuario_nombre,
+        fecha: new Date().toISOString(),
+        monto: total,
+        metodo: 'efectivo',
+        referencia: 'Pago contado automático',
+        observaciones: `Pedido del ${new Date(p.fecha).toLocaleDateString()}`,
+      });
+    }
+
+    toast({ title: tipoPagoEntrega === 'contado' ? 'Entrega confirmada y pago registrado' : 'Entrega confirmada — saldo pendiente' });
     setEntregaDialog(null);
     loadPedidos();
   };

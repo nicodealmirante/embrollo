@@ -5,16 +5,6 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import ClientLayout from './components/ClientLayout';
-import AdminLayout from './components/AdminLayout';
-import Catalogo from './pages/Catalogo';
-import Carrito from './pages/Carrito';
-import MisPedidos from './pages/MisPedidos';
-import MisPagos from './pages/MisPagos';
-import AdminDashboard from './pages/admin/Dashboard';
-import GestionUsuarios from './pages/admin/GestionUsuarios';
-import GestionItems from './pages/admin/GestionItems';
-import GestionPedidos from './pages/admin/GestionPedidos';
 import PedidoPublico from './pages/PedidoPublico';
 import AdminPanel from './pages/admin/AdminPanel';
 
@@ -45,12 +35,6 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/p/:token" element={<PedidoPublico />} />
-      <Route element={<ClientLayout />}>
-        <Route path="/" element={<Catalogo />} />
-        <Route path="/carrito" element={<Carrito />} />
-        <Route path="/mis-pedidos" element={<MisPedidos />} />
-        <Route path="/mis-pagos" element={<MisPagos />} />
-      </Route>
       <Route path="/admin" element={<AdminPanel />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
