@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, ArrowLeft, Send } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Send, Banknote, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import CartItem from "../components/CartItem";
@@ -13,6 +13,7 @@ export default function Carrito() {
   const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [observaciones, setObservaciones] = useState("");
+  const [tipoPago, setTipoPago] = useState("cuenta");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -22,9 +23,17 @@ export default function Carrito() {
 
   const multiplicador = user?.multiplicador || 1;
 
+  const getPrecioItem = (item) => {
+    if (tipoPago === "contado") {
+      return item.precio_contado || item.precio_cuenta || 0;
+    }
+    return item.precio_cuenta || item.precio_contado || 0;
+  };
+
   const detalles = cart.map((c) => ({
     ...c,
-    valor_calculado: c.cantidad * multiplicador,
+    precio_unitario: getPrecioItem(c.item),
+    valor_calculado: c.cantidad * getPrecioItem(c.item) * multiplicador,
   }));
 
   const total = detalles.reduce((sum, d) => sum + d.valor_calculado, 0);
@@ -38,6 +47,7 @@ export default function Carrito() {
       usuario_nombre: user.full_name,
       fecha: new Date().toISOString(),
       estado: "pendiente",
+      tipo_pago: tipoPago,
       total,
       multiplicador_usado: multiplicador,
       observaciones,
@@ -49,7 +59,7 @@ export default function Carrito() {
         item_id: c.item.id,
         item_nombre: c.item.nombre,
         cantidad: c.cantidad,
-        valor_calculado: c.cantidad * multiplicador,
+        valor_calculado: c.cantidad * getPrecioItem(c.item) * multiplicador,
       }))
     );
 
@@ -102,7 +112,35 @@ export default function Carrito() {
               />
             ))}
 
-            <div className="mt-4">
+            {/* Tipo de pago */}
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button
+                onClick={() => setTipoPago("contado")}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                  tipoPago === "contado"
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border text-muted-foreground"
+                }`}
+              >
+                <Banknote className="w-5 h-5" />
+                <span className="text-xs font-semibold">Contado</span>
+                <span className="text-[10px]">Pago al entregar</span>
+              </button>
+              <button
+                onClick={() => setTipoPago("cuenta")}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                  tipoPago === "cuenta"
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border text-muted-foreground"
+                }`}
+              >
+                <CreditCard className="w-5 h-5" />
+                <span className="text-xs font-semibold">A Cuenta</span>
+                <span className="text-[10px]">Pago diferido</span>
+              </button>
+            </div>
+
+            <div className="mt-3">
               <Textarea
                 placeholder="Observaciones (opcional)"
                 value={observaciones}
@@ -121,12 +159,12 @@ export default function Carrito() {
                     <span className="text-muted-foreground">
                       {d.item.nombre} × {d.cantidad}
                     </span>
-                    <span className="font-medium">{d.valor_calculado}</span>
+                    <span className="font-medium">{d.valor_calculado.toLocaleString()}</span>
                   </div>
                 ))}
                 <div className="border-t border-border pt-2 mt-2 flex justify-between">
                   <span className="font-semibold">Total</span>
-                  <span className="font-bold text-lg">{total}</span>
+                  <span className="font-bold text-lg">{total.toLocaleString()}</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
                   Multiplicador aplicado: ×{multiplicador}

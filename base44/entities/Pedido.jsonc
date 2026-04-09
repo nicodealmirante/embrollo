@@ -26,6 +26,15 @@
       "title": "Estado",
       "default": "pendiente"
     },
+    "tipo_pago": {
+      "type": "string",
+      "enum": [
+        "contado",
+        "cuenta"
+      ],
+      "title": "Tipo de Pago",
+      "default": "cuenta"
+    },
     "total": {
       "type": "number",
       "title": "Total",

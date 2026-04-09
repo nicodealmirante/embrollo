@@ -10,9 +10,14 @@
       "type": "string",
       "title": "Descripci\u00f3n"
     },
-    "precio_base": {
+    "precio_contado": {
       "type": "number",
-      "title": "Precio Base",
+      "title": "Precio Contado (entrega)",
+      "default": 0
+    },
+    "precio_cuenta": {
+      "type": "number",
+      "title": "Precio a Cuenta (diferido)",
       "default": 0
     },
     "activo": {

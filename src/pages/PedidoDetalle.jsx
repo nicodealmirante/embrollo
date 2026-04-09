@@ -54,6 +54,16 @@ export default function PedidoDetalle({ pedidoId, onBack }) {
             <span className="text-sm text-muted-foreground">Estado</span>
             <EstadoBadge estado={pedido.estado} />
           </div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-muted-foreground">Tipo de Pago</span>
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+              pedido.tipo_pago === "contado"
+                ? "bg-green-100 text-green-700"
+                : "bg-blue-100 text-blue-700"
+            }`}>
+              {pedido.tipo_pago === "contado" ? "Contado" : "A Cuenta"}
+            </span>
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Multiplicador</span>
             <span className="text-sm font-medium">×{pedido.multiplicador_usado || 1}</span>

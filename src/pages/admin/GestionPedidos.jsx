@@ -182,6 +182,16 @@ export default function GestionPedidos() {
                   <EstadoBadge estado={selectedPedido.estado} />
                 </div>
                 <div>
+                  <p className="text-muted-foreground text-xs">Tipo de Pago</p>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    selectedPedido.tipo_pago === "contado"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}>
+                    {selectedPedido.tipo_pago === "contado" ? "Contado" : "A Cuenta"}
+                  </span>
+                </div>
+                <div>
                   <p className="text-muted-foreground text-xs">Multiplicador</p>
                   <p className="font-medium">×{selectedPedido.multiplicador_usado || 1}</p>
                 </div>
