@@ -256,7 +256,7 @@ export default function PedidoPublico() {
                       const isAumento = isPago && m.referencia === "Aumento 10%";
                       const bgClass = isAumento ? "bg-gray-900 border-gray-700" : isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
                       const labelClass = isAumento ? "text-white" : isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                      const label = isAumento ? "Aumento 10%" : isPago ? "Pago" : isContado ? "Contado" : "Colgado";
+                      const label = isAumento ? "Aumento 10%" : isPago ? "Pago" : isContado ? "Contado" : "Debe";
                       const monto = isPago ? m.monto : m.total;
                       const signo = isPago ? "+" : "-";
                       return (
@@ -266,7 +266,7 @@ export default function PedidoPublico() {
                             <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
                             {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                           </div>
-                          <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>}
                         </div>
                       );
                     })}
