@@ -120,6 +120,21 @@ export default function PedidoPublico() {
         {/* Order form */}
         <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
           <h2 className="font-semibold">Generar Pedido</h2>
+
+          {/* Valores informativos */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Contado</p>
+              <p className="text-lg font-bold text-green-700">${(userData.valor_contado || 0).toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground">por unidad</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">A Cuenta</p>
+              <p className="text-lg font-bold text-blue-700">${(userData.valor_cuenta || 0).toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground">por unidad</p>
+            </div>
+          </div>
+
           <div>
             <label className="text-xs text-muted-foreground font-medium">Cantidad</label>
             <Input

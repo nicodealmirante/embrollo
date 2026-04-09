@@ -224,7 +224,7 @@ function UsuariosTab() {
 function PedidosTab() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("todos");
+  const [filtro, setFiltro] = useState("pendiente");
   const [editingId, setEditingId] = useState(null);
   const [editCantidad, setEditCantidad] = useState("");
   const [entregaDialog, setEntregaDialog] = useState(null);
@@ -396,7 +396,7 @@ function PedidosTab() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [tab, setTab] = useState("usuarios");
+  const [tab, setTab] = useState("pedidos");
 
   return (
     <div className="min-h-screen bg-background">
