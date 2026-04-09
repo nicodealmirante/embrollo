@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, UserPlus } from "lucide-react";
+import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, UserPlus, LayoutDashboard } from "lucide-react";
+import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -462,7 +463,7 @@ function PedidosTab() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [tab, setTab] = useState("pedidos");
+  const [tab, setTab] = useState("dashboard");
 
   return (
     <div className="min-h-screen bg-background">
@@ -470,6 +471,12 @@ export default function AdminPanel() {
         <h1 className="text-2xl font-bold mb-6">Panel de Administración</h1>
 
         <div className="flex gap-1 bg-muted p-1 rounded-xl mb-6">
+          <button
+            onClick={() => setTab("dashboard")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "dashboard" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <LayoutDashboard className="w-4 h-4" /> Dashboard
+          </button>
           <button
             onClick={() => setTab("usuarios")}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "usuarios" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
@@ -484,7 +491,9 @@ export default function AdminPanel() {
           </button>
         </div>
 
-        {tab === "usuarios" ? <UsuariosTab /> : <PedidosTab />}
+        {tab === "dashboard" && <DashboardTab />}
+        {tab === "usuarios" && <UsuariosTab />}
+        {tab === "pedidos" && <PedidosTab />}
       </div>
     </div>
   );
