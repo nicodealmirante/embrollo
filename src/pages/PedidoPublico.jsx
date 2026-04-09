@@ -68,7 +68,8 @@ export default function PedidoPublico() {
 
   const totalPedido = pedidos.filter(p => p.estado !== "cancelado").reduce((s, p) => s + (p.total || 0), 0);
   const totalPagado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
-  const saldo = totalPedido - totalPagado;
+  const saldoBase = totalPedido - totalPagado;
+  const saldo = saldoBase > 0 ? Math.round(saldoBase * 1.1) : saldoBase;
 
   const handlePedido = async () => {
     const cant = parseFloat(cantidad);
