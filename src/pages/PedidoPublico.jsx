@@ -253,11 +253,12 @@ export default function PedidoPublico() {
                     .map((m, i) => {
                       const isPago = m._tipo === "pago";
                       const isContado = m._tipo === "contado";
-                      const isNegativoPago = isPago && m.monto < 0;
-                      const bgClass = isNegativoPago ? "bg-red-50 border-red-200" : isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
-                      const labelClass = isNegativoPago ? "text-red-700" : isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                      const label = isNegativoPago ? "Debe" : isPago ? "Pago" : isContado ? "Contado" : "Debe";
-                      const monto = isPago ? Math.abs(m.monto) : m.total;
+                      const isAumento = isPago && m.referencia === "Aumento 10%";
+                      const bgClass = isAumento ? "bg-gray-900 border-gray-700" : isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
+                      const labelClass = isAumento ? "text-white" : isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
+                      const label = isAumento ? "Aumento 10%" : isPago ? "Pago" : isContado ? "Contado" : "Debe";
+                      const monto = isPago ? m.monto : m.total;
+                      const signo = isPago ? "+" : "-";
                       return (
                         <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
                           <div>
@@ -265,7 +266,7 @@ export default function PedidoPublico() {
                             <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
                             {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                           </div>
-                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>${(monto || 0).toLocaleString()}</p>}
+                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>{signo}${(monto || 0).toLocaleString()}</p>}
                         </div>
                       );
                     })}
