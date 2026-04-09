@@ -164,18 +164,10 @@ export default function PedidoPublico() {
         <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
           <p className="text-sm opacity-80">Bienvenido/a</p>
           <h1 className="text-2xl font-bold mt-0.5">{titulo}</h1>
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <p className="text-[10px] opacity-70">Pedido</p>
-              <p className="text-sm font-bold">${totalPedido.toLocaleString()}</p>
-            </div>
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <p className="text-[10px] opacity-70">Pagado</p>
-              <p className="text-sm font-bold">${totalPagado.toLocaleString()}</p>
-            </div>
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <p className="text-[10px] opacity-70">Saldo</p>
-              <p className={`text-sm font-bold ${saldo > 0 ? "text-red-300" : "text-green-300"}`}>
+          <div className="mt-4">
+            <div className="bg-white/10 rounded-xl p-4 text-center">
+              <p className="text-xs opacity-70 uppercase tracking-wide">Se debe</p>
+              <p className={`text-4xl font-bold mt-1 ${saldo > 0 ? "text-red-300" : "text-green-300"}`}>
                 ${saldo.toLocaleString()}
               </p>
             </div>
@@ -260,7 +252,7 @@ export default function PedidoPublico() {
                       const isContado = m._tipo === "contado";
                       const bgClass = isPago ? "bg-green-50 border-green-200" : isContado ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200";
                       const labelClass = isPago ? "text-green-700" : isContado ? "text-yellow-700" : "text-red-700";
-                      const label = isPago ? "Pago" : isContado ? "Contado" : "A Cuenta";
+                      const label = isPago ? "Pago" : isContado ? "Contado" : "Colgado";
                       const monto = isPago ? m.monto : m.total;
                       const signo = isPago ? "+" : "-";
                       return (
