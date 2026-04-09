@@ -79,10 +79,8 @@ export default function PedidoPublico() {
     setSubmitting(true);
     await crearPedidoPublico({ token, cantidad: cant, observaciones });
     toast({ title: "Pedido enviado", description: "Tu pedido fue registrado" });
-    setCantidad("");
-    setObservaciones("");
     setSubmitting(false);
-    loadData();
+    window.location.href = "https://app.base44.com/apps/69d70ceaa289dc130a901d44/editor/workspace/overview";
   };
 
   if (loading) {
