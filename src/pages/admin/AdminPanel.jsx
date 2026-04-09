@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, UserPlus, LayoutDashboard } from "lucide-react";
+import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard } from "lucide-react";
 import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,9 +32,6 @@ function UsuariosTab() {
   const [editDialog, setEditDialog] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
-  const [inviteDialog, setInviteDialog] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviting, setInviting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -117,24 +114,10 @@ function UsuariosTab() {
     loadData();
   };
 
-  const inviteUser = async () => {
-    if (!inviteEmail) return;
-    setInviting(true);
-    await base44.users.inviteUser(inviteEmail, "user");
-    toast({ title: "Invitación enviada", description: inviteEmail });
-    setInviteEmail("");
-    setInviting(false);
-    setInviteDialog(false);
-    loadData();
-  };
+
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setInviteDialog(true); setInviteEmail(""); }}>
-          <UserPlus className="w-3 h-3" /> Crear usuario
-        </Button>
-      </div>
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
 
@@ -206,16 +189,7 @@ function UsuariosTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Invite user dialog */}
-      <Dialog open={inviteDialog} onOpenChange={setInviteDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
-          <div className="space-y-3 mt-2">
-            <div><Label className="text-xs">Email *</Label><Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="usuario@email.com" className="mt-1" /></div>
-            <Button onClick={inviteUser} disabled={inviting || !inviteEmail} className="w-full">{inviting ? "Enviando..." : "Enviar invitación"}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       <Dialog open={!!pagoDialog} onOpenChange={() => setPagoDialog(null)}>
         <DialogContent className="max-w-sm">
