@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Users, ClipboardList, Copy, Check, Link, Save, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, LinkIcon } from "lucide-react";
+import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +33,8 @@ function UsuariosTab() {
   const [editDialog, setEditDialog] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
-  const [crearEnlaceDialog, setCrearEnlaceDialog] = useState(false);
-  const [nuevoEmail, setNuevoEmail] = useState("");
+  const [enlaceGenerado, setEnlaceGenerado] = useState(null);
+  const [copiedNew, setCopiedNew] = useState(false);
   const [creando, setCreando] = useState(false);
   const { toast } = useToast();
 
@@ -85,15 +86,19 @@ function UsuariosTab() {
     loadData();
   };
 
-  const crearEnlace = async () => {
-    if (!nuevoEmail) return;
+  const crearEnlaceNuevo = async () => {
     setCreando(true);
-    await base44.users.inviteUser(nuevoEmail, "user");
-    toast({ title: "Invitación enviada", description: "El usuario podrá registrarse y luego podrás generar su enlace." });
-    setNuevoEmail("");
+    const token = generateToken();
+    await base44.entities.EnlacePendiente.create({ token });
+    const link = getPublicLink(token);
+    setEnlaceGenerado(link);
     setCreando(false);
-    setCrearEnlaceDialog(false);
-    loadData();
+  };
+
+  const copyNewLink = () => {
+    navigator.clipboard.writeText(enlaceGenerado);
+    setCopiedNew(true);
+    setTimeout(() => setCopiedNew(false), 2000);
   };
 
   const generateLink = async (user) => {
@@ -132,11 +137,19 @@ function UsuariosTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setCrearEnlaceDialog(true); setNuevoEmail(""); }}>
-          <LinkIcon className="w-3 h-3" /> Crear enlace
+      <div className="flex justify-end gap-2">
+        <Button size="sm" className="h-8 text-xs gap-1" onClick={crearEnlaceNuevo} disabled={creando}>
+          <LinkIcon className="w-3 h-3" /> {creando ? "Generando..." : "Crear enlace"}
         </Button>
       </div>
+      {enlaceGenerado && (
+        <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
+          <p className="text-xs text-muted-foreground truncate flex-1">{enlaceGenerado}</p>
+          <button onClick={copyNewLink} className="shrink-0">
+            {copiedNew ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+          </button>
+        </div>
+      )}
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
 
@@ -209,18 +222,6 @@ function UsuariosTab() {
       </Dialog>
 
 
-
-      {/* Crear enlace dialog */}
-      <Dialog open={crearEnlaceDialog} onOpenChange={setCrearEnlaceDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Crear enlace para usuario</DialogTitle></DialogHeader>
-          <div className="space-y-3 mt-2">
-            <p className="text-xs text-muted-foreground">Ingresá el email del usuario. Recibirá una invitación para registrarse, luego podés generar su enlace desde su tarjeta.</p>
-            <div><Label className="text-xs">Email *</Label><Input type="email" value={nuevoEmail} onChange={e => setNuevoEmail(e.target.value)} placeholder="usuario@email.com" className="mt-1" /></div>
-            <Button onClick={crearEnlace} disabled={creando || !nuevoEmail} className="w-full">{creando ? "Enviando..." : "Enviar invitación"}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={!!pagoDialog} onOpenChange={() => setPagoDialog(null)}>
         <DialogContent className="max-w-sm">

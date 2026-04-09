@@ -1,0 +1,13 @@
+{
+  "name": "EnlacePendiente",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "title": "Token"
+    }
+  },
+  "required": [
+    "token"
+  ]
+}

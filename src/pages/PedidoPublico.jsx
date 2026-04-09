@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getUserByToken } from "@/functions/getUserByToken";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
+import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
+import { reclamarEnlace } from "@/functions/reclamarEnlace";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,9 @@ export default function PedidoPublico() {
   const [observaciones, setObservaciones] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [pendiente, setPendiente] = useState(false);
+  const [emailReclamo, setEmailReclamo] = useState("");
+  const [reclamando, setReclamando] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,7 +49,13 @@ export default function PedidoPublico() {
     setLoading(true);
     const res = await getUserByToken({ token });
     if (res.data?.error || !res.data?.user) {
-      setNotFound(true);
+      // Check if it's a pending link
+      const check = await verificarEnlacePendiente({ token });
+      if (check.data?.found) {
+        setPendiente(true);
+      } else {
+        setNotFound(true);
+      }
       setLoading(false);
       return;
     }
@@ -81,12 +92,53 @@ export default function PedidoPublico() {
     );
   }
 
+  const handleReclamo = async () => {
+    if (!emailReclamo) return;
+    setReclamando(true);
+    const res = await reclamarEnlace({ token, email: emailReclamo });
+    if (res.data?.error) {
+      toast({ title: "Error", description: res.data.error, variant: "destructive" });
+      setReclamando(false);
+      return;
+    }
+    toast({ title: "¡Enlace activado!", description: "Ya podés usar tu página personal." });
+    setPendiente(false);
+    loadData();
+  };
+
   if (notFound) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center">
           <h1 className="text-xl font-bold">Enlace no válido</h1>
           <p className="text-muted-foreground mt-2 text-sm">Este enlace no existe o fue desactivado.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pendiente) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4 bg-background">
+        <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 space-y-4">
+          <div className="text-center">
+            <h1 className="text-xl font-bold">Activar mi enlace</h1>
+            <p className="text-sm text-muted-foreground mt-1">Ingresá tu email para vincular este enlace a tu cuenta.</p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground font-medium">Tu email</label>
+            <Input
+              type="email"
+              placeholder="tu@email.com"
+              value={emailReclamo}
+              onChange={e => setEmailReclamo(e.target.value)}
+              className="mt-1"
+              onKeyDown={e => e.key === 'Enter' && handleReclamo()}
+            />
+          </div>
+          <Button onClick={handleReclamo} disabled={reclamando || !emailReclamo} className="w-full">
+            {reclamando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Activar enlace"}
+          </Button>
         </div>
       </div>
     );
