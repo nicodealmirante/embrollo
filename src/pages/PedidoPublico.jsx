@@ -258,13 +258,14 @@ export default function PedidoPublico() {
                       const bgClass = isContado ? "bg-yellow-50 border-yellow-200" : isDebe ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200";
                       const labelClass = isContado ? "text-yellow-700" : isDebe ? "text-red-700" : "text-green-700";
                       const label = isContado ? "Contado" : isDebe ? "Debe" : "Pago";
-                      const monto = montoVal;
+                      return (
+                        <div key={i} className={`flex items-center justify-between py-2.5 px-3 rounded-lg border mb-1.5 ${bgClass}`}>
                           <div>
                             <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
                             <p className={`font-semibold text-xs ${labelClass}`}>{label}</p>
                             {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                           </div>
-                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>${`${Math.abs(monto || 0).toLocaleString()}`}</p>}
+                          {!isContado && <p className={`font-bold text-sm ${labelClass}`}>${Math.abs(montoVal || 0).toLocaleString()}</p>}
                         </div>
                       );
                     })}
