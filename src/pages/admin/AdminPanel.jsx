@@ -178,6 +178,9 @@ function UsuariosTab() {
                   <UserCheck className="w-3 h-3" /> Aprobar
                 </Button>
               )}
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
             </div>
           </div>
         );
