@@ -73,8 +73,12 @@ export default function ChatUsuario({ user }) {
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
       {open && (
         <div
-          className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
-          style={{ width: "320px", display: "flex", flexDirection: "column", height: "400px", maxHeight: "calc(100vh - 90px)" }}
+          className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          style={{
+            // Full-width on small screens, fixed width on larger
+            width: "min(320px, calc(100vw - 24px))",
+            height: "min(420px, calc(100vh - 90px))",
+          }}
         >
           {/* Header */}
           <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between shrink-0">
