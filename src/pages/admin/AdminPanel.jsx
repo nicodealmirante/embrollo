@@ -476,28 +476,28 @@ export default function AdminPanel() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Panel de Administración</h1>
 
-        <div className="flex gap-1 bg-muted p-1 rounded-xl mb-6">
+        <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-xl mb-6">
           <button
             onClick={() => setTab("dashboard")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "dashboard" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "dashboard" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
             <LayoutDashboard className="w-4 h-4" /> Dashboard
           </button>
           <button
             onClick={() => setTab("usuarios")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "usuarios" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "usuarios" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
             <Users className="w-4 h-4" /> Usuarios
           </button>
           <button
             onClick={() => setTab("pedidos")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "pedidos" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "pedidos" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
             <ClipboardList className="w-4 h-4" /> Pedidos
           </button>
           <button
             onClick={() => setTab("chat")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "chat" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "chat" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
             <MessageCircle className="w-4 h-4" /> Chat
             {mensajesNL > 0 && (
