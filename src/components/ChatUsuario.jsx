@@ -80,7 +80,8 @@ export default function ChatUsuario({ user }) {
           className="fixed z-50 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           style={{
             bottom: MARGIN + FAB_SIZE + 8,
-            right: MARGIN,
+            left: "50%",
+            transform: "translateX(-50%)",
             width: `min(320px, calc(100vw - ${MARGIN * 2}px))`,
             height: `min(420px, calc(100vh - ${MARGIN * 2 + FAB_SIZE + 16}px))`,
           }}
@@ -136,11 +137,11 @@ export default function ChatUsuario({ user }) {
         </div>
       )}
 
-      {/* FAB — siempre visible en esquina inferior derecha */}
+      {/* FAB — centrado en la parte inferior */}
       <button
         onClick={() => setOpen(o => !o)}
         className="fixed z-50 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all active:scale-95 flex items-center justify-center"
-        style={{ bottom: MARGIN, right: MARGIN, width: FAB_SIZE, height: FAB_SIZE }}
+        style={{ bottom: MARGIN, left: "50%", transform: "translateX(-50%)", width: FAB_SIZE, height: FAB_SIZE }}
       >
         <MessageCircle className="w-5 h-5" />
         {noLeidos > 0 && (
