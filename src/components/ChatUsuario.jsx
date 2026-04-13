@@ -69,15 +69,20 @@ export default function ChatUsuario({ user }) {
     loadMensajes();
   }
 
+  const FAB_SIZE = 52; // px
+  const MARGIN = 16;   // px from edges
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+    <>
+      {/* Ventana de chat — posicionada sobre el FAB */}
       {open && (
         <div
-          className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          className="fixed z-50 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           style={{
-            // Full-width on small screens, fixed width on larger
-            width: "min(320px, calc(100vw - 24px))",
-            height: "min(420px, calc(100vh - 90px))",
+            bottom: MARGIN + FAB_SIZE + 8,
+            right: MARGIN,
+            width: `min(320px, calc(100vw - ${MARGIN * 2}px))`,
+            height: `min(420px, calc(100vh - ${MARGIN * 2 + FAB_SIZE + 16}px))`,
           }}
         >
           {/* Header */}
@@ -131,10 +136,11 @@ export default function ChatUsuario({ user }) {
         </div>
       )}
 
-      {/* FAB */}
+      {/* FAB — siempre visible en esquina inferior derecha */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="relative bg-primary text-primary-foreground rounded-full p-3.5 shadow-lg hover:bg-primary/90 transition-all active:scale-95"
+        className="fixed z-50 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all active:scale-95 flex items-center justify-center"
+        style={{ bottom: MARGIN, right: MARGIN, width: FAB_SIZE, height: FAB_SIZE }}
       >
         <MessageCircle className="w-5 h-5" />
         {noLeidos > 0 && (
@@ -143,6 +149,6 @@ export default function ChatUsuario({ user }) {
           </span>
         )}
       </button>
-    </div>
+    </>
   );
 }
