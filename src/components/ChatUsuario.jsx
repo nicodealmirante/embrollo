@@ -14,17 +14,13 @@ export default function ChatUsuario({ user }) {
   const bottomRef = useRef(null);
   const openRef = useRef(false);
 
-  useEffect(() => {
-    openRef.current = open;
-  }, [open]);
+  useEffect(() => { openRef.current = open; }, [open]);
 
   useEffect(() => {
     if (!user?.email) return;
     loadMensajes();
     const unsub = base44.entities.Mensaje.subscribe((event) => {
-      if (event.data?.usuario_email === user.email) {
-        loadMensajes();
-      }
+      if (event.data?.usuario_email === user.email) loadMensajes();
     });
     return unsub;
   }, [user]);
@@ -37,19 +33,15 @@ export default function ChatUsuario({ user }) {
   }, [open]);
 
   useEffect(() => {
-    if (open) {
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
-    }
+    if (open) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   }, [mensajes]);
 
   async function loadMensajes() {
     const data = await base44.entities.Mensaje.filter({ usuario_email: user.email }, "created_date");
     setMensajes(data);
-    const nl = data.filter(m => m.es_admin && !m.leido).length;
-    setNoLeidos(nl);
-    // Auto-mark as read if chat is open
-    if (openRef.current && nl > 0) {
-      const sinLeer = data.filter(m => m.es_admin && !m.leido);
+    const sinLeer = data.filter(m => m.es_admin && !m.leido);
+    setNoLeidos(sinLeer.length);
+    if (openRef.current && sinLeer.length > 0) {
       await Promise.all(sinLeer.map(m => base44.entities.Mensaje.update(m.id, { leido: true })));
       setNoLeidos(0);
     }
@@ -80,9 +72,12 @@ export default function ChatUsuario({ user }) {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
       {open && (
-        <div className="w-80 bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+        <div
+          className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+          style={{ width: "320px", display: "flex", flexDirection: "column", height: "400px", maxHeight: "calc(100vh - 90px)" }}
+        >
           {/* Header */}
-          <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between">
+          <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               <p className="font-semibold text-sm">Chat con el administrador</p>
@@ -93,7 +88,7 @@ export default function ChatUsuario({ user }) {
           </div>
 
           {/* Messages */}
-          <div className="overflow-y-auto p-3 space-y-2 flex-1" style={{ minHeight: 0 }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
             {mensajes.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-8">
                 ¡Hola! Enviá un mensaje y el administrador te responderá pronto.
@@ -117,14 +112,13 @@ export default function ChatUsuario({ user }) {
           </div>
 
           {/* Input */}
-          <div className="p-2 border-t border-border flex gap-2">
+          <div className="p-2 border-t border-border flex gap-2 shrink-0">
             <Input
               value={texto}
               onChange={e => setTexto(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && enviar()}
               placeholder="Escribí un mensaje..."
               className="text-sm h-9"
-              autoFocus
             />
             <Button size="sm" onClick={enviar} disabled={enviando || !texto.trim()} className="h-9 px-3">
               <Send className="w-3.5 h-3.5" />
@@ -133,7 +127,7 @@ export default function ChatUsuario({ user }) {
         </div>
       )}
 
-      {/* FAB Button */}
+      {/* FAB */}
       <button
         onClick={() => setOpen(o => !o)}
         className="relative bg-primary text-primary-foreground rounded-full p-3.5 shadow-lg hover:bg-primary/90 transition-all active:scale-95"

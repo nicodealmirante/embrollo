@@ -15,10 +15,7 @@ export default function ChatAdmin() {
   const bottomRef = useRef(null);
   const seleccionadoRef = useRef(null);
 
-  // Keep ref in sync with state to avoid stale closures in subscriptions
-  useEffect(() => {
-    seleccionadoRef.current = seleccionado;
-  }, [seleccionado]);
+  useEffect(() => { seleccionadoRef.current = seleccionado; }, [seleccionado]);
 
   useEffect(() => {
     loadUsuarios();
@@ -39,19 +36,16 @@ export default function ChatAdmin() {
 
   async function loadUsuarios() {
     const todos = await base44.entities.Mensaje.list("-created_date");
-    // Group by email preserving unique emails in order
     const emailsUnicos = [...new Set(todos.map(m => m.usuario_email))];
     const nl = {};
     const lista = emailsUnicos.map(email => {
       const msgs = todos.filter(m => m.usuario_email === email);
       nl[email] = msgs.filter(m => !m.es_admin && !m.leido).length;
-      // Get nombre from a user message (not admin)
       const userMsg = msgs.find(m => !m.es_admin);
       return {
         email,
         nombre: userMsg?.usuario_nombre || msgs[0]?.usuario_nombre || email,
         ultimoMensaje: msgs[0]?.texto || "",
-        fecha: msgs[0]?.created_date,
       };
     });
     setNoLeidos(nl);
@@ -61,12 +55,9 @@ export default function ChatAdmin() {
   async function loadMensajes(email) {
     const data = await base44.entities.Mensaje.filter({ usuario_email: email }, "created_date");
     setMensajes(data);
-    // Mark user messages as read
     const sinLeer = data.filter(m => !m.es_admin && !m.leido);
     await Promise.all(sinLeer.map(m => base44.entities.Mensaje.update(m.id, { leido: true })));
-    if (sinLeer.length > 0) {
-      setNoLeidos(prev => ({ ...prev, [email]: 0 }));
-    }
+    if (sinLeer.length > 0) setNoLeidos(prev => ({ ...prev, [email]: 0 }));
   }
 
   async function enviar() {
@@ -85,19 +76,15 @@ export default function ChatAdmin() {
     loadMensajes(seleccionado);
   }
 
-  const totalNoLeidos = Object.values(noLeidos).reduce((a, b) => a + b, 0);
-
   return (
-    <div className="flex gap-3" style={{ height: 'calc(100vh - 220px)', minHeight: '320px' }}>
+    <div className="border border-border rounded-xl overflow-hidden bg-card" style={{ height: "500px", display: "flex" }}>
       {/* Lista de usuarios */}
-      <div className="w-44 shrink-0 bg-card border border-border rounded-xl overflow-y-auto">
-        <div className="px-3 py-2 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Conversaciones {totalNoLeidos > 0 && <span className="text-red-500">({totalNoLeidos})</span>}
-          </p>
+      <div style={{ width: "160px", flexShrink: 0, borderRight: "1px solid hsl(var(--border))", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        <div className="px-3 py-2 border-b border-border bg-muted/30">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Usuarios</p>
         </div>
         {usuarios.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center p-4">Sin conversaciones aún</p>
+          <p className="text-xs text-muted-foreground text-center p-4">Sin conversaciones</p>
         )}
         {usuarios.map(u => (
           <button
@@ -119,19 +106,19 @@ export default function ChatAdmin() {
       </div>
 
       {/* Panel de mensajes */}
-      <div className="flex-1 flex flex-col bg-card border border-border rounded-xl overflow-hidden">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {!seleccionado ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Seleccioná un usuario para ver la conversación</p>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <p className="text-sm text-muted-foreground">Seleccioná un usuario</p>
           </div>
         ) : (
           <>
-            <div className="px-4 py-2.5 border-b border-border bg-muted/30">
+            <div className="px-4 py-2.5 border-b border-border bg-muted/20 shrink-0">
               <p className="text-sm font-semibold">{usuarios.find(u => u.email === seleccionado)?.nombre}</p>
               <p className="text-xs text-muted-foreground">{seleccionado}</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
               {mensajes.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-6">Sin mensajes aún</p>
               )}
@@ -152,7 +139,7 @@ export default function ChatAdmin() {
               <div ref={bottomRef} />
             </div>
 
-            <div className="p-2 border-t border-border flex gap-2">
+            <div className="p-2 border-t border-border flex gap-2 shrink-0">
               <Input
                 value={texto}
                 onChange={e => setTexto(e.target.value)}
