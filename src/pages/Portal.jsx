@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
-import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ export default function Portal() {
   const [observaciones, setObservaciones] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatNoLeidos, setChatNoLeidos] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -100,7 +102,20 @@ export default function Portal() {
         <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
           <div className="flex items-center justify-between mb-1">
             <p className="text-sm opacity-80">Bienvenido/a</p>
-            <button onClick={() => base44.auth.logout()} className="text-xs opacity-60 hover:opacity-100 underline">Salir</button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setChatOpen(true)}
+                className="relative text-primary-foreground opacity-80 hover:opacity-100 transition-opacity"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {chatNoLeidos > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">
+                    {chatNoLeidos}
+                  </span>
+                )}
+              </button>
+              <button onClick={() => base44.auth.logout()} className="text-xs opacity-60 hover:opacity-100 underline">Salir</button>
+            </div>
           </div>
           <h1 className="text-2xl font-bold">{titulo}</h1>
           <div className="mt-4">
@@ -204,7 +219,7 @@ export default function Portal() {
           )}
         </div>
       </div>
-      <ChatUsuario user={user} />
+      <ChatUsuario user={user} open={chatOpen} onClose={() => setChatOpen(false)} onUnread={setChatNoLeidos} />
     </div>
   );
 }
