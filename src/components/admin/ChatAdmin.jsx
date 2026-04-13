@@ -88,7 +88,7 @@ export default function ChatAdmin() {
   const totalNoLeidos = Object.values(noLeidos).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex gap-3 h-[520px]">
+    <div className="flex gap-3" style={{ height: 'calc(100vh - 220px)', minHeight: '320px' }}>
       {/* Lista de usuarios */}
       <div className="w-44 shrink-0 bg-card border border-border rounded-xl overflow-y-auto">
         <div className="px-3 py-2 border-b border-border">

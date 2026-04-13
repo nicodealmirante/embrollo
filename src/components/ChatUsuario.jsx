@@ -80,7 +80,7 @@ export default function ChatUsuario({ user }) {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
       {open && (
-        <div className="w-80 bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="w-80 bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 100px)' }}>
           {/* Header */}
           <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export default function ChatUsuario({ user }) {
           </div>
 
           {/* Messages */}
-          <div className="overflow-y-auto p-3 space-y-2" style={{ height: "280px" }}>
+          <div className="overflow-y-auto p-3 space-y-2 flex-1" style={{ minHeight: 0 }}>
             {mensajes.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-8">
                 ¡Hola! Enviá un mensaje y el administrador te responderá pronto.
