@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle } from "lucide-react";
+import ChatAdmin from "../../components/admin/ChatAdmin";
 import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
 import { Button } from "@/components/ui/button";
@@ -457,6 +458,18 @@ function PedidosTab() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
   const [tab, setTab] = useState("pedidos");
+  const [mensajesNL, setMensajesNL] = useState(0);
+
+  useEffect(() => {
+    async function checkNoLeidos() {
+      const msgs = await base44.entities.Mensaje.list();
+      const nl = msgs.filter(m => !m.es_admin && !m.leido).length;
+      setMensajesNL(nl);
+    }
+    checkNoLeidos();
+    const unsub = base44.entities.Mensaje.subscribe(() => checkNoLeidos());
+    return unsub;
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -482,11 +495,23 @@ export default function AdminPanel() {
           >
             <ClipboardList className="w-4 h-4" /> Pedidos
           </button>
+          <button
+            onClick={() => setTab("chat")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "chat" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <MessageCircle className="w-4 h-4" /> Chat
+            {mensajesNL > 0 && (
+              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {mensajesNL}
+              </span>
+            )}
+          </button>
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
         {tab === "usuarios" && <UsuariosTab />}
         {tab === "pedidos" && <PedidosTab />}
+        {tab === "chat" && <ChatAdmin />}
       </div>
     </div>
   );

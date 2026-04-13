@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react";
+import ChatUsuario from "../components/ChatUsuario";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -203,6 +204,7 @@ export default function Portal() {
           )}
         </div>
       </div>
+      <ChatUsuario user={user} />
     </div>
   );
 }

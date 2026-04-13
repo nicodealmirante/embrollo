@@ -1,0 +1,32 @@
+{
+  "name": "Mensaje",
+  "type": "object",
+  "properties": {
+    "usuario_email": {
+      "type": "string",
+      "title": "Email del Usuario"
+    },
+    "usuario_nombre": {
+      "type": "string",
+      "title": "Nombre del Usuario"
+    },
+    "texto": {
+      "type": "string",
+      "title": "Texto"
+    },
+    "es_admin": {
+      "type": "boolean",
+      "title": "Es Admin",
+      "default": false
+    },
+    "leido": {
+      "type": "boolean",
+      "title": "Le\u00eddo",
+      "default": false
+    }
+  },
+  "required": [
+    "usuario_email",
+    "texto"
+  ]
+}
