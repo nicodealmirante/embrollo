@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useRoleNames } from "@/hooks/useRoleNames";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
@@ -24,6 +25,7 @@ export default function Portal() {
   const [chatNoLeidos, setChatNoLeidos] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { adminName } = useRoleNames();
 
   useEffect(() => { loadData(); }, []);
 
@@ -85,7 +87,7 @@ export default function Portal() {
         <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-8 text-center space-y-4">
           <div className="text-5xl">⏳</div>
           <h1 className="text-xl font-bold">Acceso pendiente</h1>
-          <p className="text-sm text-muted-foreground">Tu cuenta está siendo revisada por el administrador. Pronto tendrás acceso a tu portal.</p>
+          <p className="text-sm text-muted-foreground">Tu cuenta está siendo revisada por el {adminName.toLowerCase()}. Pronto tendrás acceso a tu portal.</p>
           <p className="text-xs text-muted-foreground">Conectado como: <strong>{user.email}</strong></p>
           <Button variant="outline" size="sm" onClick={() => base44.auth.logout()}>Salir</Button>
         </div>

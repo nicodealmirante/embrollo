@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings } from "lucide-react";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
+import ConfigTab from "../../components/admin/ConfigTab";
+import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +36,7 @@ function UsuariosTab() {
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { userName } = useRoleNames();
 
   useEffect(() => { loadData(); }, []);
 
@@ -155,7 +158,7 @@ function UsuariosTab() {
 
             {user.estado !== "activo" && (
               <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                <p className="text-xs text-amber-700 font-semibold">⏳ Pendiente de aprobación</p>
+                <p className="text-xs text-amber-700 font-semibold">⏳ {userName} pendiente de aprobación</p>
               </div>
             )}
 
@@ -176,7 +179,7 @@ function UsuariosTab() {
               )}
               {user.estado !== "activo" && (
                 <Button size="sm" className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => aprobarUsuario(user)}>
-                  <UserCheck className="w-3 h-3" /> Aprobar
+                  <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
@@ -459,6 +462,7 @@ function PedidosTab() {
 export default function AdminPanel() {
   const [tab, setTab] = useState("pedidos");
   const [mensajesNL, setMensajesNL] = useState(0);
+  const { adminName, userName } = useRoleNames();
 
   useEffect(() => {
     async function checkNoLeidos() {
@@ -474,7 +478,7 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Panel de Administración</h1>
+        <h1 className="text-2xl font-bold mb-6">Panel de {adminName}</h1>
 
         <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-xl mb-6">
           <button
@@ -487,7 +491,7 @@ export default function AdminPanel() {
             onClick={() => setTab("usuarios")}
             className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "usuarios" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
-            <Users className="w-4 h-4" /> Usuarios
+            <Users className="w-4 h-4" /> {userName}s
           </button>
           <button
             onClick={() => setTab("pedidos")}
@@ -506,12 +510,19 @@ export default function AdminPanel() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setTab("config")}
+            className={`col-span-2 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "config" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <Settings className="w-4 h-4" /> Configuración
+          </button>
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
         {tab === "usuarios" && <UsuariosTab />}
         {tab === "pedidos" && <PedidosTab />}
         {tab === "chat" && <ChatAdmin />}
+        {tab === "config" && <ConfigTab />}
       </div>
     </div>
   );
