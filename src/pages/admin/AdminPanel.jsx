@@ -184,8 +184,8 @@ function UsuariosTab() {
               }
               <Button
                 size="sm"
-                variant="outline"
-                className="h-8 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                variant="outline" className="bg-slate-600 text-primary px-3 text-xs font-medium rounded-md inline-flex items-center justify-center whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-8 gap-1 border-primary/30 hover:bg-primary/5"
+
                 onClick={async () => {
                   if (!confirm(`¿Convertir a ${user.full_name || user.email} en administrador?`)) return;
                   await base44.entities.User.update(user.id, { role: "admin" });
