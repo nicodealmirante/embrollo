@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield } from "lucide-react";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
@@ -182,6 +182,19 @@ function UsuariosTab() {
                   <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                onClick={async () => {
+                  if (!confirm(`¿Convertir a ${user.full_name || user.email} en administrador?`)) return;
+                  await base44.entities.User.update(user.id, { role: "admin" });
+                  toast({ title: "Usuario promovido a admin" });
+                  loadData();
+                }}
+              >
+                <Shield className="w-3 h-3" /> Hacer admin
+              </Button>
               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
                 <Trash2 className="w-3 h-3" />
               </Button>
