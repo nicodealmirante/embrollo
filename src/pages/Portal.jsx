@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
+import NotificacionesConfig from "../components/NotificacionesConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -218,6 +219,10 @@ export default function Portal() {
             </div>
           )}
         </div>
+
+        {/* Notificaciones */}
+        <NotificacionesConfig userEmail={user.email} />
+
       </div>
       <ChatUsuario user={user} open={chatOpen} onClose={() => setChatOpen(false)} onUnread={setChatNoLeidos} />
     </div>

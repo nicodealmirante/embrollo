@@ -1,0 +1,27 @@
+{
+  "name": "PushToken",
+  "type": "object",
+  "properties": {
+    "usuario_email": {
+      "type": "string",
+      "title": "Email del Usuario"
+    },
+    "token_json": {
+      "type": "string",
+      "title": "Token JSON (PushSubscription)"
+    },
+    "activo": {
+      "type": "boolean",
+      "title": "Activo",
+      "default": true
+    },
+    "dispositivo": {
+      "type": "string",
+      "title": "Dispositivo"
+    }
+  },
+  "required": [
+    "usuario_email",
+    "token_json"
+  ]
+}
