@@ -38,6 +38,13 @@ Deno.serve(async (req) => {
     const texto = `📦 Nuevo pedido en Embrollo!\n👤 Cliente: ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 ${enlaceAdmin}`;
 
     await enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto);
+
+    // SimplePush
+    if (cfg.simplepush_key) {
+      const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '📦 Nuevo pedido', msg: texto });
+      await fetch(`https://api.simplepush.io/send?${spParams.toString()}`);
+    }
+
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -1,19 +1,41 @@
-import { Bell, BellOff, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, BellOff, Loader2, Save } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { base44 } from "@/api/base44Client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function NotificacionesConfig({ userEmail }) {
   const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications(userEmail);
+  const [spKey, setSpKey] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!userEmail) return;
+    base44.auth.me().then(me => {
+      if (me?.simplepush_key) setSpKey(me.simplepush_key);
+    });
+  }, [userEmail]);
+
+  const saveSpKey = async () => {
+    setSaving(true);
+    await base44.auth.updateMe({ simplepush_key: spKey.trim() });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <div className="space-y-3">
-      {/* SimplePush banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2">
+      {/* SimplePush */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-blue-700" />
-          <p className="text-sm font-semibold text-blue-800">Recibí notificaciones en tu celular</p>
+          <p className="text-sm font-semibold text-blue-800">Notificaciones en tu celular</p>
         </div>
         <p className="text-xs text-blue-700">
-          Descargá la app <strong>SimplePush</strong> para recibir avisos de pedidos y mensajes directamente en tu celular.
+          Descargá <strong>SimplePush</strong> y pegá tu key para recibir avisos cuando el administrador te responda.
         </p>
         <a
           href="https://play.google.com/store/apps/details?id=io.simplepush"
@@ -23,6 +45,17 @@ export default function NotificacionesConfig({ userEmail }) {
         >
           📲 Descargar SimplePush
         </a>
+        <div className="flex gap-2">
+          <Input
+            value={spKey}
+            onChange={e => setSpKey(e.target.value)}
+            placeholder="Tu SimplePush key..."
+            className="text-sm font-mono bg-white"
+          />
+          <Button size="sm" onClick={saveSpKey} disabled={saving} className="shrink-0 gap-1">
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? "✓" : <Save className="w-3.5 h-3.5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Push notifications toggle */}

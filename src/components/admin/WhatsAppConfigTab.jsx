@@ -12,6 +12,7 @@ const CLAVES = {
   apikey: "whatsapp_apikey",
   notif_mensaje: "whatsapp_notif_mensaje",
   notif_pedido: "whatsapp_notif_pedido",
+  simplepush_key: "simplepush_key",
 };
 
 async function getConfig() {
@@ -32,6 +33,7 @@ async function setConfig(clave, valor, existingId) {
 export default function WhatsAppConfigTab() {
   const [telefono, setTelefono] = useState("");
   const [apikey, setApikey] = useState("");
+  const [simplepushKey, setSimplepushKey] = useState("");
   const [notifMensaje, setNotifMensaje] = useState(true);
   const [notifPedido, setNotifPedido] = useState(true);
   const [configIds, setConfigIds] = useState({});
@@ -45,11 +47,13 @@ export default function WhatsAppConfigTab() {
     const cfg = await getConfig();
     setTelefono(cfg[CLAVES.telefono]?.valor || "");
     setApikey(cfg[CLAVES.apikey]?.valor || "");
+    setSimplepushKey(cfg[CLAVES.simplepush_key]?.valor || "");
     setNotifMensaje(cfg[CLAVES.notif_mensaje]?.valor !== "false");
     setNotifPedido(cfg[CLAVES.notif_pedido]?.valor !== "false");
     setConfigIds({
       telefono: cfg[CLAVES.telefono]?.id,
       apikey: cfg[CLAVES.apikey]?.id,
+      simplepush_key: cfg[CLAVES.simplepush_key]?.id,
       notif_mensaje: cfg[CLAVES.notif_mensaje]?.id,
       notif_pedido: cfg[CLAVES.notif_pedido]?.id,
     });
@@ -64,6 +68,7 @@ export default function WhatsAppConfigTab() {
     await Promise.all([
       setConfig(CLAVES.telefono, telefono.trim(), configIds.telefono),
       setConfig(CLAVES.apikey, apikey.trim(), configIds.apikey),
+      setConfig(CLAVES.simplepush_key, simplepushKey.trim(), configIds.simplepush_key),
       setConfig(CLAVES.notif_mensaje, String(notifMensaje), configIds.notif_mensaje),
       setConfig(CLAVES.notif_pedido, String(notifPedido), configIds.notif_pedido),
     ]);
@@ -147,6 +152,21 @@ export default function WhatsAppConfigTab() {
               type="password"
             />
           </div>
+        </div>
+
+        {/* SimplePush */}
+        <div className="border-t border-border pt-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📲</span>
+            <Label className="text-xs font-semibold">SimplePush Key (opcional)</Label>
+          </div>
+          <p className="text-[10px] text-muted-foreground">Recibí notificaciones también en la app SimplePush. Encontrás tu key en la app.</p>
+          <Input
+            value={simplepushKey}
+            onChange={e => setSimplepushKey(e.target.value)}
+            placeholder="xxxxxxxx"
+            className="font-mono text-sm"
+          />
         </div>
 
         <div className="flex gap-2">
