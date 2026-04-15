@@ -6,14 +6,7 @@ import {
 } from "recharts";
 import moment from "moment";
 
-const COSTO_UNIDAD = 3.8;
-const PRECIO_UNIDAD = 1400;
-const GANANCIA_UNIDAD = PRECIO_UNIDAD - COSTO_UNIDAD * 1000; // ajustá si el costo es en otra unidad
-
-// Si costo = $3.8 y precio = $1400, la ganancia por unidad = $1400 - (3.8 * precio_costo)
-// Asumiendo que 3.8 es el costo en alguna unidad base, la ganancia = precio - costo
-// Usamos: ganancia = total_ventas - (unidades * 3.8)
-// Es decir, costo total = unidades * 3.8
+const COSTO_UNIDAD = 5320;
 
 function KPICard({ label, value, sub, color = "text-foreground" }) {
   return (
@@ -56,7 +49,6 @@ export default function DashboardTab() {
   // Totales globales
   const totalUnidades = entregados.reduce((s, p) => s + (p.cantidad || 0), 0);
   const totalVentas = entregados.reduce((s, p) => s + (p.total || 0), 0);
-  const totalCosto = totalUnidades * COSTO_UNIDAD * PRECIO_UNIDAD / PRECIO_UNIDAD; // costo = unidades * 3.8
   const totalGanancia = totalVentas - (totalUnidades * COSTO_UNIDAD);
   const totalCobrado = pagos.filter(p => p.referencia !== "Pago contado automático" || true).reduce((s, p) => s + (p.monto || 0), 0);
   const deudaTotal = totalVentas - totalCobrado;
@@ -72,6 +64,7 @@ export default function DashboardTab() {
     const unidades = ped.reduce((s, p) => s + (p.cantidad || 0), 0);
     const ventas = ped.reduce((s, p) => s + (p.total || 0), 0);
     const ganancia = ventas - (unidades * COSTO_UNIDAD);
+
     const cobrado = pagos.filter(p => moment(p.fecha).isSame(mes, "month")).reduce((s, p) => s + (p.monto || 0), 0);
     meses.push({ mes: label, Pedidos: ped.length, Ganancia: Math.round(ganancia), Cobrado: Math.round(cobrado) });
   }
@@ -101,7 +94,7 @@ export default function DashboardTab() {
         <KPICard
           label="Ganancia neta"
           value={`$${Math.round(totalGanancia).toLocaleString()}`}
-          sub={`${totalUnidades} unidades × ($${PRECIO_UNIDAD} - $${COSTO_UNIDAD})`}
+          sub={`${totalUnidades} unidades · costo $${COSTO_UNIDAD.toLocaleString()}/u`}
           color="text-green-600"
         />
         <KPICard
@@ -126,7 +119,7 @@ export default function DashboardTab() {
       {/* Ganancias por mes */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="text-sm font-semibold mb-1">Ganancia mensual</h3>
-        <p className="text-[11px] text-muted-foreground mb-4">Últimos 6 meses · precio $1400 − costo $3.8/u</p>
+        <p className="text-[11px] text-muted-foreground mb-4">Últimos 6 meses · costo $5.320/u · precio según cliente</p>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={meses} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
