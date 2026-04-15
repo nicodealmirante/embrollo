@@ -478,14 +478,18 @@ export default function AdminPanel() {
   const { adminName, userName } = useRoleNames();
 
   useEffect(() => {
+    let timeout = null;
     async function checkNoLeidos() {
       const msgs = await base44.entities.Mensaje.list();
       const nl = msgs.filter(m => !m.es_admin && !m.leido).length;
       setMensajesNL(nl);
     }
     checkNoLeidos();
-    const unsub = base44.entities.Mensaje.subscribe(() => checkNoLeidos());
-    return unsub;
+    const unsub = base44.entities.Mensaje.subscribe(() => {
+      clearTimeout(timeout);
+      timeout = setTimeout(checkNoLeidos, 2000);
+    });
+    return () => { unsub(); clearTimeout(timeout); };
   }, []);
 
   return (
