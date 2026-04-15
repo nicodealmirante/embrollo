@@ -8,13 +8,21 @@
         "admin",
         "user"
       ],
-      "title": "Rol",
-      "default": "user"
+      "default": "user",
+      "title": "Rol"
     },
-    "multiplicador": {
-      "type": "number",
-      "title": "Multiplicador",
-      "default": 1
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "activo"
+      ],
+      "default": "pendiente",
+      "title": "Estado de acceso"
+    },
+    "link_titulo": {
+      "type": "string",
+      "title": "T\u00edtulo del enlace"
     },
     "valor_contado": {
       "type": "number",
@@ -26,13 +34,16 @@
       "title": "Valor a Cuenta",
       "default": 0
     },
-    "link_token": {
+    "whatsapp_telefono": {
       "type": "string",
-      "title": "Token de Enlace"
+      "title": "Tel\u00e9fono WhatsApp"
     },
-    "link_titulo": {
+    "whatsapp_apikey": {
       "type": "string",
-      "title": "T\u00edtulo del Enlace"
+      "title": "API Key CallMeBot"
     }
-  }
+  },
+  "required": [
+    "link_titulo"
+  ]
 }
