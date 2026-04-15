@@ -24,13 +24,13 @@ Deno.serve(async (req) => {
 
     const texto = `💬 Nuevo mensaje en Embrollo!\n👤 Cliente: ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
 
-    await enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto);
-
-    // SimplePush
+    // Enviar en paralelo, sin bloquear
+    const promises = [enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto)];
     if (cfg.simplepush_key) {
       const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '💬 Nuevo mensaje', msg: texto });
-      await fetch(`https://api.simplepush.io/send?${spParams.toString()}`);
+      promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));
     }
+    await Promise.allSettled(promises);
 
     return Response.json({ ok: true });
   } catch (error) {

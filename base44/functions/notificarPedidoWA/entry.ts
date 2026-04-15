@@ -37,13 +37,13 @@ Deno.serve(async (req) => {
     const totalLine = totalEstimado !== null ? `\n💰 Total estimado: $${totalEstimado.toLocaleString('es-AR')}` : "";
     const texto = `📦 Nuevo pedido en Embrollo!\n👤 Cliente: ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 ${enlaceAdmin}`;
 
-    await enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto);
-
-    // SimplePush
+    // Enviar en paralelo, sin bloquear
+    const promises = [enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto)];
     if (cfg.simplepush_key) {
       const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '📦 Nuevo pedido', msg: texto });
-      await fetch(`https://api.simplepush.io/send?${spParams.toString()}`);
+      promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));
     }
+    await Promise.allSettled(promises);
 
     return Response.json({ ok: true });
   } catch (error) {
