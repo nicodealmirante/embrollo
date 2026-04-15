@@ -1,8 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-async function enviarWA(telefono, apikey, texto) {
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(telefono)}&text=${encodeURIComponent(texto)}&apikey=${encodeURIComponent(apikey)}`;
-  await fetch(url);
+const TELEGRAM_CHAT_ID = "7448007856";
+const TELEGRAM_API = `https://api.telegram.org/bot${Deno.env.get("TELEGRAM_BOT_TOKEN")}`;
+
+async function enviarTelegram(texto) {
+  await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: texto }),
+  });
 }
 
 Deno.serve(async (req) => {
@@ -18,8 +24,8 @@ Deno.serve(async (req) => {
     const cfg = {};
     configs.forEach(c => { cfg[c.clave] = c.valor; });
 
-    if (!cfg.whatsapp_telefono || !cfg.whatsapp_apikey || cfg.whatsapp_notif_pedido === "false") {
-      return Response.json({ skipped: true, reason: "no config or disabled" });
+    if (cfg.whatsapp_notif_pedido === "false") {
+      return Response.json({ skipped: true, reason: "disabled" });
     }
 
     // Obtener precio a cuenta del usuario para calcular total estimado
@@ -31,14 +37,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const enlaceAdmin = `https://embrollo.me/admin`;
-
     const obs = pedido.observaciones ? `\n📝 Obs: ${pedido.observaciones}` : "";
     const totalLine = totalEstimado !== null ? `\n💰 Total estimado: $${totalEstimado.toLocaleString('es-AR')}` : "";
-    const texto = `📦 Nuevo pedido en Embrollo!\n👤 Cliente: ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 ${enlaceAdmin}`;
+    const texto = `📦 Nuevo pedido en Embrollo!\n👤 ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 https://embrollo.me/admin`;
 
-    // Enviar en paralelo, sin bloquear
-    const promises = [enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto)];
+    const promises = [enviarTelegram(texto)];
     if (cfg.simplepush_key) {
       const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '📦 Nuevo pedido', msg: texto });
       promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));
