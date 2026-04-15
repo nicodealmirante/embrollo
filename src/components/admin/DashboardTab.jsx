@@ -75,7 +75,7 @@ export default function DashboardTab() {
     .map(u => {
       const venta = entregados.filter(p => p.usuario_email === u.email).reduce((s, p) => s + (p.total || 0), 0);
       const pago = pagos.filter(p => p.usuario_email === u.email).reduce((s, p) => s + (p.monto || 0), 0);
-      return { nombre: (u.full_name || u.email).split(" ")[0], deuda: venta - pago };
+      return { nombre: u.full_name || u.email, deuda: venta - pago };
     })
     .filter(u => u.deuda > 0)
     .sort((a, b) => b.deuda - a.deuda)
