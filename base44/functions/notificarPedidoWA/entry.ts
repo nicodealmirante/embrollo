@@ -22,8 +22,22 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: "no config or disabled" });
     }
 
-    const obs = pedido.observaciones ? ` - Obs: ${pedido.observaciones}` : "";
-    const texto = `📦 Nuevo pedido en Embrollo!\n👤 Cliente: ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${obs}`;
+    // Obtener precio a cuenta del usuario para calcular total estimado
+    let totalEstimado = null;
+    if (pedido.usuario_email) {
+      const users = await base44.asServiceRole.entities.User.filter({ email: pedido.usuario_email });
+      if (users.length && users[0].valor_cuenta) {
+        totalEstimado = pedido.cantidad * users[0].valor_cuenta;
+      }
+    }
+
+    // Obtener URL base de la app
+    const appUrl = new URL(req.url).origin;
+    const enlaceAdmin = `${appUrl}/admin`;
+
+    const obs = pedido.observaciones ? `\n📝 Obs: ${pedido.observaciones}` : "";
+    const totalLine = totalEstimado !== null ? `\n💰 Total estimado: $${totalEstimado.toLocaleString('es-AR')}` : "";
+    const texto = `📦 Nuevo pedido en Embrollo!\n👤 Cliente: ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 ${enlaceAdmin}`;
 
     await enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto);
     return Response.json({ ok: true });
