@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield } from "lucide-react";
 import ChatAdmin from "../../components/admin/ChatAdmin";
-import { verificarEnlacePendiente } from "@/functions/verificarEnlacePendiente";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import { useRoleNames } from "@/hooks/useRoleNames";
