@@ -6,7 +6,6 @@ import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
-import WhatsAppConfig from "../components/WhatsAppConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -225,7 +224,7 @@ export default function Portal() {
 
         {/* Notificaciones */}
         <NotificacionesConfig userEmail={user.email} />
-        <WhatsAppConfig user={user} onSaved={loadData} />
+
 
       </div>
       <ChatUsuario user={user} open={chatOpen} onClose={() => setChatOpen(false)} onUnread={setChatNoLeidos} />

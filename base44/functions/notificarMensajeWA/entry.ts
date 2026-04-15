@@ -11,31 +11,21 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     const mensaje = payload.data;
 
-    if (!mensaje) return Response.json({ skipped: true });
+    if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
 
-    const promises = [];
+    // Obtener config global del admin
+    const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
+    const cfg = {};
+    configs.forEach(c => { cfg[c.clave] = c.valor; });
 
-    if (mensaje.es_admin) {
-      // Admin le escribió al usuario → notificar al usuario
-      const users = await base44.asServiceRole.entities.User.filter({ email: mensaje.usuario_email });
-      const user = users[0];
-      if (user?.whatsapp_telefono && user?.whatsapp_apikey) {
-        const texto = `Nuevo mensaje en Embrollo: ${mensaje.texto}`;
-        promises.push(enviarWA(user.whatsapp_telefono, user.whatsapp_apikey, texto));
-      }
-    } else {
-      // Usuario le escribió al admin → notificar al admin
-      const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
-      const cfg = {};
-      configs.forEach(c => { cfg[c.clave] = c.valor; });
-      if (cfg.whatsapp_telefono && cfg.whatsapp_apikey && cfg.whatsapp_notif_mensaje !== "false") {
-        const texto = `Nuevo mensaje en Embrollo! Cliente: ${mensaje.usuario_nombre || mensaje.usuario_email} dice: ${mensaje.texto}`;
-        promises.push(enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto));
-      }
+    if (!cfg.whatsapp_telefono || !cfg.whatsapp_apikey || cfg.whatsapp_notif_mensaje === "false") {
+      return Response.json({ skipped: true, reason: "no config or disabled" });
     }
 
-    await Promise.all(promises);
-    return Response.json({ ok: true, notificados: promises.length });
+    const texto = `💬 Nuevo mensaje en Embrollo!\n👤 Cliente: ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
+
+    await enviarWA(cfg.whatsapp_telefono, cfg.whatsapp_apikey, texto);
+    return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
