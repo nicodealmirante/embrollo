@@ -2,21 +2,11 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell
+  PieChart, Pie, Cell, Legend
 } from "recharts";
 import moment from "moment";
 
-const COSTO_UNIDAD = 5320;
-
-function KPICard({ label, value, sub, color = "text-foreground" }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-1">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
-    </div>
-  );
-}
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function DashboardTab() {
   const [pedidos, setPedidos] = useState([]);
@@ -43,145 +33,113 @@ export default function DashboardTab() {
     </div>
   );
 
-  const entregados = pedidos.filter(p => p.estado === "entregado");
-  const pendientes = pedidos.filter(p => p.estado === "pendiente");
-
-  // Totales globales
-  const totalUnidades = entregados.reduce((s, p) => s + (p.cantidad || 0), 0);
-  const totalVentas = entregados.reduce((s, p) => s + (p.total || 0), 0);
-  const totalGanancia = totalVentas - (totalUnidades * COSTO_UNIDAD);
-  const totalCobrado = pagos.filter(p => p.referencia !== "Pago contado automático" || true).reduce((s, p) => s + (p.monto || 0), 0);
-  const deudaTotal = totalVentas - totalCobrado;
-  const pedidosPendientesCount = pendientes.length;
-  const clientesActivos = users.filter(u => u.role !== "admin" && u.estado === "activo").length;
-
-  // Por mes (últimos 6)
-  const meses = [];
+  // Ventas por mes (últimos 6 meses)
+  const ventasPorMes = [];
   for (let i = 5; i >= 0; i--) {
     const mes = moment().subtract(i, "months");
-    const label = mes.format("MMM");
-    const ped = entregados.filter(p => moment(p.fecha).isSame(mes, "month"));
-    const unidades = ped.reduce((s, p) => s + (p.cantidad || 0), 0);
-    const ventas = ped.reduce((s, p) => s + (p.total || 0), 0);
-    const ganancia = ventas - (unidades * COSTO_UNIDAD);
-
-    const cobrado = pagos.filter(p => moment(p.fecha).isSame(mes, "month")).reduce((s, p) => s + (p.monto || 0), 0);
-    meses.push({ mes: label, Pedidos: ped.length, Ganancia: Math.round(ganancia), Cobrado: Math.round(cobrado) });
+    const label = mes.format("MMM YY");
+    const total = pedidos
+      .filter(p => p.estado === "entregado" && moment(p.fecha).isSame(mes, "month"))
+      .reduce((s, p) => s + (p.total || 0), 0);
+    const pagado = pagos
+      .filter(p => moment(p.fecha).isSame(mes, "month"))
+      .reduce((s, p) => s + (p.monto || 0), 0);
+    ventasPorMes.push({ mes: label, Ventas: total, Pagos: pagado });
   }
 
-  // Deuda por usuario (top 5)
-  const deudaPorUser = users
+  // Usuarios más activos (por total pedido)
+  const usuariosActivos = users
     .filter(u => u.role !== "admin")
-    .map(u => {
-      const venta = entregados.filter(p => p.usuario_email === u.email).reduce((s, p) => s + (p.total || 0), 0);
-      const pago = pagos.filter(p => p.usuario_email === u.email).reduce((s, p) => s + (p.monto || 0), 0);
-      return { nombre: u.full_name || u.email, deuda: venta - pago };
-    })
-    .filter(u => u.deuda > 0)
-    .sort((a, b) => b.deuda - a.deuda)
-    .slice(0, 5);
+    .map(u => ({
+      nombre: (u.full_name || u.email).split(" ")[0],
+      total: pedidos
+        .filter(p => p.usuario_email === u.email && p.estado === "entregado")
+        .reduce((s, p) => s + (p.total || 0), 0),
+    }))
+    .filter(u => u.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+
+  // Resumen financiero
+  const totalVentas = pedidos
+    .filter(p => p.estado === "entregado")
+    .reduce((s, p) => s + (p.total || 0), 0);
+  const totalCobrado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
+  const deudaPendiente = totalVentas - totalCobrado;
 
   const pieData = [
-    { name: "Cobrado", value: Math.max(totalCobrado, 0) },
-    { name: "Deuda", value: Math.max(deudaTotal, 0) },
+    { name: "Cobrado", value: totalCobrado },
+    { name: "Pendiente", value: Math.max(deudaPendiente, 0) },
   ];
 
   return (
-    <div className="space-y-5">
-
+    <div className="space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3">
-        <KPICard
-          label="Ganancia neta"
-          value={`$${Math.round(totalGanancia).toLocaleString()}`}
-          sub={`${totalUnidades} unidades · costo $${COSTO_UNIDAD.toLocaleString()}/u`}
-          color="text-green-600"
-        />
-        <KPICard
-          label="Total facturado"
-          value={`$${totalVentas.toLocaleString()}`}
-          sub={`${totalUnidades} unidades entregadas`}
-        />
-        <KPICard
-          label="Deuda pendiente"
-          value={`$${Math.max(deudaTotal, 0).toLocaleString()}`}
-          sub={`${deudaPorUser.length} clientes con saldo`}
-          color={deudaTotal > 0 ? "text-red-600" : "text-green-600"}
-        />
-        <KPICard
-          label="Pedidos pendientes"
-          value={pedidosPendientesCount}
-          sub={`${clientesActivos} clientes activos`}
-          color={pedidosPendientesCount > 0 ? "text-amber-600" : "text-green-600"}
-        />
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-card border border-border rounded-xl p-4 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Total Ventas</p>
+          <p className="text-xl font-bold text-foreground">${totalVentas.toLocaleString()}</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Cobrado</p>
+          <p className="text-xl font-bold text-green-600">${totalCobrado.toLocaleString()}</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Deuda</p>
+          <p className={`text-xl font-bold ${deudaPendiente > 0 ? "text-red-600" : "text-green-600"}`}>
+            ${Math.max(deudaPendiente, 0).toLocaleString()}
+          </p>
+        </div>
       </div>
 
-      {/* Ganancias por mes */}
-      <div className="bg-card border border-border rounded-2xl p-4">
-        <h3 className="text-sm font-semibold mb-1">Ganancia mensual</h3>
-        <p className="text-[11px] text-muted-foreground mb-4">Últimos 6 meses · costo $5.320/u · precio según cliente</p>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={meses} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
+      {/* Ventas por mes */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <h3 className="text-sm font-semibold mb-4">Ventas vs Cobros por Mes</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={ventasPorMes} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-            <Tooltip formatter={v => `$${v.toLocaleString()}`} />
-            <Bar dataKey="Ganancia" fill="#10b981" radius={[4,4,0,0]} />
-            <Bar dataKey="Cobrado" fill="#3b82f6" radius={[4,4,0,0]} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Bar dataKey="Ventas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Pagos" fill="#10b981" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Pedidos por mes */}
-      <div className="bg-card border border-border rounded-2xl p-4">
-        <h3 className="text-sm font-semibold mb-4">Cantidad de pedidos entregados</h3>
-        <ResponsiveContainer width="100%" height={150}>
-          <LineChart data={meses} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-            <Tooltip />
-            <Line type="monotone" dataKey="Pedidos" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Deuda por cliente + Pie */}
+      {/* Pie + usuarios activos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <h3 className="text-sm font-semibold mb-1">Estado de cobros</h3>
-          <p className="text-[11px] text-muted-foreground mb-3">Cobrado vs deuda total</p>
-          <ResponsiveContainer width="100%" height={160}>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h3 className="text-sm font-semibold mb-4">Ingresos vs Deuda</h3>
+          <ResponsiveContainer width="100%" height={180}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={68} dataKey="value" label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={11}>
-                <Cell fill="#10b981" />
-                <Cell fill="#ef4444" />
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
+                {pieData.map((_, i) => <Cell key={i} fill={i === 0 ? "#10b981" : "#ef4444"} />)}
               </Pie>
-              <Tooltip formatter={v => `$${v.toLocaleString()}`} />
+              <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <h3 className="text-sm font-semibold mb-3">Top deudores</h3>
-          {deudaPorUser.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Sin deudas pendientes 🎉</p>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h3 className="text-sm font-semibold mb-4">Usuarios más Activos</h3>
+          {usuariosActivos.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Sin datos aún</p>
           ) : (
-            <div className="space-y-2">
-              {deudaPorUser.map((u, i) => (
-                <div key={i} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs text-muted-foreground w-4">{i+1}.</span>
-                    <span className="text-sm font-medium truncate">{u.nombre}</span>
-                  </div>
-                  <span className="text-sm font-bold text-red-600 shrink-0">${u.deuda.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={usuariosActivos} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 10 }} />
+                <YAxis dataKey="nombre" type="category" tick={{ fontSize: 11 }} width={60} />
+                <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
+                <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+                  {usuariosActivos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </div>
-
       </div>
     </div>
   );
