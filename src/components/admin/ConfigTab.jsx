@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Settings, Shield, User } from "lucide-react";
+import { Settings, Shield, User, MessageSquare } from "lucide-react";
+import WhatsAppConfigTab from "@/components/admin/WhatsAppConfigTab";
 
 export default function ConfigTab() {
   const { adminName, userName } = useRoleNames();
@@ -29,8 +30,29 @@ export default function ConfigTab() {
     toast({ title: "Configuración guardada" });
   };
 
+  const [subTab, setSubTab] = useState("roles");
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Sub-tabs */}
+      <div className="flex gap-1 bg-muted p-1 rounded-xl">
+        <button
+          onClick={() => setSubTab("roles")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "roles" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+        >
+          <Settings className="w-3.5 h-3.5" /> Roles
+        </button>
+        <button
+          onClick={() => setSubTab("whatsapp")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "whatsapp" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+        </button>
+      </div>
+
+      {subTab === "whatsapp" && <WhatsAppConfigTab />}
+
+      {subTab === "roles" && <div className="space-y-6">
       <div className="bg-card rounded-xl border border-border p-5 space-y-5">
         <div className="flex items-center gap-2 mb-1">
           <Settings className="w-4 h-4 text-muted-foreground" />
@@ -81,6 +103,7 @@ export default function ConfigTab() {
           editando su perfil. Los permisos internos se mantienen independientemente del nombre visible.
         </p>
       </div>
+      </div>}
     </div>
   );
 }
