@@ -104,8 +104,16 @@ export default function WhatsAppConfigTab() {
           <p className="text-sm font-semibold text-green-800">Cómo obtener tu API key de CallMeBot</p>
         </div>
         <ol className="text-xs text-green-700 space-y-1 list-decimal list-inside">
-          <li>Guardá el contacto <strong>+34 644 59 78 06</strong> en tu WhatsApp</li>
-          <li>Enviá el mensaje: <strong>I allow callmebot to send me messages</strong></li>
+          <li>
+            <a
+              href="https://wa.me/+34644597806?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold"
+            >
+              Tocá acá para enviar el mensaje de activación
+            </a>
+          </li>
           <li>Recibirás tu API key por WhatsApp en unos minutos</li>
           <li>Ingresala abajo junto con tu número de teléfono</li>
         </ol>
