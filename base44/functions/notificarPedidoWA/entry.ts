@@ -31,9 +31,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Obtener URL base de la app
-    const appUrl = new URL(req.url).origin;
-    const enlaceAdmin = `${appUrl}/admin`;
+    const enlaceAdmin = `https://embrollo.me/admin`;
 
     const obs = pedido.observaciones ? `\n📝 Obs: ${pedido.observaciones}` : "";
     const totalLine = totalEstimado !== null ? `\n💰 Total estimado: $${totalEstimado.toLocaleString('es-AR')}` : "";
