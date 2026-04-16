@@ -6,6 +6,7 @@ import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
+import TelefonoConfig from "../components/TelefonoConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -221,6 +222,9 @@ export default function Portal() {
             </div>
           )}
         </div>
+
+        {/* Teléfono WhatsApp */}
+        <TelefonoConfig user={user} onSaved={loadData} />
 
         {/* Notificaciones */}
         <NotificacionesConfig userEmail={user.email} />

@@ -13,18 +13,14 @@
     "estado": {
       "type": "string",
       "enum": [
-        "activo",
-        "pendiente"
+        "pendiente",
+        "activo"
       ],
       "default": "pendiente"
     },
     "link_titulo": {
       "type": "string",
       "title": "T\u00edtulo del enlace"
-    },
-    "link_token": {
-      "type": "string",
-      "title": "Token de enlace"
     },
     "valor_contado": {
       "type": "number",
@@ -39,6 +35,11 @@
     "simplepush_key": {
       "type": "string",
       "title": "SimplePush Key"
+    },
+    "telefono": {
+      "type": "string",
+      "title": "Tel\u00e9fono (WhatsApp)",
+      "description": "Con c\u00f3digo de pa\u00eds, sin + ni espacios. Ej: 5491123456789"
     }
   }
 }
