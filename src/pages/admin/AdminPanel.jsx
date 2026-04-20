@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator } from "lucide-react";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
+import CalculoTab from "../../components/admin/CalculoTab";
 import PagosPendientesTab from "../../components/admin/PagosPendientesTab";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
@@ -669,6 +670,12 @@ export default function AdminPanel() {
           >
             <Settings className="w-4 h-4" /> Configuración
           </button>
+          <button
+            onClick={() => setTab("calculo")}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "calculo" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <Calculator className="w-4 h-4" /> Cálculo
+          </button>
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
@@ -677,6 +684,7 @@ export default function AdminPanel() {
         {tab === "chat" && <ChatAdmin />}
         {tab === "pagos" && <PagosPendientesTab />}
         {tab === "config" && <ConfigTab />}
+        {tab === "calculo" && <CalculoTab />}
       </div>
     </div>
   );
