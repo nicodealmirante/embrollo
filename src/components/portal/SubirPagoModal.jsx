@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, Upload, DollarSign } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { notificarPagoWA } from "@/functions/notificarPagoWA";
 
 export default function SubirPagoModal({ user, open, onClose, onSuccess }) {
   const [monto, setMonto] = useState("");
@@ -34,7 +35,7 @@ export default function SubirPagoModal({ user, open, onClose, onSuccess }) {
       setUploading(false);
     }
 
-    await base44.entities.Pago.create({
+    const pagoData = {
       usuario_email: user.email,
       usuario_nombre: user.full_name || user.email,
       fecha: new Date().toISOString(),
@@ -45,7 +46,9 @@ export default function SubirPagoModal({ user, open, onClose, onSuccess }) {
       comprobante_url,
       estado: "pendiente",
       origen: "usuario",
-    });
+    };
+    await base44.entities.Pago.create(pagoData);
+    notificarPagoWA({ data: pagoData }).catch(() => {});
 
     toast({ title: "Pago enviado", description: "El administrador lo revisará pronto" });
     setSubmitting(false);

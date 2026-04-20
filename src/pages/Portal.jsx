@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
+import { notificarPedidoWA } from "@/functions/notificarPedidoWA";
 import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
@@ -66,7 +67,8 @@ export default function Portal() {
       return;
     }
     setSubmitting(true);
-    await crearPedidoPublico({ useEmail: true, cantidad: cant, observaciones });
+    const pedidoResp = await crearPedidoPublico({ useEmail: true, cantidad: cant, observaciones });
+    notificarPedidoWA({ data: { usuario_email: user.email, usuario_nombre: user.full_name || user.email, cantidad: cant, observaciones } }).catch(() => {});
     toast({ title: "Pedido enviado", description: "Tu pedido fue registrado" });
     setSubmitting(false);
     setCantidad("");

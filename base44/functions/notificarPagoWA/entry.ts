@@ -34,31 +34,20 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const pedido = payload.data;
+    const pago = payload.data;
 
-    if (!pedido) return Response.json({ skipped: true });
+    // Solo notificar pagos subidos por el usuario (origen=usuario, estado=pendiente)
+    if (!pago || pago.origen !== "usuario") return Response.json({ skipped: true });
 
     // Obtener config global del admin
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};
     configs.forEach(c => { cfg[c.clave] = c.valor; });
 
-    if (cfg.whatsapp_notif_pedido === "false") {
-      return Response.json({ skipped: true, reason: "disabled" });
-    }
-
-    // Obtener precio a cuenta del usuario para calcular total estimado
-    let totalEstimado = null;
-    if (pedido.usuario_email) {
-      const users = await base44.asServiceRole.entities.User.filter({ email: pedido.usuario_email });
-      if (users.length && users[0].valor_cuenta) {
-        totalEstimado = pedido.cantidad * users[0].valor_cuenta;
-      }
-    }
-
-    const obs = pedido.observaciones ? `\n📝 Obs: ${pedido.observaciones}` : "";
-    const totalLine = totalEstimado !== null ? `\n💰 Total estimado: $${totalEstimado.toLocaleString('es-AR')}` : "";
-    const texto = `📦 Nuevo pedido en Embrollo!\n👤 ${pedido.usuario_nombre || pedido.usuario_email}\n📧 ${pedido.usuario_email}\n🔢 Cantidad: ${pedido.cantidad} unidades${totalLine}${obs}\n🔗 https://embrollo.me/admin`;
+    const ref = pago.referencia ? `\n🔖 Ref: ${pago.referencia}` : "";
+    const obs = pago.observaciones ? `\n📝 ${pago.observaciones}` : "";
+    const comp = pago.comprobante_url ? `\n🧾 Comprobante: ${pago.comprobante_url}` : "";
+    const texto = `💰 Nuevo pago registrado en Embrollo!\n👤 ${pago.usuario_nombre || pago.usuario_email}\n📧 ${pago.usuario_email}\n💵 $${(pago.monto || 0).toLocaleString('es-AR')} (${pago.metodo})${ref}${obs}${comp}\n🔗 https://embrollo.me/admin`;
 
     const promises = [enviarTelegram(texto)];
 
@@ -68,11 +57,11 @@ Deno.serve(async (req) => {
     }
 
     if (cfg.simplepush_key) {
-      const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '📦 Nuevo pedido', msg: texto });
+      const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '💰 Nuevo pago', msg: texto });
       promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));
     }
-    await Promise.allSettled(promises);
 
+    await Promise.allSettled(promises);
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
