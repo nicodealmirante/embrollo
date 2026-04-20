@@ -57,6 +57,17 @@ function UsuariosTab() {
     return totalPedido - totalPagado;
   };
 
+  const getCompraStats = (email) => {
+    const entregados = pedidos.filter(p => p.usuario_email === email && p.estado === "entregado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    const ultima = entregados[0] || null;
+    const ahora = new Date();
+    const hace7 = new Date(ahora - 7 * 24 * 60 * 60 * 1000);
+    const hace30 = new Date(ahora - 30 * 24 * 60 * 60 * 1000);
+    const total7 = entregados.filter(p => new Date(p.fecha) >= hace7).reduce((s, p) => s + (p.cantidad || 0), 0);
+    const total30 = entregados.filter(p => new Date(p.fecha) >= hace30).reduce((s, p) => s + (p.cantidad || 0), 0);
+    return { ultima, total7, total30 };
+  };
+
   const openEdit = (user) => {
     setEditDialog(user);
     setEditForm({ link_titulo: user.link_titulo || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "" });
@@ -135,10 +146,11 @@ function UsuariosTab() {
 
       {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
+        const { ultima, total7, total30 } = getCompraStats(user.email);
 
         return (
           <div key={user.id} className="bg-card rounded-xl border border-border p-4">
-            <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <p className="font-semibold">{user.full_name || "—"}</p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -153,6 +165,31 @@ function UsuariosTab() {
                     +10% = ${Math.round(saldo * 1.1).toLocaleString()}
                   </p>
                 )}
+              </div>
+            </div>
+
+            {/* Estadísticas de compra */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="bg-muted/50 rounded-lg p-2 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Última compra</p>
+                {ultima ? (
+                  <>
+                    <p className="text-xs font-bold text-foreground mt-0.5">{moment(ultima.fecha).fromNow()}</p>
+                    <p className="text-[10px] text-muted-foreground">{ultima.cantidad} u · ${(ultima.total || 0).toLocaleString()}</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-0.5">Sin compras</p>
+                )}
+              </div>
+              <div className="bg-muted/50 rounded-lg p-2 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Últimos 7d</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{total7}</p>
+                <p className="text-[10px] text-muted-foreground">unidades</p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-2 text-center">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Últimos 30d</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{total30}</p>
+                <p className="text-[10px] text-muted-foreground">unidades</p>
               </div>
             </div>
 
