@@ -1,33 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const TELEGRAM_CHAT_ID = "7448007856";
-const TELEGRAM_API = `https://api.telegram.org/bot${Deno.env.get("TELEGRAM_BOT_TOKEN")}`;
 const WA_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
-
-async function enviarTelegram(texto) {
-  await fetch(`${TELEGRAM_API}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: texto }),
-  });
-}
-
-async function enviarWhatsAppTexto(telefono, texto) {
-  await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${WA_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: telefono,
-      type: "text",
-      text: { body: texto },
-    }),
-  });
-}
 
 Deno.serve(async (req) => {
   try {
@@ -37,7 +11,6 @@ Deno.serve(async (req) => {
 
     if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
 
-    // Obtener config global del admin
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};
     configs.forEach(c => { cfg[c.clave] = c.valor; });
@@ -48,19 +21,29 @@ Deno.serve(async (req) => {
 
     const texto = `💬 Nuevo mensaje en Embrollo!\n👤 ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
 
-    const promises = [enviarTelegram(texto)];
+    const promises = [];
 
-    // WhatsApp al admin (si tiene teléfono configurado)
     if (cfg.whatsapp_telefono && WA_PHONE_ID && WA_TOKEN) {
-      promises.push(enviarWhatsAppTexto(cfg.whatsapp_telefono, texto));
+      promises.push(fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${WA_TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: cfg.whatsapp_telefono, type: "text", text: { body: texto } }),
+      }));
     }
 
-    if (cfg.simplepush_key) {
-      const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '💬 Nuevo mensaje', msg: texto });
-      promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));
+    // Email a admins
+    const admins = await base44.asServiceRole.entities.User.filter({ role: "admin" });
+    for (const admin of admins) {
+      if (admin.email) {
+        promises.push(base44.asServiceRole.integrations.Core.SendEmail({
+          to: admin.email,
+          subject: "💬 Nuevo mensaje - Embrollo",
+          body: texto.replace(/\n/g, "<br>"),
+        }));
+      }
     }
+
     await Promise.allSettled(promises);
-
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
