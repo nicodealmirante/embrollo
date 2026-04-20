@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
-import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
 import TelefonoConfig from "../components/TelefonoConfig";
+import SubirPagoModal from "../components/portal/SubirPagoModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +25,7 @@ export default function Portal() {
   const [historialOpen, setHistorialOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatNoLeidos, setChatNoLeidos] = useState(0);
+  const [pagoModalOpen, setPagoModalOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { adminName } = useRoleNames();
@@ -132,6 +134,15 @@ export default function Portal() {
           </div>
         </div>
 
+        {/* Subir pago */}
+        <Button
+          variant="outline"
+          className="w-full h-11 gap-2 border-green-300 text-green-700 hover:bg-green-50"
+          onClick={() => setPagoModalOpen(true)}
+        >
+          <DollarSign className="w-4 h-4" /> Registrar un pago
+        </Button>
+
         {/* Order form */}
         <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
           <h2 className="font-semibold">Generar Pedido</h2>
@@ -232,6 +243,7 @@ export default function Portal() {
 
       </div>
       <ChatUsuario user={user} open={chatOpen} onClose={() => setChatOpen(false)} onUnread={setChatNoLeidos} />
+      <SubirPagoModal user={user} open={pagoModalOpen} onClose={() => setPagoModalOpen(false)} onSuccess={loadData} />
     </div>
   );
 }

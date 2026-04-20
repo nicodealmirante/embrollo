@@ -36,6 +36,29 @@
     "observaciones": {
       "type": "string",
       "title": "Observaciones"
+    },
+    "comprobante_url": {
+      "type": "string",
+      "title": "URL del Comprobante"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "pendiente",
+        "aprobado",
+        "rechazado"
+      ],
+      "title": "Estado",
+      "default": "aprobado"
+    },
+    "origen": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "usuario"
+      ],
+      "title": "Origen",
+      "default": "admin"
     }
   },
   "required": [

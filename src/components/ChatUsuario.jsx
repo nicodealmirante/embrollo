@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { notificarMensajeWA } from "@/functions/notificarMensajeWA";
 import { Send, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,13 +56,15 @@ export default function ChatUsuario({ user, open, onClose, onUnread }) {
   async function enviar() {
     if (!texto.trim()) return;
     setEnviando(true);
-    await base44.entities.Mensaje.create({
+    const msg = await base44.entities.Mensaje.create({
       usuario_email: user.email,
       usuario_nombre: user.full_name || user.email,
       texto: texto.trim(),
       es_admin: false,
       leido: false,
     });
+    // Notificar al admin por WhatsApp (sin bloquear)
+    notificarMensajeWA({ data: { ...msg, usuario_email: user.email, usuario_nombre: user.full_name || user.email, texto: texto.trim(), es_admin: false } }).catch(() => {});
     setTexto("");
     setEnviando(false);
     loadMensajes();

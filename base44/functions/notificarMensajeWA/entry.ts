@@ -2,12 +2,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const TELEGRAM_CHAT_ID = "7448007856";
 const TELEGRAM_API = `https://api.telegram.org/bot${Deno.env.get("TELEGRAM_BOT_TOKEN")}`;
+const WA_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
+const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
 
 async function enviarTelegram(texto) {
   await fetch(`${TELEGRAM_API}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: texto }),
+  });
+}
+
+async function enviarWhatsAppTexto(telefono, texto) {
+  await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${WA_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: telefono,
+      type: "text",
+      text: { body: texto },
+    }),
   });
 }
 
@@ -31,6 +49,12 @@ Deno.serve(async (req) => {
     const texto = `💬 Nuevo mensaje en Embrollo!\n👤 ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
 
     const promises = [enviarTelegram(texto)];
+
+    // WhatsApp al admin (si tiene teléfono configurado)
+    if (cfg.whatsapp_telefono && WA_PHONE_ID && WA_TOKEN) {
+      promises.push(enviarWhatsAppTexto(cfg.whatsapp_telefono, texto));
+    }
+
     if (cfg.simplepush_key) {
       const spParams = new URLSearchParams({ key: cfg.simplepush_key, title: '💬 Nuevo mensaje', msg: texto });
       promises.push(fetch(`https://api.simplepush.io/send?${spParams.toString()}`));

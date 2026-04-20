@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign } from "lucide-react";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
+import PagosPendientesTab from "../../components/admin/PagosPendientesTab";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -474,6 +475,7 @@ function PedidosTab() {
 export default function AdminPanel() {
   const [tab, setTab] = useState("pedidos");
   const [mensajesNL, setMensajesNL] = useState(0);
+  const [pagosNL, setPagosNL] = useState(0);
   const { adminName, userName } = useRoleNames();
 
   useEffect(() => {
@@ -488,7 +490,17 @@ export default function AdminPanel() {
       clearTimeout(timeout);
       timeout = setTimeout(checkNoLeidos, 2000);
     });
-    return () => { unsub(); clearTimeout(timeout); };
+
+    async function checkPagosPendientes() {
+      const data = await base44.entities.Pago.filter({ origen: "usuario", estado: "pendiente" });
+      setPagosNL(data.length);
+    }
+    checkPagosPendientes();
+    const unsubPagos = base44.entities.Pago.subscribe(() => {
+      setTimeout(checkPagosPendientes, 1000);
+    });
+
+    return () => { unsub(); unsubPagos(); clearTimeout(timeout); };
   }, []);
 
   return (
@@ -527,8 +539,19 @@ export default function AdminPanel() {
             )}
           </button>
           <button
+            onClick={() => setTab("pagos")}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "pagos" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <DollarSign className="w-4 h-4" /> Pagos
+            {pagosNL > 0 && (
+              <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {pagosNL}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setTab("config")}
-            className={`col-span-2 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "config" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "config" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
             <Settings className="w-4 h-4" /> Configuración
           </button>
@@ -538,6 +561,7 @@ export default function AdminPanel() {
         {tab === "usuarios" && <UsuariosTab />}
         {tab === "pedidos" && <PedidosTab />}
         {tab === "chat" && <ChatAdmin />}
+        {tab === "pagos" && <PagosPendientesTab />}
         {tab === "config" && <ConfigTab />}
       </div>
     </div>
