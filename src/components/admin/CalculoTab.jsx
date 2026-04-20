@@ -212,21 +212,21 @@ export default function CalculoTab() {
 
                 {/* Ganancia */}
                 {(() => {
-                  const totalBruto = resultado * unidadesDesdeReposicion;
-                  const costo = pedidos
+                  const totalBruto = pedidos
                     .filter(p => moment(p.fecha).isSameOrAfter(moment(fechaReposicion).startOf("day")))
                     .reduce((s, p) => s + (p.total || 0), 0);
+                  const costo = resultado * unidadesDesdeReposicion;
                   const ganancia = totalBruto - costo;
                   const neto = ganancia - pagosDesdeReposicion;
                   return (
                     <>
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2 text-sm">
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Total bruto (resultado × unidades)</span>
+                          <span className="text-muted-foreground">Total bruto (suma de pedidos)</span>
                           <span className="font-mono font-semibold">${totalBruto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">− Costo (pedidos × valor de venta)</span>
+                          <span className="text-muted-foreground">− Costo ({resultado.toFixed(2).replace(".", ",")} × {unidadesDesdeReposicion} u.)</span>
                           <span className="font-mono font-semibold text-red-500">−${costo.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="border-t border-green-200 pt-2 flex justify-between items-center">
