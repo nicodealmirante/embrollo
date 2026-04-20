@@ -300,20 +300,54 @@ function UsuariosTab() {
 // ─── Pedidos Tab ──────────────────────────────────────────────────────────────
 function PedidosTab() {
   const [pedidos, setPedidos] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("pendiente");
   const [editingId, setEditingId] = useState(null);
   const [editCantidad, setEditCantidad] = useState("");
   const [entregaDialog, setEntregaDialog] = useState(null);
   const [tipoPagoEntrega, setTipoPagoEntrega] = useState("contado");
+  const [nuevoPedidoOpen, setNuevoPedidoOpen] = useState(false);
+  const [npUsuario, setNpUsuario] = useState("");
+  const [npCantidad, setNpCantidad] = useState("");
+  const [npObs, setNpObs] = useState("");
+  const [npSubmitting, setNpSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => { loadPedidos(); }, []);
+  useEffect(() => {
+    loadPedidos();
+    base44.entities.User.filter({ estado: "activo" }).then(data => setUsuarios(data.filter(u => u.role !== "admin")));
+  }, []);
 
   async function loadPedidos() {
     const data = await base44.entities.Pedido.list("-created_date");
     setPedidos(data);
     setLoading(false);
+  }
+
+  async function crearPedido() {
+    if (!npUsuario || !npCantidad || parseFloat(npCantidad) <= 0) {
+      toast({ title: "Completá usuario y cantidad", variant: "destructive" });
+      return;
+    }
+    setNpSubmitting(true);
+    const user = usuarios.find(u => u.email === npUsuario);
+    await base44.entities.Pedido.create({
+      usuario_email: npUsuario,
+      usuario_nombre: user?.full_name || npUsuario,
+      fecha: new Date().toISOString(),
+      estado: "pendiente",
+      tipo_pago: "cuenta",
+      cantidad: parseFloat(npCantidad),
+      valor_usado: 0,
+      total: 0,
+      observaciones: npObs.trim(),
+    });
+    toast({ title: "Pedido creado" });
+    setNpSubmitting(false);
+    setNuevoPedidoOpen(false);
+    setNpUsuario(""); setNpCantidad(""); setNpObs("");
+    loadPedidos();
   }
 
   const confirmarEntrega = async () => {
@@ -371,7 +405,10 @@ function PedidosTab() {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNuevoPedidoOpen(true)}>
+          <Plus className="w-3.5 h-3.5" /> Nuevo Pedido
+        </Button>
         <Select value={filtro} onValueChange={setFiltro}>
           <SelectTrigger className="w-36 h-8 text-sm"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -437,6 +474,46 @@ function PedidosTab() {
         ))}
         {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Sin pedidos</p>}
       </div>
+
+      {/* Nuevo Pedido dialog */}
+      <Dialog open={nuevoPedidoOpen} onOpenChange={setNuevoPedidoOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Plus className="w-4 h-4" /> Nuevo Pedido</DialogTitle></DialogHeader>
+          <div className="space-y-3 mt-1">
+            <div>
+              <Label className="text-xs">Usuario *</Label>
+              <Select value={npUsuario} onValueChange={setNpUsuario}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccionar usuario..." /></SelectTrigger>
+                <SelectContent>
+                  {usuarios.map(u => (
+                    <SelectItem key={u.email} value={u.email}>
+                      {u.full_name || u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Cantidad *</Label>
+              <Input
+                type="number"
+                value={npCantidad}
+                onChange={e => setNpCantidad(e.target.value)}
+                placeholder="0"
+                className="mt-1 text-xl font-bold text-center h-12"
+                min="1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Observaciones</Label>
+              <Input value={npObs} onChange={e => setNpObs(e.target.value)} placeholder="Opcional" className="mt-1" />
+            </div>
+            <Button onClick={crearPedido} disabled={npSubmitting} className="w-full h-11">
+              {npSubmitting ? "Creando..." : "Crear Pedido"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Entrega dialog */}
       <Dialog open={!!entregaDialog} onOpenChange={() => setEntregaDialog(null)}>
