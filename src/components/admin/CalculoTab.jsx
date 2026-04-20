@@ -213,7 +213,8 @@ export default function CalculoTab() {
                 {/* Ganancia */}
                 {(() => {
                   const totalBruto = resultado * unidadesDesdeReposicion;
-                  const ganancia = totalBruto - resultado;
+                  const costo = resultado * unidadesDesdeReposicion;
+                  const ganancia = totalBruto - costo;
                   const neto = ganancia - pagosDesdeReposicion;
                   return (
                     <>
@@ -223,8 +224,8 @@ export default function CalculoTab() {
                           <span className="font-mono font-semibold">${totalBruto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">− Resultado (costo)</span>
-                          <span className="font-mono font-semibold text-red-500">−${resultado.toFixed(2).replace(".", ",")}</span>
+                          <span className="text-muted-foreground">− Costo (resultado × unidades)</span>
+                          <span className="font-mono font-semibold text-red-500">−${costo.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="border-t border-green-200 pt-2 flex justify-between items-center">
                           <span className="text-green-700 font-medium">Ganancia estimada</span>
