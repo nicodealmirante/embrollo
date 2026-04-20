@@ -1,3 +1,4 @@
+// v2
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const TELEGRAM_CHAT_ID = "7448007856";
@@ -15,7 +16,7 @@ async function enviarTelegram(texto) {
 }
 
 async function enviarWhatsAppTexto(telefono, texto) {
-  await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
+  const res = await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${WA_TOKEN}`,
@@ -29,6 +30,9 @@ async function enviarWhatsAppTexto(telefono, texto) {
       text: { preview_url: false, body: texto },
     }),
   });
+  const data = await res.json();
+  console.log(`WA [${telefono}] status=${res.status}`, JSON.stringify(data));
+  return data;
 }
 
 Deno.serve(async (req) => {
