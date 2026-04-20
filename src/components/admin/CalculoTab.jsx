@@ -14,6 +14,7 @@ export default function CalculoTab() {
   const [fechaReposicion, setFechaReposicion] = useState("");
   const [fechaInput, setFechaInput] = useState("");
   const [pedidos, setPedidos] = useState([]);
+  const [pagos, setPagos] = useState([]);
   const [configId, setConfigId] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -45,8 +46,12 @@ export default function CalculoTab() {
   };
 
   const loadPedidos = async () => {
-    const data = await base44.entities.Pedido.filter({ estado: "entregado" });
-    setPedidos(data);
+    const [pedidosData, pagosData] = await Promise.all([
+      base44.entities.Pedido.filter({ estado: "entregado" }),
+      base44.entities.Pago.list(),
+    ]);
+    setPedidos(pedidosData);
+    setPagos(pagosData);
   };
 
   const guardarFecha = async (fecha) => {
@@ -78,6 +83,12 @@ export default function CalculoTab() {
     ? pedidos
         .filter(p => moment(p.fecha).isSameOrAfter(moment(fechaReposicion).startOf("day")))
         .reduce((s, p) => s + (p.cantidad || 0), 0)
+    : 0;
+
+  const pagosDesdeReposicion = fechaReposicion
+    ? pagos
+        .filter(p => moment(p.fecha).isSameOrAfter(moment(fechaReposicion).startOf("day")))
+        .reduce((s, p) => s + (p.monto || 0), 0)
     : 0;
 
   return (
@@ -200,13 +211,51 @@ export default function CalculoTab() {
                 </div>
 
                 {/* Ganancia */}
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-5 text-center">
-                  <p className="text-xs text-green-700 uppercase tracking-widest font-medium mb-1">Ganancia estimada</p>
-                  <p className="text-5xl font-black text-green-600 mt-1">
-                    ${((resultado * unidadesDesdeReposicion) - resultado).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-xs text-green-600 opacity-70 mt-2">Total bruto − Resultado ({resultado.toFixed(2).replace(".", ",")})</p>
-                </div>
+                {(() => {
+                  const totalBruto = resultado * unidadesDesdeReposicion;
+                  const ganancia = totalBruto - resultado;
+                  const neto = ganancia - pagosDesdeReposicion;
+                  return (
+                    <>
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Total bruto</span>
+                          <span className="font-mono font-semibold">${totalBruto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">− Resultado (costo)</span>
+                          <span className="font-mono font-semibold text-red-500">−${resultado.toFixed(2).replace(".", ",")}</span>
+                        </div>
+                        <div className="border-t border-green-200 pt-2 flex justify-between items-center">
+                          <span className="text-green-700 font-medium">Ganancia estimada</span>
+                          <span className="font-mono font-bold text-green-700">${ganancia.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+
+                      {/* Pagos recibidos */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700 font-medium">Pagos recibidos</span>
+                          <span className="font-mono font-bold text-blue-700">${pagosDesdeReposicion.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <p className="text-xs text-blue-600 opacity-70">Desde el {moment(fechaReposicion).format("DD/MM/YYYY")}</p>
+                      </div>
+
+                      {/* Neto */}
+                      <div className={`rounded-2xl p-5 text-center border-2 ${neto >= 0 ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
+                        <p className={`text-xs uppercase tracking-widest font-medium mb-1 ${neto >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                          Ganancia − Pagos recibidos
+                        </p>
+                        <p className={`text-5xl font-black mt-1 ${neto >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          ${neto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className={`text-xs mt-2 opacity-70 ${neto >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          {neto >= 0 ? "A favor" : "En déficit"}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
           </div>
