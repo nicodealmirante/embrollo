@@ -77,7 +77,7 @@ export default function CalculoTab() {
     await guardarFecha(fechaInput);
   };
 
-  const resultado = dolar != null ? (3800 + dolar) / 1000 : null;
+  const resultado = dolar != null ? (3800 * dolar) / 1000 : null;
 
   const unidadesDesdeReposicion = fechaReposicion
     ? pedidos
@@ -120,12 +120,16 @@ export default function CalculoTab() {
                 <span className="font-mono font-semibold">3.800</span>
               </div>
               <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">×</span>
+                <span className="font-mono text-muted-foreground">×</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Dólar blue (venta)</span>
                 <span className="font-mono font-semibold text-blue-600">${dolar?.toLocaleString("es-AR")}</span>
               </div>
               <div className="border-t border-border pt-2 flex justify-between items-center">
-                <span className="text-muted-foreground">Suma</span>
-                <span className="font-mono font-semibold">{(3800 + dolar).toLocaleString("es-AR")}</span>
+                <span className="text-muted-foreground">Producto</span>
+                <span className="font-mono font-semibold">{(3800 * dolar).toLocaleString("es-AR")}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">÷ 1000</span>
@@ -138,7 +142,7 @@ export default function CalculoTab() {
               <p className="text-6xl font-black tracking-tight">
                 {resultado.toFixed(2).replace(".", ",")}
               </p>
-              <p className="text-sm opacity-60 mt-1">(3800 + {dolar}) ÷ 1000</p>
+              <p className="text-sm opacity-60 mt-1">(3800 × {dolar}) ÷ 1000</p>
             </div>
           </div>
         )}
