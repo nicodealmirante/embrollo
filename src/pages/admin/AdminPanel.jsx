@@ -42,7 +42,7 @@ function UsuariosTab() {
 
   async function loadData() {
     const [usersData, pedidosData, pagosData] = await Promise.all([
-      base44.entities.User.filter({}),
+      base44.entities.User.list(),
       base44.entities.Pedido.list(),
       base44.entities.Pago.list(),
     ]);
