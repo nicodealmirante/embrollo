@@ -219,23 +219,14 @@ export default function CalculoTab() {
                   const totalBruto = pedidos
                     .filter(p => moment(p.fecha).isSameOrAfter(moment(fechaReposicion).startOf("day")))
                     .reduce((s, p) => s + (p.total || 0), 0);
-                  const costo = resultado * unidadesDesdeReposicion;
-                  const ganancia = totalBruto - costo;
-                  const neto = ganancia - pagosDesdeReposicion;
+                  const neto = pagosDesdeReposicion - totalBruto;
                   return (
                     <>
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2 text-sm">
+                      {/* Total bruto */}
+                      <div className="bg-muted/40 rounded-xl p-4 space-y-2 text-sm">
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">Total bruto (suma de pedidos)</span>
                           <span className="font-mono font-semibold">${totalBruto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">− Costo ({resultado.toFixed(2).replace(".", ",")} × {unidadesDesdeReposicion} u.)</span>
-                          <span className="font-mono font-semibold text-red-500">−${costo.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="border-t border-green-200 pt-2 flex justify-between items-center">
-                          <span className="text-green-700 font-medium">Ganancia estimada</span>
-                          <span className="font-mono font-bold text-green-700">${ganancia.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                       </div>
 
@@ -251,7 +242,7 @@ export default function CalculoTab() {
                       {/* Neto */}
                       <div className={`rounded-2xl p-5 text-center border-2 ${neto >= 0 ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
                         <p className={`text-xs uppercase tracking-widest font-medium mb-1 ${neto >= 0 ? "text-emerald-700" : "text-red-700"}`}>
-                          Ganancia − Pagos recibidos
+                          Pagos recibidos − Total bruto
                         </p>
                         <p className={`text-5xl font-black mt-1 ${neto >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                           ${neto.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
