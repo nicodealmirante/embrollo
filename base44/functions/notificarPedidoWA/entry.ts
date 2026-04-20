@@ -63,9 +63,12 @@ Deno.serve(async (req) => {
 
     const promises = [enviarTelegram(texto)];
 
-    // WhatsApp al admin (número fijo)
+    // WhatsApp al admin (número fijo + número configurado si es distinto)
     if (WA_PHONE_ID && WA_TOKEN) {
       promises.push(enviarWhatsAppTexto(ADMIN_WA_NUMBER, texto));
+      if (cfg.whatsapp_telefono && cfg.whatsapp_telefono !== ADMIN_WA_NUMBER) {
+        promises.push(enviarWhatsAppTexto(cfg.whatsapp_telefono, texto));
+      }
     }
 
     if (cfg.simplepush_key) {
