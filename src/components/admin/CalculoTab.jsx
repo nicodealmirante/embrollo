@@ -168,17 +168,47 @@ export default function CalculoTab() {
 
         {/* Resultado */}
         {fechaReposicion ? (
-          <div className="bg-accent/10 border border-accent/30 rounded-2xl p-5 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">
-              Desde el {moment(fechaReposicion).format("DD/MM/YYYY")}
-            </p>
-            <p className="text-5xl font-black text-accent mt-1">
-              {unidadesDesdeReposicion.toLocaleString("es-AR")}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">unidades vendidas</p>
-            <p className="text-xs text-muted-foreground mt-2 opacity-70">
-              Hace {moment(fechaReposicion).fromNow(true)}
-            </p>
+          <div className="space-y-3">
+            <div className="bg-accent/10 border border-accent/30 rounded-2xl p-5 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">
+                Desde el {moment(fechaReposicion).format("DD/MM/YYYY")} · Hace {moment(fechaReposicion).fromNow(true)}
+              </p>
+              <p className="text-5xl font-black text-accent mt-1">
+                {unidadesDesdeReposicion.toLocaleString("es-AR")}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">unidades vendidas</p>
+            </div>
+
+            {resultado != null && unidadesDesdeReposicion > 0 && (
+              <>
+                {/* Total bruto */}
+                <div className="bg-muted/40 rounded-xl p-4 space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Resultado</span>
+                    <span className="font-mono font-semibold">{resultado.toFixed(2).replace(".", ",")}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">× Unidades vendidas</span>
+                    <span className="font-mono font-semibold">{unidadesDesdeReposicion.toLocaleString("es-AR")}</span>
+                  </div>
+                  <div className="border-t border-border pt-2 flex justify-between items-center">
+                    <span className="text-muted-foreground font-medium">Total bruto</span>
+                    <span className="font-mono font-bold text-foreground">
+                      ${(resultado * unidadesDesdeReposicion).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Ganancia */}
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-5 text-center">
+                  <p className="text-xs text-green-700 uppercase tracking-widest font-medium mb-1">Ganancia estimada</p>
+                  <p className="text-5xl font-black text-green-600 mt-1">
+                    ${((resultado * unidadesDesdeReposicion) - resultado).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-green-600 opacity-70 mt-2">Total bruto − Resultado ({resultado.toFixed(2).replace(".", ",")})</p>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-3">
