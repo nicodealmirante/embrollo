@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator } from "lucide-react";
+import { listarUsuarios } from "@/functions/listarUsuarios";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
@@ -42,11 +43,12 @@ function UsuariosTab() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [usersData, pedidosData, pagosData] = await Promise.all([
-      base44.entities.User.list(),
+    const [usersResp, pedidosData, pagosData] = await Promise.all([
+      listarUsuarios({}),
       base44.entities.Pedido.list(),
       base44.entities.Pago.list(),
     ]);
+    const usersData = usersResp.data?.users || [];
     setUsers(usersData);
     setPedidos(pedidosData);
     setPagos(pagosData);
@@ -354,7 +356,10 @@ function PedidosTab() {
 
   useEffect(() => {
     loadPedidos();
-    base44.entities.User.filter({ estado: "activo" }).then(data => setUsuarios(data.filter(u => u.role !== "admin")));
+    listarUsuarios({}).then(resp => {
+      const data = resp.data?.users || [];
+      setUsuarios(data.filter(u => u.role !== "admin" && u.estado === "activo"));
+    });
   }, []);
 
   async function loadPedidos() {
