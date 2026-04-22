@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    promises.push(sendGreenGroup(texto));
+    promises.push(sendGreenGroup("MARCOS NOTIFICACION"));
 
     await Promise.allSettled(promises);
     return Response.json({ ok: true });
