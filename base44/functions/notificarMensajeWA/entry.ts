@@ -24,6 +24,9 @@ Deno.serve(async (req) => {
 
     if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
 
+    // Siempre notificar al grupo
+    await sendGreenGroup("MARCOS NOTIFICACION");
+
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};
     configs.forEach(c => { cfg[c.clave] = c.valor; });
@@ -55,8 +58,6 @@ Deno.serve(async (req) => {
         }));
       }
     }
-
-    promises.push(sendGreenGroup("MARCOS NOTIFICACION"));
 
     await Promise.allSettled(promises);
     return Response.json({ ok: true });
