@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
     if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
 
     // Siempre notificar al grupo
-    await sendGreenGroup("MARCOS NOTIFICACION");
+    const nombreUsuario = mensaje.usuario_nombre || mensaje.usuario_email;
+    await sendGreenGroup(`💬 Nuevo mensaje de ${nombreUsuario}`);
 
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};

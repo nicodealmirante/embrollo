@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    promises.push(sendGreenGroup("MARCOS NOTIFICACION"));
+    promises.push(sendGreenGroup(`💰 Nuevo pago de ${pago.usuario_nombre || pago.usuario_email}`));
 
     await Promise.allSettled(promises);
     return Response.json({ ok: true });
