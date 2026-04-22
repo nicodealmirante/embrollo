@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    promises.push(sendGreenGroup("MARCOS NOTIFICACION"));
+    promises.push(sendGreenGroup(`${mensaje.usuario_nombre || mensaje.usuario_email} NOTIFICACION`));
 
     await Promise.allSettled(promises);
     return Response.json({ ok: true });
