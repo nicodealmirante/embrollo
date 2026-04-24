@@ -10,15 +10,11 @@ export async function enviarWhatsAppUsuario(telefono, templateName, languageCode
       "Authorization": `Bearer ${WA_TOKEN}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: telefono,
-      type: "template",
-      template: { name: templateName, language: { code: languageCode } },
-    }),
+        body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: telefono, type: "text", text: { body: "mensaje"} }),
   });
   return res.json();
 }
+
 
 Deno.serve(async (req) => {
   try {
