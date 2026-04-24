@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: "disabled" });
     }
 
-    const texto = `💬 Nuevo mensaje en Embrollo!\n👤 ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
+    const texto = `💬 Nuevo mensaje 👤`;
 
     const promises = [];
 
