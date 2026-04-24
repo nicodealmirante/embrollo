@@ -3,7 +3,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const WA_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
 
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -11,7 +10,6 @@ Deno.serve(async (req) => {
     const mensaje = payload.data;
 
     if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
-
 
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};
@@ -21,7 +19,7 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: "disabled" });
     }
 
-    const texto = `💬 Nuevo mensaje 👤`;
+    const texto = `💬 Nuevo mensaje en Embrollo!\n👤 ${mensaje.usuario_nombre || mensaje.usuario_email}\n📧 ${mensaje.usuario_email}\n📝 ${mensaje.texto}`;
 
     const promises = [];
 

@@ -1,23 +1,37 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const ONEMSG_TOKEN = Deno.env.get("ONEMSG_TOKEN");
-const ONEMSG_API_URL = Deno.env.get("ONEMSG_API_URL"); // e.g. https://sandbox.1msg.io/FRO986388621/
+const WA_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
+const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
+const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "embrollo_verify_123";
 
 async function sendWhatsAppMessage(to, text) {
-  await fetch(`${ONEMSG_API_URL}sendMessage`, {
+  await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
     method: "POST",
     headers: {
-      "Authorization": ONEMSG_TOKEN,
+      "Authorization": `Bearer ${WA_TOKEN}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ chatId: `${to}@c.us`, message: text }),
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "text",
+      text: { body: text },
+    }),
   });
 }
 
 Deno.serve(async (req) => {
-  // Verificación del webhook (GET) — 1msg no requiere verificación, responder 200
+  // Verificación del webhook (GET)
   if (req.method === "GET") {
-    return new Response("OK", { status: 200 });
+    const url = new URL(req.url);
+    const mode = url.searchParams.get("hub.mode");
+    const token = url.searchParams.get("hub.verify_token");
+    const challenge = url.searchParams.get("hub.challenge");
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      return new Response(challenge, { status: 200 });
+    }
+    return new Response("Forbidden", { status: 403 });
   }
 
   // Recepción de mensajes (POST)
@@ -25,14 +39,16 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 
-    // Formato payload de 1msg.io
-    const message = body?.messages?.[0];
+    const entry = body?.entry?.[0];
+    const change = entry?.changes?.[0];
+    const message = change?.value?.messages?.[0];
+
     if (!message || message.type !== "text") {
       return Response.json({ ok: true });
     }
 
-    const from = message.from.replace("@c.us", ""); // número limpio
-    const userText = message.body || message.text?.body;
+    const from = message.from; // número de teléfono del usuario
+    const userText = message.text?.body;
 
     // Buscar usuario por teléfono en la app
     const allUsers = await base44.asServiceRole.entities.User.list();
