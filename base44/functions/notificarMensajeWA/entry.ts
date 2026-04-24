@@ -3,18 +3,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const WA_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
 
-const GREEN_API_URL = "https://7107.api.greenapi.com";
-const GREEN_INSTANCE = "waInstance7107595736";
-const GREEN_TOKEN = "f7a7c98f098b47098c5748a81613fd95bbb1d6231fe9429da1";
-const GROUP_CHAT_ID = "120363410157216558@g.us";
-
-async function sendGreenGroup(message) {
-  await fetch(`${GREEN_API_URL}/${GREEN_INSTANCE}/sendMessage/${GREEN_TOKEN}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chatId: GROUP_CHAT_ID, message }),
-  });
-}
 
 Deno.serve(async (req) => {
   try {
@@ -24,8 +12,6 @@ Deno.serve(async (req) => {
 
     if (!mensaje || mensaje.es_admin) return Response.json({ skipped: true });
 
-    // Siempre notificar al grupo
-    await sendGreenGroup("MARCOS NOTIFICACION");
 
     const configs = await base44.asServiceRole.entities.ConfigApp.filter({});
     const cfg = {};
