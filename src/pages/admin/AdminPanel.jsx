@@ -674,7 +674,7 @@ export default function AdminPanel() {
             }
           </button>
           <button
-            onClick={() => setTab("config")} className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-card shadow-sm text-foreground hidden">
+            onClick={() => setTab("config")} className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-card shadow-sm text-foreground">
 
             
             <Settings className="w-4 h-4" /> Configuración
