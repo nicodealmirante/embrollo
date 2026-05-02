@@ -169,6 +169,7 @@ function UsuariosTab() {
                   </p>
                 )}
               </div>
+              
             </div>
 
             {/* Estadísticas de compra */}
@@ -206,6 +207,9 @@ function UsuariosTab() {
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => openEdit(user)}>
                 <Edit className="w-3 h-3" /> Editar
               </Button>
+                <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNuevoPedidoOpen(true)}>
+          <Plus className="w-3.5 h-3.5" /> Nuevo Pedido
+        </Button>
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => { setPagoDialog(user); setPagoForm({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" }); }}>
                 <Plus className="w-3 h-3" /> Registrar pago
               </Button>
