@@ -37,15 +37,15 @@ export default function ConfigTab() {
       {/* Sub-tabs */}
       <div className="flex gap-1 bg-muted p-1 rounded-xl">
         <button
-          onClick={() => setSubTab("roles")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "roles" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
-        >
+          onClick={() => setSubTab("roles")} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all bg-card shadow-sm text-foreground hidden">
+
+          
           <Settings className="w-3.5 h-3.5" /> Roles
         </button>
         <button
           onClick={() => setSubTab("whatsapp")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "whatsapp" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
-        >
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "whatsapp" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}>
+          
           <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
         </button>
       </div>
@@ -69,11 +69,11 @@ export default function ConfigTab() {
               <Label className="text-sm font-medium">Nombre visible del rol Admin</Label>
             </div>
             <Input
-              value={adminInput}
-              onChange={e => setAdminInput(e.target.value)}
-              placeholder="Admin"
-              className="mt-1"
-            />
+                value={adminInput}
+                onChange={(e) => setAdminInput(e.target.value)}
+                placeholder="Admin"
+                className="mt-1" />
+              
           </div>
 
           <div className="bg-muted/40 rounded-xl p-4 space-y-2">
@@ -82,11 +82,11 @@ export default function ConfigTab() {
               <Label className="text-sm font-medium">Nombre visible del rol Usuario</Label>
             </div>
             <Input
-              value={userInput}
-              onChange={e => setUserInput(e.target.value)}
-              placeholder="Usuario"
-              className="mt-1"
-            />
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Usuario"
+                className="mt-1" />
+              
           </div>
         </div>
 
@@ -104,6 +104,6 @@ export default function ConfigTab() {
         </p>
       </div>
       </div>}
-    </div>
-  );
+    </div>);
+
 }
