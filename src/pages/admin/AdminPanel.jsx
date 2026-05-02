@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator } from "lucide-react";
 import { listarUsuarios } from "@/functions/listarUsuarios";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
@@ -37,13 +37,6 @@ function UsuariosTab() {
   const [editDialog, setEditDialog] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
-  const [nuevoPedidoUser, setNuevoPedidoUser] = useState(null);
-  const [npCantidad, setNpCantidad] = useState("1");
-  const [npObs, setNpObs] = useState("");
-  const [npSubmitting, setNpSubmitting] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [estadoFiltro, setEstadoFiltro] = useState("todos");
-  const [saldoFiltro, setSaldoFiltro] = useState("todos");
   const { toast } = useToast();
   const { userName } = useRoleNames();
 
@@ -66,8 +59,6 @@ function UsuariosTab() {
     const totalPagado = pagos.filter(p => p.usuario_email === email).reduce((s, p) => s + (p.monto || 0), 0);
     return totalPedido - totalPagado;
   };
-
-  const formatMoney = (value) => `$${Math.round(value || 0).toLocaleString("es-AR")}`;
 
   const getCompraStats = (email) => {
     const entregados = pedidos.filter(p => p.usuario_email === email && p.estado === "entregado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -151,129 +142,17 @@ function UsuariosTab() {
     loadData();
   };
 
-  const openNuevoPedido = (user) => {
-    setNuevoPedidoUser(user);
-    setNpCantidad("1");
-    setNpObs("");
-  };
 
-  const cerrarNuevoPedido = () => {
-    if (npSubmitting) return;
-    setNuevoPedidoUser(null);
-    setNpCantidad("1");
-    setNpObs("");
-  };
-
-
-  const usuariosBase = useMemo(() => users.filter(u => u.role !== "admin"), [users]);
-
-  const usuariosFiltrados = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    return usuariosBase
-      .filter(user => {
-        const saldo = getSaldo(user.email);
-        const texto = `${user.full_name || ""} ${user.email || ""} ${user.phone || ""} ${user.telefono || ""}`.toLowerCase();
-        const estadoOk = estadoFiltro === "todos" || (estadoFiltro === "activo" ? user.estado === "activo" : user.estado !== "activo");
-        const saldoOk = saldoFiltro === "todos" || (saldoFiltro === "deuda" ? saldo > 0 : saldo <= 0);
-        return (!q || texto.includes(q)) && estadoOk && saldoOk;
-      })
-      .sort((a, b) => getSaldo(b.email) - getSaldo(a.email));
-  }, [usuariosBase, busqueda, estadoFiltro, saldoFiltro, pedidos, pagos]);
-
-  const resumenUsuarios = useMemo(() => {
-    const totalSaldo = usuariosBase.reduce((s, u) => s + getSaldo(u.email), 0);
-    const conDeuda = usuariosBase.filter(u => getSaldo(u.email) > 0).length;
-    const pendientes = usuariosBase.filter(u => u.estado !== "activo").length;
-    const pedidosPendientes = pedidos.filter(p => p.estado === "pendiente").length;
-    return { totalSaldo, conDeuda, pendientes, pedidosPendientes };
-  }, [usuariosBase, pedidos, pagos]);
-
-  const crearPedidoParaUsuario = async () => {
-    if (!nuevoPedidoUser || !npCantidad || parseFloat(npCantidad) <= 0) {
-      toast({ title: "Error", description: "Ingrese una cantidad válida", variant: "destructive" });
-      return;
-    }
-
-    setNpSubmitting(true);
-    try {
-      await base44.entities.Pedido.create({
-        usuario_email: nuevoPedidoUser.email,
-        usuario_nombre: nuevoPedidoUser.full_name || nuevoPedidoUser.email,
-        fecha: new Date().toISOString(),
-        estado: "pendiente",
-        tipo_pago: "cuenta",
-        cantidad: parseFloat(npCantidad),
-        valor_usado: 0,
-        total: 0,
-        observaciones: npObs.trim(),
-      });
-
-      toast({ title: "Pedido creado", description: `Asignado a ${nuevoPedidoUser.full_name || nuevoPedidoUser.email}` });
-      setNuevoPedidoUser(null);
-      setNpCantidad("1");
-      setNpObs("");
-      loadData();
-    } catch (error) {
-      toast({ title: "Error", description: "No se pudo crear el pedido", variant: "destructive" });
-    } finally {
-      setNpSubmitting(false);
-    }
-  };
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestión de {userName}s</p>
-            <h2 className="text-xl font-bold">Usuarios, pedidos y saldos</h2>
-            <p className="text-sm text-muted-foreground">Vista más clara para operar rápido sin jugar a buscar botones escondidos.</p>
-          </div>
-          <div className="rounded-xl bg-primary/10 p-3 text-primary">
-            <UserRound className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Saldo total</p><p className={`text-lg font-black ${resumenUsuarios.totalSaldo > 0 ? "text-red-600" : "text-green-600"}`}>{formatMoney(resumenUsuarios.totalSaldo)}</p></div>
-          <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Con deuda</p><p className="text-lg font-black">{resumenUsuarios.conDeuda}</p></div>
-          <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pendientes</p><p className="text-lg font-black text-amber-600">{resumenUsuarios.pendientes}</p></div>
-          <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pedidos abiertos</p><p className="text-lg font-black text-primary">{resumenUsuarios.pedidosPendientes}</p></div>
-        </div>
-      </div>
 
-      <div className="sticky top-2 z-10 rounded-2xl border bg-background/95 p-3 shadow-sm backdrop-blur">
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar nombre, mail o teléfono..." className="h-10 rounded-xl pl-9" />
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex">
-            <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
-              <SelectTrigger className="h-10 rounded-xl sm:w-36"><Filter className="mr-2 h-4 w-4" /><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="todos">Todos</SelectItem><SelectItem value="activo">Activos</SelectItem><SelectItem value="pendiente">Pendientes</SelectItem></SelectContent>
-            </Select>
-            <Select value={saldoFiltro} onValueChange={setSaldoFiltro}>
-              <SelectTrigger className="h-10 rounded-xl sm:w-36"><Wallet className="mr-2 h-4 w-4" /><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="todos">Saldo</SelectItem><SelectItem value="deuda">Con deuda</SelectItem><SelectItem value="aldia">Al día</SelectItem></SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {usuariosFiltrados.length === 0 && (
-        <div className="rounded-2xl border border-dashed bg-card p-8 text-center">
-          <Users className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 font-semibold">No hay usuarios con esos filtros</p>
-          <p className="text-sm text-muted-foreground">Borrá la búsqueda o cambiá el filtro, porque claramente el filtro no adivina deseos.</p>
-        </div>
-      )}
-
-      {usuariosFiltrados.map((user) => {
+      {users.filter(u => u.role !== "admin").map((user) => {
         const saldo = getSaldo(user.email);
         const { ultima, total7, total30 } = getCompraStats(user.email);
 
         return (
-          <div key={user.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div key={user.id} className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <p className="font-semibold">{user.full_name || "—"}</p>
@@ -282,11 +161,11 @@ function UsuariosTab() {
               <div className="text-right shrink-0">
                 <p className="text-xs text-muted-foreground">Saldo</p>
                 <p className={`text-lg font-bold ${saldo > 0 ? "text-red-600" : "text-green-600"}`}>
-                  {formatMoney(saldo)}
+                  ${saldo.toLocaleString()}
                 </p>
                 {saldo > 0 && (
                   <p className="text-xs text-amber-600 font-semibold mt-0.5">
-                    +10% = {formatMoney(saldo * 1.1)}
+                    +10% = ${Math.round(saldo * 1.1).toLocaleString()}
                   </p>
                 )}
               </div>
@@ -328,9 +207,9 @@ function UsuariosTab() {
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => openEdit(user)}>
                 <Edit className="w-3 h-3" /> Editar
               </Button>
-              <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openNuevoPedido(user)}>
-                <PackagePlus className="w-3.5 h-3.5" /> Nuevo Pedido
-              </Button>
+                <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNuevoPedidoOpen(true)}>
+          <Plus className="w-3.5 h-3.5" /> Nuevo Pedido
+        </Button>
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => { setPagoDialog(user); setPagoForm({ monto: "", metodo: "efectivo", referencia: "", observaciones: "" }); }}>
                 <Plus className="w-3 h-3" /> Registrar pago
               </Button>
@@ -458,49 +337,6 @@ function UsuariosTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Nuevo pedido desde la ficha del usuario */}
-      <Dialog open={!!nuevoPedidoUser} onOpenChange={cerrarNuevoPedido}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Nuevo Pedido
-            </DialogTitle>
-          </DialogHeader>
-          {nuevoPedidoUser && (
-            <div className="space-y-3 mt-1">
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Usuario</p>
-                <p className="text-sm font-semibold">{nuevoPedidoUser.full_name || nuevoPedidoUser.email}</p>
-                <p className="text-xs text-muted-foreground">{nuevoPedidoUser.email}</p>
-              </div>
-              <div>
-                <Label className="text-xs">Cantidad *</Label>
-                <Input
-                  type="number"
-                  value={npCantidad}
-                  onChange={e => setNpCantidad(e.target.value)}
-                  placeholder="0"
-                  className="mt-1 text-xl font-bold text-center h-12"
-                  min="1"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Observaciones</Label>
-                <Input
-                  value={npObs}
-                  onChange={e => setNpObs(e.target.value)}
-                  placeholder="Opcional"
-                  className="mt-1"
-                />
-              </div>
-              <Button onClick={crearPedidoParaUsuario} disabled={npSubmitting} className="w-full h-11">
-                {npSubmitting ? "Creando..." : "Crear Pedido"}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
     </div>
   );
 }
@@ -520,9 +356,6 @@ function PedidosTab() {
   const [npCantidad, setNpCantidad] = useState("");
   const [npObs, setNpObs] = useState("");
   const [npSubmitting, setNpSubmitting] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [estadoFiltro, setEstadoFiltro] = useState("todos");
-  const [saldoFiltro, setSaldoFiltro] = useState("todos");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -621,7 +454,7 @@ function PedidosTab() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNuevoPedidoOpen(true)}>
-          <PackagePlus className="w-3.5 h-3.5" /> Nuevo Pedido
+          <Plus className="w-3.5 h-3.5" /> Nuevo Pedido
         </Button>
         <Select value={filtro} onValueChange={setFiltro}>
           <SelectTrigger className="w-36 h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -636,7 +469,7 @@ function PedidosTab() {
 
       <div className="space-y-3">
         {filtered.map((p) => (
-          <div key={p.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div key={p.id} className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
                 <p className="font-semibold text-sm">{p.usuario_nombre || p.usuario_email}</p>
