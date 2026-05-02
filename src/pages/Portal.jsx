@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { notificarPedidoWA } from "@/functions/notificarPedidoWA";
-import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign } from "lucide-react";
+import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign, PackagePlus, Plus, Minus, Wallet } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
 import TelefonoConfig from "../components/TelefonoConfig";
@@ -59,6 +59,14 @@ export default function Portal() {
   const totalPedido = pedidos.filter(p => p.estado !== "cancelado").reduce((s, p) => s + (p.total || 0), 0);
   const totalPagado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
   const saldo = totalPedido - totalPagado;
+  const pedidosPendientes = pedidos.filter(p => p.estado === "pendiente").length;
+  const ultimoPedido = pedidos.filter(p => p.estado !== "cancelado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0] || null;
+  const formatMoney = (value) => `$${Math.round(value || 0).toLocaleString("es-AR")}`;
+
+  const sumarCantidad = (valor) => {
+    const actual = parseFloat(cantidad) || 0;
+    setCantidad(String(Math.max(1, actual + valor)));
+  };
 
   const handlePedido = async () => {
     const cant = parseFloat(cantidad);
@@ -67,7 +75,7 @@ export default function Portal() {
       return;
     }
     setSubmitting(true);
-    const pedidoResp = await crearPedidoPublico({ useEmail: true, cantidad: cant, observaciones });
+    await crearPedidoPublico({ useEmail: true, cantidad: cant, observaciones });
     notificarPedidoWA({ data: { usuario_email: user.email, usuario_nombre: user.full_name || user.email, cantidad: cant, observaciones } }).catch(() => {});
     toast({ title: "Pedido enviado", description: "Tu pedido fue registrado" });
     setSubmitting(false);
@@ -101,87 +109,108 @@ export default function Portal() {
   }
 
   const titulo = user.link_titulo || user.full_name || user.email;
+  const cantidadActual = parseFloat(cantidad) || 0;
+  const estimadoCuenta = cantidadActual * (user.valor_cuenta || 0);
+  const estimadoContado = cantidadActual * (user.valor_contado || 0);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 py-6 space-y-5">
 
         {/* Header */}
-        <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm opacity-80">Bienvenido/a</p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setChatOpen(true)}
-                className="relative text-primary-foreground opacity-80 hover:opacity-100 transition-opacity"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {chatNoLeidos > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">
-                    {chatNoLeidos}
-                  </span>
-                )}
-              </button>
-              <button onClick={() => base44.auth.logout()} className="text-xs opacity-60 hover:opacity-100 underline">Salir</button>
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm">
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm opacity-80">Bienvenido/a</p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setChatOpen(true)}
+                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {chatNoLeidos > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">
+                      {chatNoLeidos}
+                    </span>
+                  )}
+                </button>
+                <button onClick={() => base44.auth.logout()} className="text-xs opacity-70 hover:opacity-100 underline">Salir</button>
+              </div>
             </div>
-          </div>
-          <h1 className="text-2xl font-bold">{titulo}</h1>
-          <div className="mt-4">
-            <div className="bg-white/10 rounded-xl p-4 text-center">
-              <p className="text-xs opacity-70 uppercase tracking-wide">Se debe</p>
-              <p className={`text-4xl font-bold mt-1 ${saldo > 0 ? "text-red-300" : "text-green-300"}`}>
-                ${saldo.toLocaleString()}
-              </p>
+            <h1 className="text-2xl font-black leading-tight">{titulo}</h1>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="col-span-2 rounded-2xl bg-white/10 p-4 text-center ring-1 ring-white/10">
+                <p className="text-xs uppercase tracking-wide opacity-70">Saldo actual</p>
+                <p className={`mt-1 text-4xl font-black ${saldo > 0 ? "text-red-200" : "text-green-200"}`}>{formatMoney(saldo)}</p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                <p className="text-[11px] opacity-70">Pedidos pendientes</p>
+                <p className="text-xl font-black">{pedidosPendientes}</p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                <p className="text-[11px] opacity-70">Último pedido</p>
+                <p className="text-sm font-bold">{ultimoPedido ? moment(ultimoPedido.fecha).fromNow() : "Sin pedidos"}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Subir pago */}
-        <Button
-          variant="outline"
-          className="w-full h-11 gap-2 border-green-300 text-green-700 hover:bg-green-50"
-          onClick={() => setPagoModalOpen(true)}
-        >
-          <DollarSign className="w-4 h-4" /> Registrar un pago
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" className="h-12 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50" onClick={() => setPagoModalOpen(true)}>
+            <DollarSign className="w-4 h-4" /> Pago
+          </Button>
+          <Button variant="outline" className="h-12 gap-2 rounded-2xl" onClick={() => setHistorialOpen(true)}>
+            <ClipboardList className="w-4 h-4" /> Movimientos
+          </Button>
+        </div>
 
         {/* Order form */}
-        <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-          <h2 className="font-semibold">Generar Pedido</h2>
+        <div className="bg-card rounded-3xl border border-border p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pedido rápido</p>
+              <h2 className="text-xl font-black">Generar Pedido</h2>
+            </div>
+            <div className="rounded-2xl bg-primary/10 p-3 text-primary"><PackagePlus className="h-5 w-5" /></div>
+          </div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-3 text-center">
               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Contado</p>
-              <p className="text-lg font-bold text-green-700">${(user.valor_contado || 0).toLocaleString()}</p>
+              <p className="text-lg font-black text-green-700">{formatMoney(user.valor_contado || 0)}</p>
               <p className="text-[10px] text-muted-foreground">por unidad</p>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-center">
               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">A Cuenta</p>
-              <p className="text-lg font-bold text-blue-700">${(user.valor_cuenta || 0).toLocaleString()}</p>
+              <p className="text-lg font-black text-blue-700">{formatMoney(user.valor_cuenta || 0)}</p>
               <p className="text-[10px] text-muted-foreground">por unidad</p>
             </div>
           </div>
           <div>
             <label className="text-xs text-muted-foreground font-medium">Cantidad</label>
-            <Input
-              type="number"
-              placeholder="0"
-              value={cantidad}
-              onChange={(e) => setCantidad(e.target.value)}
-              className="mt-1 text-xl font-bold h-14 text-center"
-              min="1"
-            />
+            <div className="mt-1 flex items-center gap-2">
+              <Button type="button" variant="outline" className="h-14 w-12 rounded-2xl" onClick={() => sumarCantidad(-1)}><Minus className="h-4 w-4" /></Button>
+              <Input type="number" placeholder="0" value={cantidad} onChange={(e) => setCantidad(e.target.value)} className="h-14 rounded-2xl text-center text-2xl font-black" min="1" />
+              <Button type="button" variant="outline" className="h-14 w-12 rounded-2xl" onClick={() => sumarCantidad(1)}><Plus className="h-4 w-4" /></Button>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[5, 10, 20].map((n) => <Button key={n} type="button" variant="outline" className="h-9 rounded-xl text-xs" onClick={() => sumarCantidad(n)}>+{n}</Button>)}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border bg-muted/30 p-3">
+              <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground"><Wallet className="h-3 w-3" /> Estimado cuenta</p>
+              <p className="text-base font-black text-primary">{formatMoney(estimadoCuenta)}</p>
+            </div>
+            <div className="rounded-2xl border bg-muted/30 p-3">
+              <p className="text-[11px] font-medium text-muted-foreground">Estimado contado</p>
+              <p className="text-base font-black text-green-700">{formatMoney(estimadoContado)}</p>
+            </div>
           </div>
           <div>
             <label className="text-xs text-muted-foreground font-medium">Observaciones (opcional)</label>
-            <Textarea
-              placeholder="Notas del pedido..."
-              value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
-              className="mt-1 text-sm resize-none"
-              rows={2}
-            />
+            <Textarea placeholder="Notas del pedido..." value={observaciones} onChange={(e) => setObservaciones(e.target.value)} className="mt-1 resize-none rounded-2xl text-sm" rows={2} />
           </div>
-          <Button onClick={handlePedido} disabled={submitting} className="w-full h-12 text-sm font-semibold gap-2">
+          <Button onClick={handlePedido} disabled={submitting} className="w-full min-h-12 rounded-2xl text-sm font-bold gap-2">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {submitting ? "Enviando..." : "Enviar Pedido"}
           </Button>
