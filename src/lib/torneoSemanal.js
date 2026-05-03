@@ -1,3 +1,6 @@
+export const PREMIO_TORNEO_UNIDADES = 80;
+export const PREMIO_TORNEO_DESCUENTO_DEUDA = 80000;
+
 export function getInicioSemanaArgentina(date = new Date()) {
   const argentinaNow = new Date(date.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
   const day = argentinaNow.getDay();
@@ -17,6 +20,24 @@ export function calcularSaldoUsuario(email, pedidos = [], pagos = []) {
     .reduce((s, p) => s + (Number(p.monto) || 0), 0);
 
   return totalPedido - totalPagado;
+}
+
+export function calcularPremioTorneo(deuda = 0) {
+  if (deuda > 0) {
+    return {
+      tipo: "descuento_deuda",
+      descripcion: "$80.000 de descuento en deuda",
+      descuentoDeuda: PREMIO_TORNEO_DESCUENTO_DEUDA,
+      unidades: 0,
+    };
+  }
+
+  return {
+    tipo: "unidades",
+    descripcion: "80 unidades de premio",
+    descuentoDeuda: 0,
+    unidades: PREMIO_TORNEO_UNIDADES,
+  };
 }
 
 export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
@@ -47,6 +68,7 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
         generado,
         deuda,
         puntaje,
+        premioSiGana: calcularPremioTorneo(deuda),
       };
     })
     .sort((a, b) => {
