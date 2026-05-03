@@ -1,11 +1,52 @@
-import { Trophy, Medal, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { Trophy, Medal, TrendingUp, TrendingDown, Minus, Sparkles, Volume2 } from "lucide-react";
 import { calcularRankingSemanal } from "@/lib/torneoSemanal";
 
 function getMovimiento(actual, anterior) {
-  if (!actual || !anterior) return { label: "Semana en curso", icon: Sparkles, className: "text-primary", texto: "Seguí sumando para subir." };
-  if (actual < anterior) return { label: "Subiste de puesto", icon: TrendingUp, className: "text-green-600", texto: `Venías #${anterior}.` };
-  if (actual > anterior) return { label: "Bajaste de puesto", icon: TrendingDown, className: "text-amber-600", texto: `Venías #${anterior}.` };
-  return { label: "Te mantenés", icon: Minus, className: "text-muted-foreground", texto: `Seguís #${actual}.` };
+  if (!actual || !anterior) return { label: "Semana en curso", icon: Sparkles, className: "text-primary", texto: "Seguí sumando para subir.", tipo: "neutral" };
+  if (actual < anterior) return { label: "Subiste de puesto", icon: TrendingUp, className: "text-green-600", texto: `Venías #${anterior}.`, tipo: "subio" };
+  if (actual > anterior) return { label: "Bajaste de puesto", icon: TrendingDown, className: "text-amber-600", texto: `Venías #${anterior}.`, tipo: "bajo" };
+  return { label: "Te mantenés", icon: Minus, className: "text-muted-foreground", texto: `Seguís #${actual}.`, tipo: "igual" };
+}
+
+function playTone(frequency, startTime, duration, audioCtx, gainNode) {
+  const oscillator = audioCtx.createOscillator();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(frequency, startTime);
+  oscillator.connect(gainNode);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration);
+}
+
+function playTorneoSound(type = "subio") {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const audioCtx = new AudioContext();
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.14, audioCtx.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.65);
+    gainNode.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === "primero") {
+      playTone(523.25, now, 0.12, audioCtx, gainNode);
+      playTone(659.25, now + 0.13, 0.12, audioCtx, gainNode);
+      playTone(783.99, now + 0.26, 0.18, audioCtx, gainNode);
+      playTone(1046.5, now + 0.45, 0.18, audioCtx, gainNode);
+    } else if (type === "subio") {
+      playTone(440, now, 0.12, audioCtx, gainNode);
+      playTone(587.33, now + 0.14, 0.12, audioCtx, gainNode);
+      playTone(739.99, now + 0.28, 0.16, audioCtx, gainNode);
+    }
+
+    setTimeout(() => audioCtx.close().catch(() => {}), 900);
+  } catch {
+    // Si el navegador bloquea audio automático, no rompemos nada. Ya bastante rompe el navegador solo.
+  }
 }
 
 export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos = [] }) {
@@ -13,16 +54,29 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
   const miPuesto = ranking.find((r) => r.email === user?.email);
   const puesto = miPuesto?.puesto || "-";
 
-  const puestoAnterior = Number(localStorage.getItem(`embrollo_torneo_puesto_${user?.email}`)) || null;
+  const storageKey = `embrollo_torneo_puesto_${user?.email}`;
+  const puestoAnterior = Number(localStorage.getItem(storageKey)) || null;
   const movimiento = getMovimiento(Number(puesto), puestoAnterior);
   const MovimientoIcon = movimiento.icon;
-
-  if (miPuesto?.puesto) {
-    localStorage.setItem(`embrollo_torneo_puesto_${user.email}`, String(miPuesto.puesto));
-  }
-
   const esPrimero = miPuesto?.puesto === 1;
   const rankingVisible = ranking.slice(0, 10);
+
+  useEffect(() => {
+    if (!user?.email || !miPuesto?.puesto) return;
+
+    const last = Number(localStorage.getItem(storageKey)) || null;
+    const current = Number(miPuesto.puesto);
+
+    if (last && current < last) {
+      playTorneoSound(current === 1 ? "primero" : "subio");
+    }
+
+    if (!last && current === 1) {
+      playTorneoSound("primero");
+    }
+
+    localStorage.setItem(storageKey, String(current));
+  }, [user?.email, miPuesto?.puesto]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm">
@@ -45,9 +99,12 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
       </div>
 
       <div className="relative mt-4 rounded-2xl border bg-background/70 p-3">
-        <div className="flex items-center gap-2">
-          <MovimientoIcon className={`h-4 w-4 ${movimiento.className}`} />
-          <p className={`text-sm font-bold ${movimiento.className}`}>{movimiento.label}</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <MovimientoIcon className={`h-4 w-4 ${movimiento.className}`} />
+            <p className={`text-sm font-bold ${movimiento.className}`}>{movimiento.label}</p>
+          </div>
+          {(movimiento.tipo === "subio" || esPrimero) && <Volume2 className="h-4 w-4 text-primary" />}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{movimiento.texto}</p>
       </div>
