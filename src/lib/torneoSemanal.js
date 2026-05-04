@@ -46,10 +46,13 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
   return users
     .filter((u) => u.role !== "admin")
     .map((user) => {
+      const finSemana = new Date(inicioSemana);
+      finSemana.setDate(finSemana.getDate() + 7);
+
       const entregadosSemana = pedidos.filter((p) => {
         if (p.usuario_email !== user.email || p.estado !== "entregado") return false;
         const fecha = new Date(p.fecha || p.created_date || p.updated_date || 0);
-        return fecha >= inicioSemana;
+        return fecha >= inicioSemana && fecha < finSemana;
       });
 
       const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);

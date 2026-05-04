@@ -91,7 +91,7 @@ export default function TorneoConfigTab() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Torneo semanal</p>
             <h2 className="text-xl font-black">Configuración y ranking</h2>
-            <p className="text-sm text-muted-foreground">Puntaje: ventas entregadas de la semana menos deuda actual.</p>
+            <p className="text-sm text-muted-foreground">Puntaje: ventas entregadas de la semana menos deuda actual.<br/>Semana actual: lunes 00:00 a lunes 00:00</p>
           </div>
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>

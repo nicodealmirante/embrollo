@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink } from "lucide-react";
 import { listarUsuarios } from "@/functions/listarUsuarios";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import CalculoTab from "../../components/admin/CalculoTab";
-import PagosPendientesTab from "../../components/admin/PagosPendientesTab";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -505,65 +504,29 @@ function UsuariosTab() {
   );
 }
 
-// ─── Pedidos Tab ──────────────────────────────────────────────────────────────
-function PedidosTab() {
+// ─── Solicitudes Tab ─────────────────────────────────────────────────────────
+function SolicitudesTab() {
   const [pedidos, setPedidos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("pendiente");
-  const [editingId, setEditingId] = useState(null);
-  const [editCantidad, setEditCantidad] = useState("");
   const [entregaDialog, setEntregaDialog] = useState(null);
   const [tipoPagoEntrega, setTipoPagoEntrega] = useState("contado");
-  const [nuevoPedidoOpen, setNuevoPedidoOpen] = useState(false);
-  const [npUsuario, setNpUsuario] = useState("");
-  const [npCantidad, setNpCantidad] = useState("");
-  const [npObs, setNpObs] = useState("");
-  const [npSubmitting, setNpSubmitting] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [estadoFiltro, setEstadoFiltro] = useState("todos");
-  const [saldoFiltro, setSaldoFiltro] = useState("todos");
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadPedidos();
-    listarUsuarios({}).then(resp => {
-      const data = resp.data?.users || [];
-      setUsuarios(data.filter(u => u.role !== "admin" && u.estado === "activo"));
-    });
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  async function loadPedidos() {
-    const data = await base44.entities.Pedido.list("-created_date");
-    setPedidos(data);
+  async function loadData() {
+    setLoading(true);
+    const [pedData, pagData] = await Promise.all([
+      base44.entities.Pedido.filter({ estado: "pendiente" }, "-created_date"),
+      base44.entities.Pago.filter({ origen: "usuario", estado: "pendiente" }, "-created_date")
+    ]);
+    setPedidos(pedData);
+    setPagos(pagData);
     setLoading(false);
   }
 
-  async function crearPedido() {
-    if (!npUsuario || !npCantidad || parseFloat(npCantidad) <= 0) {
-      toast({ title: "Completá usuario y cantidad", variant: "destructive" });
-      return;
-    }
-    setNpSubmitting(true);
-    const user = usuarios.find(u => u.email === npUsuario);
-    await base44.entities.Pedido.create({
-      usuario_email: npUsuario,
-      usuario_nombre: user?.full_name || npUsuario,
-      fecha: new Date().toISOString(),
-      estado: "pendiente",
-      tipo_pago: "cuenta",
-      cantidad: parseFloat(npCantidad),
-      valor_usado: 0,
-      total: 0,
-      observaciones: npObs.trim(),
-    });
-    toast({ title: "Pedido creado" });
-    setNpSubmitting(false);
-    setNuevoPedidoOpen(false);
-    setNpUsuario(""); setNpCantidad(""); setNpObs("");
-    loadPedidos();
-  }
-
+  // --- Lógica Pedidos ---
   const confirmarEntrega = async () => {
     const p = entregaDialog;
     const users = await base44.entities.User.filter({ email: p.usuario_email });
@@ -578,7 +541,6 @@ function PedidosTab() {
       total,
     });
 
-    // Si es contado: registrar pago automático para que saldo quede en 0
     if (tipoPagoEntrega === 'contado') {
       await base44.entities.Pago.create({
         usuario_email: p.usuario_email,
@@ -590,144 +552,102 @@ function PedidosTab() {
         observaciones: `Pedido del ${new Date(p.fecha).toLocaleDateString()}`,
       });
     }
-
     toast({ title: tipoPagoEntrega === 'contado' ? 'Entrega confirmada y pago registrado' : 'Entrega confirmada — saldo pendiente' });
     setEntregaDialog(null);
-    loadPedidos();
+    loadData();
   };
 
   const deletePedido = async (id) => {
-    if (!confirm("¿Eliminar este pedido?")) return;
-    await base44.entities.Pedido.delete(id);
-    toast({ title: "Pedido eliminado" });
-    loadPedidos();
+    if (!confirm("¿Cancelar este pedido?")) return;
+    await base44.entities.Pedido.update(id, { estado: "cancelado" });
+    toast({ title: "Pedido cancelado" });
+    loadData();
   };
 
-  const saveEdit = async (pedido) => {
-    const cant = parseFloat(editCantidad);
-    if (!cant || cant <= 0) return;
-    const newTotal = cant * (pedido.valor_usado || 0);
-    await base44.entities.Pedido.update(pedido.id, { cantidad: cant, total: newTotal });
-    setEditingId(null);
-    toast({ title: "Actualizado" });
-    loadPedidos();
-  };
+  // --- Lógica Pagos ---
+  async function aprobarPago(pago) {
+    await base44.entities.Pago.update(pago.id, { estado: "aprobado" });
+    toast({ title: "Pago aprobado ✓" });
+    loadData();
+  }
 
-  const filtered = pedidos.filter(p => filtro === "todos" || p.estado === filtro);
+  async function rechazarPago(pago) {
+    if (!confirm(`¿Rechazar el pago de $${pago.monto?.toLocaleString()} de ${pago.usuario_nombre}?`)) return;
+    await base44.entities.Pago.update(pago.id, { estado: "rechazado" });
+    toast({ title: "Pago rechazado" });
+    loadData();
+  }
 
   if (loading) return <div className="flex justify-center py-12"><div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
+  const items = [
+    ...pedidos.map(p => ({ ...p, _type: 'pedido', _date: new Date(p.fecha) })),
+    ...pagos.map(p => ({ ...p, _type: 'pago', _date: new Date(p.fecha) }))
+  ].sort((a, b) => b._date - a._date);
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNuevoPedidoOpen(true)}>
-          <PackagePlus className="w-3.5 h-3.5" /> Nuevo Pedido
-        </Button>
-        <Select value={filtro} onValueChange={setFiltro}>
-          <SelectTrigger className="w-36 h-8 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="pendiente">Pendiente</SelectItem>
-            <SelectItem value="entregado">Entregado</SelectItem>
-            <SelectItem value="cancelado">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-3">
-        {filtered.map((p) => (
-          <div key={p.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <div>
-                <p className="font-semibold text-sm">{p.usuario_nombre || p.usuario_email}</p>
-                <p className="text-xs text-muted-foreground">{moment(p.fecha).format("DD/MM/YY HH:mm")}</p>
+    <div className="space-y-4">
+      {items.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay solicitudes pendientes.</p>}
+      
+      {items.map((item, idx) => (
+        <div key={idx} className={`bg-card rounded-2xl border border-border p-4 shadow-sm ${item._type === 'pago' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-blue-500'}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item._type === 'pago' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {item._type}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-medium">{moment(item.fecha).fromNow()}</span>
               </div>
-              <EstadoBadge estado={p.estado} />
+              <p className="font-semibold text-sm">{item.usuario_nombre || item.usuario_email}</p>
+              <p className="text-xs text-muted-foreground">{moment(item.fecha).format("DD/MM/YY HH:mm")}</p>
             </div>
-
-            <div className="flex items-center gap-4 text-sm mb-3">
-              <span className="text-muted-foreground">Cant:&nbsp;
-                {editingId === p.id
-                  ? <Input type="number" value={editCantidad} onChange={e => setEditCantidad(e.target.value)} className="inline-block w-20 h-6 text-sm" />
-                  : <strong>{p.cantidad}</strong>}
-              </span>
-              {p.estado === "entregado" && (
+            <div className="text-right">
+              {item._type === 'pago' ? (
                 <>
-                  <span className="text-muted-foreground">Tipo: <strong>{p.tipo_pago === "contado" ? "Contado" : "A Cuenta"}</strong></span>
-                  <span className="text-muted-foreground">Total: <strong>${(p.total || 0).toLocaleString()}</strong></span>
-                </>
-              )}
-              {p.observaciones && <span className="text-muted-foreground italic text-xs">{p.observaciones}</span>}
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {p.estado === "pendiente" && (
-                <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700"
-                  onClick={() => { setEntregaDialog(p); setTipoPagoEntrega("contado"); }}>
-                  <CheckCircle className="w-3 h-3" /> Confirmar entrega
-                </Button>
-              )}
-
-              {editingId === p.id ? (
-                <>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => saveEdit(p)}>Guardar</Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingId(null)}><X className="w-3 h-3" /></Button>
+                  <p className="font-bold text-green-600">${(item.monto || 0).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{item.metodo}</p>
                 </>
               ) : (
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { setEditingId(p.id); setEditCantidad(String(p.cantidad)); }}>
-                  <Pencil className="w-3 h-3" /> Modificar
-                </Button>
+                <>
+                  <p className="font-bold text-blue-600">{item.cantidad} unidades</p>
+                  <p className="text-xs text-muted-foreground capitalize">{item.tipo_pago}</p>
+                </>
               )}
-
-              <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive gap-1 ml-auto"
-                onClick={() => deletePedido(p.id)}>
-                <Trash2 className="w-3 h-3" />
-              </Button>
             </div>
           </div>
-        ))}
-        {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Sin pedidos</p>}
-      </div>
 
-      {/* Nuevo Pedido dialog */}
-      <Dialog open={nuevoPedidoOpen} onOpenChange={setNuevoPedidoOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Plus className="w-4 h-4" /> Nuevo Pedido</DialogTitle></DialogHeader>
-          <div className="space-y-3 mt-1">
-            <div>
-              <Label className="text-xs">Usuario *</Label>
-              <Select value={npUsuario} onValueChange={setNpUsuario}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccionar usuario..." /></SelectTrigger>
-                <SelectContent>
-                  {usuarios.map(u => (
-                    <SelectItem key={u.email} value={u.email}>
-                      {u.full_name || u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Cantidad *</Label>
-              <Input
-                type="number"
-                value={npCantidad}
-                onChange={e => setNpCantidad(e.target.value)}
-                placeholder="0"
-                className="mt-1 text-xl font-bold text-center h-12"
-                min="1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Observaciones</Label>
-              <Input value={npObs} onChange={e => setNpObs(e.target.value)} placeholder="Opcional" className="mt-1" />
-            </div>
-            <Button onClick={crearPedido} disabled={npSubmitting} className="w-full h-11">
-              {npSubmitting ? "Creando..." : "Crear Pedido"}
-            </Button>
+          {item.observaciones && <p className="mt-2 text-xs text-muted-foreground italic bg-muted/50 p-2 rounded-lg">{item.observaciones}</p>}
+          {item.referencia && <p className="mt-2 text-xs text-muted-foreground">Ref: <strong>{item.referencia}</strong></p>}
+          {item.comprobante_url && (
+            <a href={item.comprobante_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline mt-2">
+              <ExternalLink className="w-3 h-3" /> Ver comprobante
+            </a>
+          )}
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {item._type === 'pedido' ? (
+              <>
+                <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => { setEntregaDialog(item); setTipoPagoEntrega("contado"); }}>
+                  <CheckCircle className="w-3 h-3" /> Confirmar entrega
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive gap-1" onClick={() => deletePedido(item.id)}>
+                  <Trash2 className="w-3 h-3" /> Cancelar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => aprobarPago(item)}>
+                  <CheckCircle className="w-3.5 h-3.5" /> Aprobar
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => rechazarPago(item)}>
+                  <XCircle className="w-3.5 h-3.5" /> Rechazar
+                </Button>
+              </>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      ))}
 
       {/* Entrega dialog */}
       <Dialog open={!!entregaDialog} onOpenChange={() => setEntregaDialog(null)}>
@@ -762,77 +682,9 @@ function PedidosTab() {
   );
 }
 
-// ─── Gestión Tab ──────────────────────────────────────────────────────────────
-function GestionTab() {
-  const [pedidos, setPedidos] = useState([]);
-  const [pagos, setPagos] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      base44.entities.Pedido.list("-created_date"),
-      base44.entities.Pago.list("-created_date")
-    ]).then(([ped, pag]) => {
-      setPedidos(ped);
-      setPagos(pag);
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <div className="flex justify-center py-12"><div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
-
-  const items = [
-    ...pedidos.map(p => ({ ...p, _type: 'pedido', _date: new Date(p.fecha) })),
-    ...pagos.map(p => ({ ...p, _type: 'pago', _date: new Date(p.fecha) }))
-  ].sort((a, b) => b._date - a._date);
-
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm mb-4">
-        <h2 className="text-xl font-bold">Gestión Centralizada</h2>
-        <p className="text-sm text-muted-foreground">Todos los pedidos y pagos en un solo lugar.</p>
-      </div>
-
-      <div className="space-y-3">
-        {items.map((item, idx) => (
-          <div key={idx} className={`bg-card rounded-2xl border border-border p-4 shadow-sm ${item._type === 'pago' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-blue-500'}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item._type === 'pago' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {item._type}
-                  </span>
-                  <EstadoBadge estado={item.estado} />
-                </div>
-                <p className="font-semibold text-sm">{item.usuario_nombre || item.usuario_email}</p>
-                <p className="text-xs text-muted-foreground">{moment(item.fecha).format("DD/MM/YY HH:mm")}</p>
-              </div>
-              <div className="text-right">
-                {item._type === 'pago' ? (
-                  <>
-                    <p className="font-bold text-green-600">${(item.monto || 0).toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{item.metodo}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="font-bold text-blue-600">{item.cantidad} unidades</p>
-                    <p className="text-xs text-muted-foreground capitalize">{item.tipo_pago}</p>
-                  </>
-                )}
-              </div>
-            </div>
-            {item.observaciones && <p className="mt-2 text-xs text-muted-foreground italic bg-muted/50 p-2 rounded-lg">{item.observaciones}</p>}
-          </div>
-        ))}
-        {items.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay registros.</p>}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [tab, setTab] = useState("pedidos");
+  const [tab, setTab] = useState("solicitudes");
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
   const { adminName, userName } = useRoleNames();
@@ -886,10 +738,15 @@ export default function AdminPanel() {
             <Users className="w-4 h-4" /> {userName}s
           </button>
           <button
-            onClick={() => setTab("pedidos")}
-            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "pedidos" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+            onClick={() => setTab("solicitudes")}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "solicitudes" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
-            <ClipboardList className="w-4 h-4" /> Pedidos
+            <ClipboardList className="w-4 h-4" /> Solicitudes
+            {pagosNL > 0 && (
+              <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {pagosNL}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setTab("chat")}
@@ -901,23 +758,6 @@ export default function AdminPanel() {
                 {mensajesNL}
               </span>
             )}
-          </button>
-          <button
-            onClick={() => setTab("pagos")}
-            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all relative ${tab === "pagos" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
-          >
-            <DollarSign className="w-4 h-4" /> Pagos
-            {pagosNL > 0 && (
-              <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {pagosNL}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setTab("gestion")}
-            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "gestion" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
-          >
-            <ClipboardList className="w-4 h-4" /> Gestión
           </button>
           <button
             onClick={() => setTab("config")}
@@ -934,11 +774,9 @@ export default function AdminPanel() {
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
-        {tab === "gestion" && <GestionTab />}
         {tab === "usuarios" && <UsuariosTab />}
-        {tab === "pedidos" && <PedidosTab />}
+        {tab === "solicitudes" && <SolicitudesTab />}
         {tab === "chat" && <ChatAdmin />}
-        {tab === "pagos" && <PagosPendientesTab />}
         {tab === "config" && <ConfigTab />}
         {tab === "calculo" && <CalculoTab />}
       </div>
