@@ -697,10 +697,24 @@ export default function AdminPanel() {
   const [tab, setTab] = useState("solicitudes");
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
+  const [authLoading, setAuthLoading] = useState(true);
   const { adminName, userName } = useRoleNames();
   const navigate = useNavigate();
 
   useEffect(() => {
+    base44.auth.me().then(me => {
+      if (me.role !== 'admin') {
+        navigate('/portal', { replace: true });
+      } else {
+        setAuthLoading(false);
+      }
+    }).catch(() => {
+      base44.auth.redirectToLogin();
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    if (authLoading) return;
     let timeout = null;
     async function checkNoLeidos() {
       const msgs = await base44.entities.Mensaje.list();
@@ -726,6 +740,10 @@ export default function AdminPanel() {
   }, []);
 
 
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -45,17 +45,24 @@ export default function Portal() {
 
   async function loadData() {
     setLoading(true);
+    let me;
     try {
-      const me = await base44.auth.me();
-      
-      if (me.role === "admin") {
-        navigate("/admin", { replace: true });
-        return;
-      }
+      me = await base44.auth.me();
+    } catch (e) {
+      console.error(e);
+      base44.auth.redirectToLogin();
+      return;
+    }
 
-      setUser(me);
-      
-      if (me?.estado === "activo") {
+    if (me.role === "admin") {
+      navigate("/admin", { replace: true });
+      return;
+    }
+
+    setUser(me);
+    
+    if (me?.estado === "activo") {
+      try {
         const [ped, pag, torneoResp] = await Promise.all([
           base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
           base44.entities.Pago.filter({ usuario_email: me.email }),
@@ -73,10 +80,9 @@ export default function Portal() {
           });
           setTorneoConfig(cfg);
         }
+      } catch (dataErr) {
+        console.error("Error loading data", dataErr);
       }
-    } catch (e) {
-      console.error(e);
-      base44.auth.redirectToLogin();
     }
     setLoading(false);
   }
