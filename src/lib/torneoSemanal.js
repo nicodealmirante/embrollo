@@ -58,11 +58,18 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
 
       const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
       const generado = entregadosSemana.reduce((s, p) => {
-        const total = Number(p.total) || ((Number(p.cantidad) || 0) * (Number(p.valor_usado) || 0));
+        let total = Number(p.total) || 0;
+        if (total <= 0) {
+          let valor_usado = Number(p.valor_usado) || 0;
+          if (valor_usado <= 0) {
+            valor_usado = p.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+          }
+          total = (Number(p.cantidad) || 0) * valor_usado;
+        }
         return s + total;
       }, 0);
       const deuda = calcularSaldoUsuario(user.email, pedidos, pagos);
-      const puntaje = generado - deuda;
+      const puntaje = entregadosSemana.length === 0 ? 0 : generado - deuda;
 
       return {
         id: user.id,
