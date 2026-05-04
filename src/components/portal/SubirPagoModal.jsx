@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Loader2, Upload, DollarSign } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { notificarPagoWA } from "@/functions/notificarPagoWA";
+import { getNombreVisible } from "@/lib/utils";
 
 export default function SubirPagoModal({ user, open, onClose, onSuccess }) {
   const [monto, setMonto] = useState("");
@@ -37,7 +38,7 @@ export default function SubirPagoModal({ user, open, onClose, onSuccess }) {
 
     const pagoData = {
       usuario_email: user.email,
-      usuario_nombre: user.full_name || user.email,
+      usuario_nombre: getNombreVisible(user),
       fecha: new Date().toISOString(),
       monto: parseFloat(monto),
       metodo,

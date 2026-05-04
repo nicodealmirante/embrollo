@@ -58,8 +58,8 @@ function UsuariosTab() {
   async function loadData() {
     const [usersResp, pedidosData, pagosData] = await Promise.all([
       listarUsuarios({}),
-      base44.entities.Pedido.list(),
-      base44.entities.Pago.list(),
+      base44.entities.Pedido.list("-created_date", 5000),
+      base44.entities.Pago.list("-created_date", 5000),
     ]);
     const usersData = usersResp.data?.users || [];
     setUsers(usersData);

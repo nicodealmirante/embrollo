@@ -65,7 +65,7 @@ export default function Portal() {
       try {
         const [ped, pag, torneoResp] = await Promise.all([
           base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
-          base44.entities.Pago.filter({ usuario_email: me.email }),
+          base44.entities.Pago.filter({ usuario_email: me.email }, "-created_date"),
           obtenerDatosTorneo({})
         ]);
         setPedidos(ped);
@@ -87,8 +87,18 @@ export default function Portal() {
     setLoading(false);
   }
 
-  const totalPedido = pedidos.filter(p => p.estado !== "cancelado").reduce((s, p) => s + (p.total || 0), 0);
-  const totalPagado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
+  const totalPedido = pedidos.filter(p => p.estado !== "cancelado").reduce((s, p) => {
+    let total = Number(p.total) || 0;
+    if (total <= 0 && p.estado === "entregado") {
+      let valorUsado = Number(p.valor_usado) || 0;
+      if (valorUsado <= 0) {
+        valorUsado = p.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+      }
+      total = (Number(p.cantidad) || 0) * valorUsado;
+    }
+    return s + total;
+  }, 0);
+  const totalPagado = pagos.filter(p => p.estado !== "rechazado").reduce((s, p) => s + (Number(p.monto) || 0), 0);
   const saldo = totalPedido - totalPagado;
   const pedidosPendientes = pedidos.filter(p => p.estado === "pendiente").length;
   const ultimoPedido = pedidos.filter(p => p.estado !== "cancelado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0] || null;
@@ -286,7 +296,21 @@ export default function Portal() {
                   .map((m, i) => {
                     const isPago = m._tipo === "pago";
                     const isContado = m._tipo === "contado";
-                    const montoVal = isPago ? m.monto : m.total;
+                    
+                    let montoVal = 0;
+                    if (isPago) {
+                      montoVal = m.monto;
+                    } else {
+                      montoVal = Number(m.total) || 0;
+                      if (montoVal <= 0) {
+                        let valorUsado = Number(m.valor_usado) || 0;
+                        if (valorUsado <= 0) {
+                          valorUsado = m.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+                        }
+                        montoVal = (Number(m.cantidad) || 0) * valorUsado;
+                      }
+                    }
+                    
                     const isDebe = (!isPago && !isContado) || (isPago && m.monto < 0);
                     const bgClass = isContado ? "bg-yellow-50 border-yellow-200" : isDebe ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200";
                     const labelClass = isContado ? "text-yellow-700" : isDebe ? "text-red-700" : "text-green-700";

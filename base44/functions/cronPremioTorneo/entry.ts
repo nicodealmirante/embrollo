@@ -17,13 +17,23 @@ function getSemanaKey(date = new Date()) {
   return inicio.toISOString().slice(0, 10);
 }
 
-function calcularSaldoUsuario(email: string, pedidos: any[] = [], pagos: any[] = []) {
+function calcularSaldoUsuario(email: string, pedidos: any[] = [], pagos: any[] = [], user: any = null) {
   const totalPedido = pedidos
     .filter((p) => p.usuario_email === email && p.estado !== 'cancelado')
-    .reduce((s, p) => s + (Number(p.total) || 0), 0);
+    .reduce((s, p) => {
+      let total = Number(p.total) || 0;
+      if (total <= 0 && user && p.estado === 'entregado') {
+        let valor_usado = Number(p.valor_usado) || 0;
+        if (valor_usado <= 0) {
+          valor_usado = p.tipo_pago === 'contado' ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+        }
+        total = (Number(p.cantidad) || 0) * valor_usado;
+      }
+      return s + total;
+    }, 0);
 
   const totalPagado = pagos
-    .filter((p) => p.usuario_email === email)
+    .filter((p) => p.usuario_email === email && p.estado !== 'rechazado')
     .reduce((s, p) => s + (Number(p.monto) || 0), 0);
 
   return totalPedido - totalPagado;
@@ -47,11 +57,18 @@ function calcularRankingSemanal(users: any[] = [], pedidos: any[] = [], pagos: a
 
       const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
       const generado = entregadosSemana.reduce((s, p) => {
-        const total = Number(p.total) || ((Number(p.cantidad) || 0) * (Number(p.valor_usado) || 0));
+        let total = Number(p.total) || 0;
+        if (total <= 0) {
+          let valor_usado = Number(p.valor_usado) || 0;
+          if (valor_usado <= 0) {
+            valor_usado = p.tipo_pago === 'contado' ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+          }
+          total = (Number(p.cantidad) || 0) * valor_usado;
+        }
         return s + total;
       }, 0);
-      const deuda = calcularSaldoUsuario(user.email, pedidos, pagos);
-      const puntaje = generado - deuda;
+      const deuda = calcularSaldoUsuario(user.email, pedidos, pagos, user);
+      const puntaje = entregadosSemana.length === 0 ? 0 : generado - deuda;
 
       return {
         id: user.id,
@@ -90,8 +107,8 @@ Deno.serve(async (req) => {
     }
 
     const [users, pedidos] = await Promise.all([
-      base44.asServiceRole.entities.User.list(),
-      base44.asServiceRole.entities.Pedido.list(),
+      base44.asServiceRole.entities.User.list("-created_date", 1000),
+      base44.asServiceRole.entities.Pedido.list("-created_date", 5000),
     ]);
 
     const ranking = calcularRankingSemanal(users, pedidos, pagos);

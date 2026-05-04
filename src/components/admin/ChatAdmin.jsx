@@ -40,15 +40,15 @@ export default function ChatAdmin() {
   }, [mensajes]);
 
   async function loadTodosUsuarios() {
-    const all = await base44.entities.User.list();
+    const all = await base44.entities.User.list("-created_date", 1000);
     setTodosUsuarios(all.filter(u => u.role !== "admin"));
   }
 
   async function loadUsuarios() {
-    const todos = await base44.entities.Mensaje.list("-created_date");
+    const todos = await base44.entities.Mensaje.list("-created_date", 5000);
     const emailsUnicos = [...new Set(todos.map(m => m.usuario_email))];
     const nl = {};
-    const allUsers = await base44.entities.User.list();
+    const allUsers = await base44.entities.User.list("-created_date", 1000);
     const lista = emailsUnicos.map(email => {
       const msgs = todos.filter(m => m.usuario_email === email);
       nl[email] = msgs.filter(m => !m.es_admin && !m.leido).length;

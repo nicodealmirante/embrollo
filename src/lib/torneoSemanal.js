@@ -10,13 +10,23 @@ export function getInicioSemanaArgentina(date = new Date()) {
   return argentinaNow;
 }
 
-export function calcularSaldoUsuario(email, pedidos = [], pagos = []) {
+export function calcularSaldoUsuario(email, pedidos = [], pagos = [], user = null) {
   const totalPedido = pedidos
     .filter((p) => p.usuario_email === email && p.estado !== "cancelado")
-    .reduce((s, p) => s + (Number(p.total) || 0), 0);
+    .reduce((s, p) => {
+      let total = Number(p.total) || 0;
+      if (total <= 0 && user && p.estado === "entregado") {
+        let valor_usado = Number(p.valor_usado) || 0;
+        if (valor_usado <= 0) {
+          valor_usado = p.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+        }
+        total = (Number(p.cantidad) || 0) * valor_usado;
+      }
+      return s + total;
+    }, 0);
 
   const totalPagado = pagos
-    .filter((p) => p.usuario_email === email)
+    .filter((p) => p.usuario_email === email && p.estado !== "rechazado")
     .reduce((s, p) => s + (Number(p.monto) || 0), 0);
 
   return totalPedido - totalPagado;
@@ -68,7 +78,7 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
         }
         return s + total;
       }, 0);
-      const deuda = calcularSaldoUsuario(user.email, pedidos, pagos);
+      const deuda = calcularSaldoUsuario(user.email, pedidos, pagos, user);
       const puntaje = entregadosSemana.length === 0 ? 0 : generado - deuda;
 
       return {

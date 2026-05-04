@@ -10,9 +10,9 @@ Deno.serve(async (req) => {
     }
 
     const [users, pedidos, pagos, configs] = await Promise.all([
-      base44.asServiceRole.entities.User.list(),
-      base44.asServiceRole.entities.Pedido.list(),
-      base44.asServiceRole.entities.Pago.list(),
+      base44.asServiceRole.entities.User.list("-created_date", 1000),
+      base44.asServiceRole.entities.Pedido.list("-created_date", 5000),
+      base44.asServiceRole.entities.Pago.list("-created_date", 5000),
       base44.asServiceRole.entities.ConfigApp.list().catch(() => [])
     ]);
 
