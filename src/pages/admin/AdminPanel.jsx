@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink, Store } from "lucide-react";
 import { listarUsuarios } from "@/functions/listarUsuarios";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import CalculoTab from "../../components/admin/CalculoTab";
+import VentasExternasTab from "../../components/admin/VentasExternasTab";
 import VistaPreviaUsuarioModal from "../../components/admin/VistaPreviaUsuarioModal";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
@@ -745,7 +746,7 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-xl mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 bg-muted p-1 rounded-xl mb-6">
           <button
             onClick={() => setTab("dashboard")}
             className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "dashboard" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
@@ -792,9 +793,16 @@ export default function AdminPanel() {
           >
             <Calculator className="w-4 h-4" /> Cálculo
           </button>
+          <button
+            onClick={() => setTab("ventas_externas")}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "ventas_externas" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <Store className="w-4 h-4" /> Externas
+          </button>
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
+        {tab === "ventas_externas" && <VentasExternasTab />}
         {tab === "usuarios" && <UsuariosTab />}
         {tab === "solicitudes" && <SolicitudesTab />}
         {tab === "chat" && <ChatAdmin />}

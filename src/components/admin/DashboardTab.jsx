@@ -13,6 +13,7 @@ export default function DashboardTab() {
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [users, setUsers] = useState([]);
+  const [ventasExternas, setVentasExternas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,10 +21,12 @@ export default function DashboardTab() {
       base44.entities.Pedido.list(),
       base44.entities.Pago.list(),
       base44.entities.User.list(),
-    ]).then(([p, pa, u]) => {
+      base44.entities.VentaExterna.list(),
+    ]).then(([p, pa, u, ve]) => {
       setPedidos(p);
       setPagos(pa);
       setUsers(u);
+      setVentasExternas(ve);
       setLoading(false);
     });
   }, []);
@@ -45,7 +48,22 @@ export default function DashboardTab() {
     const pagado = pagos
       .filter(p => moment(p.fecha).isSame(mes, "month"))
       .reduce((s, p) => s + (p.monto || 0), 0);
-    ventasPorMes.push({ mes: label, Ventas: total, Pagos: pagado });
+    
+    // Externas
+    const totalExt = ventasExternas
+      .filter(v => moment(v.fecha).isSame(mes, "month"))
+      .reduce((s, v) => s + (v.total || 0), 0);
+    const pagadoExt = ventasExternas
+      .filter(v => moment(v.fecha).isSame(mes, "month"))
+      .reduce((s, v) => s + (v.monto_pagado || 0), 0);
+
+    ventasPorMes.push({ 
+      mes: label, 
+      Ventas: total, 
+      Pagos: pagado,
+      "Ventas Ext": totalExt,
+      "Pagos Ext": pagadoExt,
+    });
   }
 
   // Usuarios más activos (por total pedido)
@@ -68,6 +86,12 @@ export default function DashboardTab() {
   const totalCobrado = pagos.reduce((s, p) => s + (p.monto || 0), 0);
   const deudaPendiente = totalVentas - totalCobrado;
 
+  // Externas
+  const totalVentasExt = ventasExternas.reduce((s, v) => s + (v.total || 0), 0);
+  const totalCobradoExt = ventasExternas.reduce((s, v) => s + (v.monto_pagado || 0), 0);
+  const deudaExtPendiente = ventasExternas.reduce((s, v) => s + (v.saldo_pendiente || 0), 0);
+  const totalProductosExt = ventasExternas.reduce((s, v) => s + (v.cantidad || 0), 0);
+
   const pieData = [
     { name: "Cobrado", value: totalCobrado },
     { name: "Pendiente", value: Math.max(deudaPendiente, 0) },
@@ -75,23 +99,51 @@ export default function DashboardTab() {
 
   return (
     <div className="space-y-6">
-      {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Total Ventas</p>
-          <p className="text-xl font-bold text-foreground">${totalVentas.toLocaleString()}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Cobrado</p>
-          <p className="text-xl font-bold text-green-600">${totalCobrado.toLocaleString()}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Deuda</p>
-          <p className={`text-xl font-bold ${deudaPendiente > 0 ? "text-red-600" : "text-green-600"}`}>
-            ${Math.max(deudaPendiente, 0).toLocaleString()}
-          </p>
+      {/* KPIs Principales */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3">Resumen de Sistema</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Total Ventas</p>
+            <p className="text-xl font-bold text-foreground">${totalVentas.toLocaleString()}</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Cobrado</p>
+            <p className="text-xl font-bold text-green-600">${totalCobrado.toLocaleString()}</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Deuda</p>
+            <p className={`text-xl font-bold ${deudaPendiente > 0 ? "text-red-600" : "text-green-600"}`}>
+              ${Math.max(deudaPendiente, 0).toLocaleString()}
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* KPIs Externos */}
+      {ventasExternas.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3 text-amber-600">Resumen de Ventas Externas</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+              <p className="text-[10px] text-amber-700 uppercase tracking-wide mb-1">Prod. Vendidos</p>
+              <p className="text-xl font-bold text-amber-700">{totalProductosExt.toLocaleString()}</p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+              <p className="text-[10px] text-amber-700 uppercase tracking-wide mb-1">Total Externo</p>
+              <p className="text-xl font-bold text-amber-700">${totalVentasExt.toLocaleString()}</p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-[10px] text-green-700 uppercase tracking-wide mb-1">Cobrado Ext</p>
+              <p className="text-xl font-bold text-green-700">${totalCobradoExt.toLocaleString()}</p>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <p className="text-[10px] text-red-700 uppercase tracking-wide mb-1">Deuda Ext</p>
+              <p className="text-xl font-bold text-red-700">${deudaExtPendiente.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ventas por mes */}
       <div className="bg-card border border-border rounded-xl p-4">
@@ -105,6 +157,8 @@ export default function DashboardTab() {
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="Ventas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             <Bar dataKey="Pagos" fill="#10b981" radius={[4, 4, 0, 0]} />
+            {ventasExternas.length > 0 && <Bar dataKey="Ventas Ext" fill="#f59e0b" radius={[4, 4, 0, 0]} />}
+            {ventasExternas.length > 0 && <Bar dataKey="Pagos Ext" fill="#8b5cf6" radius={[4, 4, 0, 0]} />}
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -1,0 +1,63 @@
+{
+  "name": "VentaExterna",
+  "type": "object",
+  "properties": {
+    "cliente_nombre": {
+      "type": "string",
+      "title": "Nombre del Cliente"
+    },
+    "cliente_telefono": {
+      "type": "string",
+      "title": "Tel\u00e9fono o Referencia"
+    },
+    "cantidad": {
+      "type": "number",
+      "title": "Cantidad",
+      "default": 1
+    },
+    "precio_unitario": {
+      "type": "number",
+      "title": "Precio Unitario",
+      "default": 0
+    },
+    "total": {
+      "type": "number",
+      "title": "Total",
+      "default": 0
+    },
+    "estado_pago": {
+      "type": "string",
+      "enum": [
+        "pago",
+        "debe"
+      ],
+      "title": "Estado de Pago",
+      "default": "pago"
+    },
+    "monto_pagado": {
+      "type": "number",
+      "title": "Monto Pagado",
+      "default": 0
+    },
+    "saldo_pendiente": {
+      "type": "number",
+      "title": "Saldo Pendiente",
+      "default": 0
+    },
+    "observaciones": {
+      "type": "string",
+      "title": "Observaciones"
+    },
+    "fecha": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Fecha"
+    }
+  },
+  "required": [
+    "cliente_nombre",
+    "cantidad",
+    "total",
+    "estado_pago"
+  ]
+}
