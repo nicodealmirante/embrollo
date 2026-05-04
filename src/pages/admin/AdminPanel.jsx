@@ -762,6 +762,74 @@ function PedidosTab() {
   );
 }
 
+// ─── Gestión Tab ──────────────────────────────────────────────────────────────
+function GestionTab() {
+  const [pedidos, setPedidos] = useState([]);
+  const [pagos, setPagos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      base44.entities.Pedido.list("-created_date"),
+      base44.entities.Pago.list("-created_date")
+    ]).then(([ped, pag]) => {
+      setPedidos(ped);
+      setPagos(pag);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
+
+  const items = [
+    ...pedidos.map(p => ({ ...p, _type: 'pedido', _date: new Date(p.fecha) })),
+    ...pagos.map(p => ({ ...p, _type: 'pago', _date: new Date(p.fecha) }))
+  ].sort((a, b) => b._date - a._date);
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm mb-4">
+        <h2 className="text-xl font-bold">Gestión Centralizada</h2>
+        <p className="text-sm text-muted-foreground">Todos los pedidos y pagos en un solo lugar.</p>
+      </div>
+
+      <div className="space-y-3">
+        {items.map((item, idx) => (
+          <div key={idx} className={`bg-card rounded-2xl border border-border p-4 shadow-sm ${item._type === 'pago' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-blue-500'}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item._type === 'pago' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {item._type}
+                  </span>
+                  <EstadoBadge estado={item.estado} />
+                </div>
+                <p className="font-semibold text-sm">{item.usuario_nombre || item.usuario_email}</p>
+                <p className="text-xs text-muted-foreground">{moment(item.fecha).format("DD/MM/YY HH:mm")}</p>
+              </div>
+              <div className="text-right">
+                {item._type === 'pago' ? (
+                  <>
+                    <p className="font-bold text-green-600">${(item.monto || 0).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{item.metodo}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-bold text-blue-600">{item.cantidad} unidades</p>
+                    <p className="text-xs text-muted-foreground capitalize">{item.tipo_pago}</p>
+                  </>
+                )}
+              </div>
+            </div>
+            {item.observaciones && <p className="mt-2 text-xs text-muted-foreground italic bg-muted/50 p-2 rounded-lg">{item.observaciones}</p>}
+          </div>
+        ))}
+        {items.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No hay registros.</p>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
   const [tab, setTab] = useState("pedidos");
@@ -841,6 +909,12 @@ export default function AdminPanel() {
             )}
           </button>
           <button
+            onClick={() => setTab("gestion")}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "gestion" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+          >
+            <ClipboardList className="w-4 h-4" /> Gestión
+          </button>
+          <button
             onClick={() => setTab("config")}
             className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${tab === "config" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
           >
@@ -855,6 +929,7 @@ export default function AdminPanel() {
         </div>
 
         {tab === "dashboard" && <DashboardTab />}
+        {tab === "gestion" && <GestionTab />}
         {tab === "usuarios" && <UsuariosTab />}
         {tab === "pedidos" && <PedidosTab />}
         {tab === "chat" && <ChatAdmin />}

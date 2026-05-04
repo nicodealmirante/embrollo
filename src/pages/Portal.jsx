@@ -9,6 +9,8 @@ import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
 import TelefonoConfig from "../components/TelefonoConfig";
 import SubirPagoModal from "../components/portal/SubirPagoModal";
+import TorneoPuestoCard from "../components/portal/TorneoPuestoCard";
+import { obtenerDatosTorneo } from "@/functions/obtenerDatosTorneo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +21,10 @@ export default function Portal() {
   const [user, setUser] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
+  const [todosUsuarios, setTodosUsuarios] = useState([]);
+  const [todosPedidos, setTodosPedidos] = useState([]);
+  const [todosPagos, setTodosPagos] = useState([]);
+  const [torneoConfig, setTorneoConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const [cantidad, setCantidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -43,12 +49,23 @@ export default function Portal() {
       }
       setUser(me);
       if (me.estado === "activo") {
-        const [ped, pag] = await Promise.all([
+        const [ped, pag, torneoResp] = await Promise.all([
           base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
           base44.entities.Pago.filter({ usuario_email: me.email }),
+          obtenerDatosTorneo({})
         ]);
         setPedidos(ped);
         setPagos(pag);
+        if (torneoResp?.data) {
+          setTodosUsuarios(torneoResp.data.users || []);
+          setTodosPedidos(torneoResp.data.pedidos || []);
+          setTodosPagos(torneoResp.data.pagos || []);
+          const cfg = {};
+          (torneoResp.data.configs || []).forEach(c => {
+             if (c.clave) cfg[c.clave] = c.valor;
+          });
+          setTorneoConfig(cfg);
+        }
       }
     } catch {
       base44.auth.redirectToLogin();
@@ -154,6 +171,10 @@ export default function Portal() {
             </div>
           </div>
         </div>
+
+        {torneoConfig.torneo_activo !== "false" && (
+          <TorneoPuestoCard user={user} users={todosUsuarios} pedidos={todosPedidos} pagos={todosPagos} config={torneoConfig} />
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <Button variant="outline" className="h-12 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50" onClick={() => setPagoModalOpen(true)}>

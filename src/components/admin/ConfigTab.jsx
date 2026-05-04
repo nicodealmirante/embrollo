@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Settings, Shield, User, MessageSquare } from "lucide-react";
+import { Settings, Shield, User, MessageSquare, Trophy } from "lucide-react";
 import WhatsAppConfigTab from "@/components/admin/WhatsAppConfigTab";
+import TorneoConfigTab from "@/components/admin/TorneoConfigTab";
 
 export default function ConfigTab() {
   const { adminName, userName } = useRoleNames();
@@ -48,9 +49,17 @@ export default function ConfigTab() {
         >
           <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
         </button>
+        <button
+          onClick={() => setSubTab("torneo")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "torneo" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+        >
+          <Trophy className="w-3.5 h-3.5" /> Torneo
+        </button>
       </div>
 
       {subTab === "whatsapp" && <WhatsAppConfigTab />}
+      
+      {subTab === "torneo" && <TorneoConfigTab />}
 
       {subTab === "roles" && <div className="space-y-6">
       <div className="bg-card rounded-xl border border-border p-5 space-y-5">

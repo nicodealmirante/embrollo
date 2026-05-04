@@ -43,7 +43,7 @@ function playTorneoSound(type = "subio") {
   } catch {}
 }
 
-export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos = [] }) {
+export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos = [], config = {} }) {
   const ranking = calcularRankingSemanal(users, pedidos, pagos);
   const miPuesto = ranking.find((r) => r.email === user?.email);
   const puesto = miPuesto?.puesto || "-";
@@ -53,16 +53,20 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
   const MovimientoIcon = movimiento.icon;
   const esPrimero = miPuesto?.puesto === 1;
   const rankingVisible = ranking.slice(0, 10);
-  const premioTexto = miPuesto?.deuda > 0 ? "$80.000 de descuento en tu deuda" : "80 unidades de premio";
+  const premioTexto = miPuesto?.deuda > 0 
+    ? `$${Number(config.torneo_premio_descuento_deuda || 80000).toLocaleString("es-AR")} de descuento en tu deuda` 
+    : `${config.torneo_premio_unidades || 80} unidades`;
 
   useEffect(() => {
     if (!user?.email || !miPuesto?.puesto) return;
     const last = Number(localStorage.getItem(storageKey)) || null;
     const current = Number(miPuesto.puesto);
-    if (last && current < last) playTorneoSound(current === 1 ? "primero" : "subio");
-    if (!last && current === 1) playTorneoSound("primero");
+    if (config.torneo_sonidos !== "false") {
+      if (last && current < last) playTorneoSound(current === 1 ? "primero" : "subio");
+      if (!last && current === 1) playTorneoSound("primero");
+    }
     localStorage.setItem(storageKey, String(current));
-  }, [user?.email, miPuesto?.puesto]);
+  }, [user?.email, miPuesto?.puesto, config.torneo_sonidos]);
 
   return (
     <div className="space-y-3">
@@ -76,7 +80,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-700">Ganaste</p>
               <h2 className="text-2xl font-black text-amber-950">Vas primero en el torneo</h2>
-              <p className="mt-1 text-sm font-semibold text-amber-800">Si cerrás la semana así: {premioTexto}.</p>
+              <p className="mt-1 text-sm font-semibold text-amber-800">Si cerrás la semana así, ganás {premioTexto}.</p>
             </div>
           </div>
         </div>
@@ -110,6 +114,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
           <p className="mt-1 text-xs text-muted-foreground">{movimiento.texto}</p>
         </div>
 
+        {config.torneo_ranking_visible !== "false" && (
         <div className="relative mt-4 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Puestos</p>
           {rankingVisible.length === 0 ? (
@@ -129,6 +134,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
             })
           )}
         </div>
+        )}
       </div>
     </div>
   );
