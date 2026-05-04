@@ -82,15 +82,19 @@ function UsuariosTab() {
 
   const openEdit = (user) => {
     setEditDialog(user);
-    setEditForm({ link_titulo: user.link_titulo || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "" });
+    setEditForm({ link_titulo: user.link_titulo || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
   };
 
   const saveEdit = async () => {
+    if (editForm.role === "admin" && editDialog.role !== "admin") {
+      if (!confirm(`¿Convertir a ${editDialog.full_name || editDialog.email} en administrador?`)) return;
+    }
     setSaving(true);
     await base44.entities.User.update(editDialog.id, {
       link_titulo: editForm.link_titulo,
       valor_contado: parseFloat(editForm.valor_contado) || 0,
       valor_cuenta: parseFloat(editForm.valor_cuenta) || 0,
+      role: editForm.role,
     });
     if (editForm.ajuste && parseFloat(editForm.ajuste) !== 0) {
       await base44.entities.Pago.create({
@@ -347,19 +351,6 @@ function UsuariosTab() {
                   <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
               )}
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
-                onClick={async () => {
-                  if (!confirm(`¿Convertir a ${user.full_name || user.email} en administrador?`)) return;
-                  await base44.entities.User.update(user.id, { role: "admin" });
-                  toast({ title: "Usuario promovido a admin" });
-                  loadData();
-                }}
-              >
-                <Shield className="w-3 h-3" /> Hacer admin
-              </Button>
               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
                 <Trash2 className="w-3 h-3" />
               </Button>
@@ -383,6 +374,16 @@ function UsuariosTab() {
                 <Label className="text-xs text-red-600">Ajuste de saldo</Label>
                 <p className="text-[10px] text-muted-foreground mb-1">Positivo para abonar, negativo para agregar deuda. Saldo actual: <strong>${getSaldo(editDialog.email).toLocaleString()}</strong></p>
                 <Input type="number" value={editForm.ajuste} onChange={e => setEditForm(f => ({ ...f, ajuste: e.target.value }))} placeholder="Ej: 5000 o -2000" className="mt-1" />
+              </div>
+              <div className="pt-3 border-t border-border">
+                <Label className="text-xs font-semibold flex items-center gap-1"><Shield className="w-3 h-3" /> Permisos</Label>
+                <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v }))}>
+                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Usuario</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button onClick={saveEdit} disabled={saving} className="w-full">{saving ? "Guardando..." : "Guardar cambios"}</Button>
             </div>
