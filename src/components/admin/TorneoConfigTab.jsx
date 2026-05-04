@@ -92,10 +92,10 @@ export default function TorneoConfigTab() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Torneo semanal</p>
             <h2 className="text-xl font-black">Configuración y ranking</h2>
             <p className="text-sm text-muted-foreground">Fórmula explicada con variables:<br/>
-A: unidades semanales<br/>
+A: unidades vendidas semanales<br/>
 B: costo unidad dashboard admin<br/>
 C: valor contado del usuario<br/>
-<strong>Puntos = (A × B × C) - deuda general</strong><br/>
+<strong>Puntos = ((C - B) × A) - deuda general</strong><br/>
 Semana actual: lunes 00:00 a domingo 23:59</p>
           </div>
           <Trophy className="h-8 w-8 text-amber-500" />
@@ -140,12 +140,13 @@ Semana actual: lunes 00:00 a domingo 23:59</p>
 
         <div className="space-y-2">
           {ranking.map((item) => (
-            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_80px_80px_80px_80px_90px]">
+            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_80px_80px_80px_80px_80px_90px]">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-sm font-black">#{item.puesto}</div>
               <div className="min-w-0"><p className="font-semibold truncate">{item.nombre}</p><p className="text-xs text-muted-foreground truncate">{item.email}</p></div>
               <Metric label="A unidades" value={item.unidadesSemana} />
               <Metric label="B costo" value={`$${Math.round(item.costoUnidadDashboardAdmin).toLocaleString("es-AR")}`} />
-              <Metric label="C v.contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
+              <Metric label="C contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
+              <Metric label="Margen C-B" value={`$${Math.round(item.margen).toLocaleString("es-AR")}`} />
               <Metric label="Deuda gen." value={`$${Math.round(item.deudaGeneral).toLocaleString("es-AR")}`} />
               <Metric label="Pts. finales" value={Math.round(item.puntaje).toLocaleString("es-AR")} />
             </div>

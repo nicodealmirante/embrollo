@@ -45,7 +45,6 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
                   <span className="w-5 font-bold opacity-80">#{r.puesto}</span>
                   <span className="truncate max-w-[140px]">{r.nombre.split(' ')[0]}</span>
                 </div>
-                {/* Mostrar puntos sólo del usuario */}
                 <span className="font-semibold opacity-90">{r.email === user.email ? Math.round(r.puntaje) + ' pts' : '-'}</span>
               </div>
             ))}
