@@ -69,9 +69,12 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = [], con
       const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
       const valorContado = Number(user.valor_contado || 0);
       const costoUnidadAdmin = Number(config.torneo_costo_unidad_admin || 1);
-      const puntaje = valorContado * costoUnidadAdmin * productosVendidos;
       
-      const deuda = calcularSaldoUsuario(user.email, pedidos, pagos, user);
+      // La deuda general incluye todos los pedidos no cancelados menos los pagos
+      const deudaGeneral = calcularSaldoUsuario(user.email, pedidos, pagos, user);
+      
+      const base = valorContado * costoUnidadAdmin * productosVendidos;
+      const puntaje = base - deudaGeneral;
 
       return {
         id: user.id,
@@ -80,9 +83,9 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = [], con
         productosVendidos,
         valorContado,
         costoUnidadAdmin,
-        deuda,
+        deuda: deudaGeneral,
         puntaje,
-        premioSiGana: calcularPremioTorneo(deuda),
+        premioSiGana: calcularPremioTorneo(deudaGeneral),
       };
     })
     .sort((a, b) => {

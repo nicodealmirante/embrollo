@@ -91,7 +91,7 @@ export default function TorneoConfigTab() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Torneo semanal</p>
             <h2 className="text-xl font-black">Configuración y ranking</h2>
-            <p className="text-sm text-muted-foreground">Puntaje: valor contado del usuario × costo unidad admin × unidades semanales.<br/>Semana actual: lunes 00:00 a domingo 23:59</p>
+            <p className="text-sm text-muted-foreground">Fórmula: Puntos = (valor contado del usuario × costo unidad admin × unidades semanales) - deuda general.<br/>Semana actual: lunes 00:00 a domingo 23:59</p>
           </div>
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>
@@ -135,12 +135,13 @@ export default function TorneoConfigTab() {
 
         <div className="space-y-2">
           {ranking.map((item) => (
-            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_60px_80px_80px_90px]">
+            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_60px_80px_80px_80px_90px]">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-sm font-black">#{item.puesto}</div>
               <div className="min-w-0"><p className="font-semibold truncate">{item.nombre}</p><p className="text-xs text-muted-foreground truncate">{item.email}</p></div>
               <Metric label="Unidades" value={item.productosVendidos} />
               <Metric label="V.Contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
               <Metric label="C.Admin" value={`$${Math.round(item.costoUnidadAdmin).toLocaleString("es-AR")}`} />
+              <Metric label="Deuda" value={`$${Math.round(item.deuda).toLocaleString("es-AR")}`} />
               <Metric label="Puntos" value={Math.round(item.puntaje).toLocaleString("es-AR")} />
             </div>
           ))}
