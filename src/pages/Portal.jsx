@@ -182,6 +182,12 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
               <p className="text-sm opacity-80">Bienvenido/a</p>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={() => setConfigModalOpen(true)}
+                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() => {
                     if (adminPreviewMode) {
                       toast({ title: "Vista previa", description: "Chat deshabilitado." });
@@ -250,11 +256,8 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
           }}>
             <DollarSign className="w-5 h-5" /> Informar pago
           </Button>
-          <Button variant="outline" className="h-12 gap-2 rounded-2xl font-semibold shadow-sm" onClick={() => setHistorialOpen(true)}>
+          <Button variant="outline" className="col-span-2 h-12 gap-2 rounded-2xl font-semibold shadow-sm" onClick={() => setHistorialOpen(true)}>
             <ClipboardList className="w-4 h-4 text-muted-foreground" /> Historial
-          </Button>
-          <Button variant="outline" className="h-12 gap-2 rounded-2xl font-semibold shadow-sm" onClick={() => setConfigModalOpen(true)}>
-            <Settings className="w-4 h-4 text-muted-foreground" /> Configuración
           </Button>
         </div>
 
