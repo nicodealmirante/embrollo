@@ -55,28 +55,27 @@ function calcularRankingSemanal(users: any[] = [], pedidos: any[] = [], pagos: a
         return fecha >= inicioSemana && fecha <= finSemana;
       });
 
-      const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
-      const valorContado = Number(user.valor_contado || 0);
-      const costoUnidadAdmin = Number(config.torneo_costo_unidad_admin || 1);
+      const A = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
+      const B = Number(config.torneo_costo_unidad_admin || 1);
+      const C = Number(user.valor_contado || 0);
       
       const deudaGeneral = calcularSaldoUsuario(user.email, pedidos, pagos, user);
-      const base = valorContado * costoUnidadAdmin * productosVendidos;
-      const puntaje = base - deudaGeneral;
+      const puntos = (A * B * C) - deudaGeneral;
 
       return {
         id: user.id,
         nombre: user.full_name || user.email,
         email: user.email,
-        productosVendidos,
-        valorContado,
-        costoUnidadAdmin,
-        deuda: deudaGeneral,
-        puntaje,
+        unidadesSemana: A,
+        costoUnidadDashboardAdmin: B,
+        valorContado: C,
+        deudaGeneral,
+        puntaje: puntos,
       };
     })
     .sort((a, b) => {
       if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
-      return b.productosVendidos - a.productosVendidos;
+      return b.unidadesSemana - a.unidadesSemana;
     })
     .map((item, index) => ({ ...item, puesto: index + 1 }));
 }

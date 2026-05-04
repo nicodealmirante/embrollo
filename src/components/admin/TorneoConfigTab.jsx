@@ -91,7 +91,12 @@ export default function TorneoConfigTab() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Torneo semanal</p>
             <h2 className="text-xl font-black">Configuración y ranking</h2>
-            <p className="text-sm text-muted-foreground">Fórmula: Puntos = (valor contado del usuario × costo unidad admin × unidades semanales) - deuda general.<br/>Semana actual: lunes 00:00 a domingo 23:59</p>
+            <p className="text-sm text-muted-foreground">Fórmula explicada con variables:<br/>
+A: unidades semanales<br/>
+B: costo unidad dashboard admin<br/>
+C: valor contado del usuario<br/>
+<strong>Puntos = (A × B × C) - deuda general</strong><br/>
+Semana actual: lunes 00:00 a domingo 23:59</p>
           </div>
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>
@@ -112,7 +117,7 @@ export default function TorneoConfigTab() {
             <Input value={config.torneo_premio_descuento_deuda} onChange={(e) => setConfig((c) => ({ ...c, torneo_premio_descuento_deuda: e.target.value }))} className="mt-1" />
           </div>
           <div>
-            <Label className="text-xs text-primary font-semibold">Costo unidad administrador</Label>
+            <Label className="text-xs text-primary font-semibold">Costo unidad dashboard admin (B)</Label>
             <Input value={config.torneo_costo_unidad_admin} onChange={(e) => setConfig((c) => ({ ...c, torneo_costo_unidad_admin: e.target.value }))} className="mt-1 border-primary" />
           </div>
         </div>
@@ -135,14 +140,14 @@ export default function TorneoConfigTab() {
 
         <div className="space-y-2">
           {ranking.map((item) => (
-            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_60px_80px_80px_80px_90px]">
+            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_80px_80px_80px_80px_90px]">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-sm font-black">#{item.puesto}</div>
               <div className="min-w-0"><p className="font-semibold truncate">{item.nombre}</p><p className="text-xs text-muted-foreground truncate">{item.email}</p></div>
-              <Metric label="Unidades" value={item.productosVendidos} />
-              <Metric label="V.Contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
-              <Metric label="C.Admin" value={`$${Math.round(item.costoUnidadAdmin).toLocaleString("es-AR")}`} />
-              <Metric label="Deuda" value={`$${Math.round(item.deuda).toLocaleString("es-AR")}`} />
-              <Metric label="Puntos" value={Math.round(item.puntaje).toLocaleString("es-AR")} />
+              <Metric label="A unidades" value={item.unidadesSemana} />
+              <Metric label="B costo" value={`$${Math.round(item.costoUnidadDashboardAdmin).toLocaleString("es-AR")}`} />
+              <Metric label="C v.contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
+              <Metric label="Deuda gen." value={`$${Math.round(item.deudaGeneral).toLocaleString("es-AR")}`} />
+              <Metric label="Pts. finales" value={Math.round(item.puntaje).toLocaleString("es-AR")} />
             </div>
           ))}
           {ranking.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Todavía no hay usuarios en el torneo.</p>}

@@ -30,9 +30,21 @@ export default function CalculoTab() {
   const fetchDolar = async () => {
     setLoading(true);
     setError(null);
-    const res = await fetch("https://dolarapi.com/v1/dolares/blue");
-    const data = await res.json();
-    setDolar(data.venta);
+    try {
+      const res = await fetch("https://dolarapi.com/v1/dolares/blue");
+      const data = await res.json();
+      setDolar(data.venta);
+      
+      const resultado = (3800 * data.venta) / 1000;
+      const configItems = await base44.entities.ConfigApp.filter({ clave: "torneo_costo_unidad_admin" });
+      if (configItems.length > 0) {
+         await base44.entities.ConfigApp.update(configItems[0].id, { valor: String(resultado) });
+      } else {
+         await base44.entities.ConfigApp.create({ clave: "torneo_costo_unidad_admin", valor: String(resultado) });
+      }
+    } catch (err) {
+      setError("Error de conexión");
+    }
     setLoading(false);
   };
 
