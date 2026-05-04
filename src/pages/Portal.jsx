@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import moment from "moment";
 import { getNombreVisible } from "@/lib/utils";
 
-export default function Portal({ adminPreviewMode = false, previewEmail = null, onExitAdminPreview = null }) {
+export default function Portal() {
   const [user, setUser] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
@@ -27,7 +27,6 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
   const [todosPedidos, setTodosPedidos] = useState([]);
   const [todosPagos, setTodosPagos] = useState([]);
   const [torneoConfig, setTorneoConfig] = useState({});
-  const [isPreview, setIsPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cantidad, setCantidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -48,34 +47,18 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
     setLoading(true);
     try {
       const me = await base44.auth.me();
-      const isPreviewQuery = adminPreviewMode || new URLSearchParams(window.location.search).get("preview") === "true";
       
-      let activeUser = me;
-      if (me.role === "admin" && isPreviewQuery) {
-        setIsPreview(true);
-        if (previewEmail) {
-          const matchedUser = await base44.entities.User.filter({ email: previewEmail });
-          if (matchedUser.length > 0) activeUser = matchedUser[0];
-        } else {
-          const pedAdmin = await base44.entities.Pedido.filter({ usuario_email: me.email });
-          if (pedAdmin.length > 0 || me.estado === "activo") {
-            activeUser = me;
-          } else {
-            const users = await base44.entities.User.list();
-            const nonAdminActive = users.filter(u => u.role !== "admin" && u.estado === "activo");
-            if (nonAdminActive.length > 0) activeUser = nonAdminActive[0];
-          }
-        }
-      } else if (me.role === "admin") {
-        activeUser = { ...me, estado: "activo" };
+      if (me.role === "admin") {
+        navigate("/admin", { replace: true });
+        return;
       }
 
-      setUser(activeUser);
+      setUser(me);
       
-      if (activeUser?.estado === "activo" || isPreviewQuery) {
+      if (me?.estado === "activo") {
         const [ped, pag, torneoResp] = await Promise.all([
-          base44.entities.Pedido.filter({ usuario_email: activeUser.email }, "-created_date"),
-          base44.entities.Pago.filter({ usuario_email: activeUser.email }),
+          base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
+          base44.entities.Pago.filter({ usuario_email: me.email }),
           obtenerDatosTorneo({})
         ]);
         setPedidos(ped);
@@ -93,9 +76,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
       }
     } catch (e) {
       console.error(e);
-      if (!adminPreviewMode) {
-        base44.auth.redirectToLogin();
-      }
+      base44.auth.redirectToLogin();
     }
     setLoading(false);
   }
@@ -113,10 +94,6 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
   };
 
   const handlePedido = async () => {
-    if (adminPreviewMode) {
-      toast({ title: "Modo vista previa", description: "Acción deshabilitada en la vista previa." });
-      return;
-    }
     const cant = parseFloat(cantidad);
     if (!cant || cant <= 0) {
       toast({ title: "Error", description: "Ingrese una cantidad válida", variant: "destructive" });
@@ -168,13 +145,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
 
         {/* Header */}
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm relative">
-          {isPreview && (
-            <div className="absolute top-0 inset-x-0 bg-red-600 text-center text-[11px] font-bold py-1 z-10 uppercase tracking-widest text-white shadow-md">
-              Vista previa admin ({user.email}) 
-              <button onClick={() => { if (onExitAdminPreview) onExitAdminPreview(); else navigate('/admin'); }} className="ml-3 underline hover:text-red-100">Volver al admin</button>
-            </div>
-          )}
-          <div className={`p-5 ${isPreview ? "pt-8" : ""}`}>
+          <div className="p-5">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm opacity-80">Bienvenido/a</p>
               <div className="flex items-center gap-3">
@@ -185,13 +156,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
                   <Settings className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => {
-                    if (adminPreviewMode) {
-                      toast({ title: "Vista previa", description: "Chat deshabilitado." });
-                    } else {
-                      setChatOpen(true);
-                    }
-                  }}
+                  onClick={() => setChatOpen(true)}
                   className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
                 >
                   <MessageCircle className="w-5 h-5" />
@@ -201,25 +166,8 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
                     </span>
                   )}
                 </button>
-                {user.role === "admin" && !isPreview && (
-                  <button onClick={() => {
-                    if (onExitAdminPreview) {
-                      onExitAdminPreview();
-                    } else {
-                      navigate('/admin');
-                    }
-                  }} className="text-xs opacity-90 hover:opacity-100 underline font-bold bg-white/10 px-2 py-1 rounded-md">
-                    Ir al admin
-                  </button>
-                )}
-                <button onClick={() => {
-                  if (adminPreviewMode) {
-                    if (onExitAdminPreview) onExitAdminPreview();
-                  } else {
-                    base44.auth.logout();
-                  }
-                }} className="text-xs opacity-70 hover:opacity-100 underline">
-                  {adminPreviewMode ? "Volver" : "Salir"}
+                <button onClick={() => base44.auth.logout()} className="text-xs opacity-70 hover:opacity-100 underline">
+                  Salir
                 </button>
               </div>
             </div>
@@ -246,22 +194,10 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
         )}
 
         <div className="grid grid-cols-2 gap-2 mt-4">
-          <Button className="h-14 gap-2 rounded-2xl font-bold shadow-sm" onClick={() => {
-            if (adminPreviewMode) {
-              toast({ title: "Vista previa", description: "Acción deshabilitada." });
-            } else {
-              setPedidoModalOpen(true);
-            }
-          }}>
+          <Button className="h-14 gap-2 rounded-2xl font-bold shadow-sm" onClick={() => setPedidoModalOpen(true)}>
             <PackagePlus className="w-5 h-5" /> Realizar pedido
           </Button>
-          <Button variant="outline" className="h-14 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50 font-bold shadow-sm" onClick={() => {
-            if (adminPreviewMode) {
-              toast({ title: "Vista previa", description: "Acción deshabilitada." });
-            } else {
-              setPagoModalOpen(true);
-            }
-          }}>
+          <Button variant="outline" className="h-14 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50 font-bold shadow-sm" onClick={() => setPagoModalOpen(true)}>
             <DollarSign className="w-5 h-5" /> Informar pago
           </Button>
           <Button variant="outline" className="col-span-2 h-12 gap-2 rounded-2xl font-semibold shadow-sm" onClick={() => setHistorialOpen(true)}>

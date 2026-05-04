@@ -1,14 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink, Store } from "lucide-react";
+import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink, Store, UserCheck } from "lucide-react";
 import { listarUsuarios } from "@/functions/listarUsuarios";
 import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import CalculoTab from "../../components/admin/CalculoTab";
 import VentasExternasTab from "../../components/admin/VentasExternasTab";
-import VistaPreviaUsuarioModal from "../../components/admin/VistaPreviaUsuarioModal";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -698,8 +697,6 @@ export default function AdminPanel() {
   const [tab, setTab] = useState("solicitudes");
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
-  const [previewUsuarioOpen, setPreviewUsuarioOpen] = useState(false);
-  const [usuariosActivos, setUsuariosActivos] = useState([]);
   const { adminName, userName } = useRoleNames();
   const navigate = useNavigate();
 
@@ -725,10 +722,6 @@ export default function AdminPanel() {
       setTimeout(checkPagosPendientes, 1000);
     });
 
-    base44.entities.User.list().then(us => {
-      setUsuariosActivos(us.filter(u => u.role !== "admin" && u.estado === "activo"));
-    });
-
     return () => { unsub(); unsubPagos(); clearTimeout(timeout); };
   }, []);
 
@@ -739,11 +732,6 @@ export default function AdminPanel() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 gap-2 font-bold" onClick={() => setPreviewUsuarioOpen(true)}>
-              <UserCheck className="w-3.5 h-3.5" /> Modo usuario
-            </Button>
-          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 bg-muted p-1 rounded-xl mb-6">
@@ -809,12 +797,6 @@ export default function AdminPanel() {
         {tab === "config" && <ConfigTab />}
         {tab === "calculo" && <CalculoTab />}
       </div>
-
-      <VistaPreviaUsuarioModal 
-        open={previewUsuarioOpen} 
-        onClose={() => setPreviewUsuarioOpen(false)} 
-        usuariosActivos={usuariosActivos}
-      />
     </div>
   );
 }
