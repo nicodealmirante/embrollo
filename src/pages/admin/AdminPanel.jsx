@@ -6,6 +6,7 @@ import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import CalculoTab from "../../components/admin/CalculoTab";
+import Portal from "../../pages/Portal";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -687,6 +688,9 @@ export default function AdminPanel() {
   const [tab, setTab] = useState("solicitudes");
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUser, setPreviewUser] = useState("");
+  const [usuariosActivos, setUsuariosActivos] = useState([]);
   const { adminName, userName } = useRoleNames();
 
   useEffect(() => {
@@ -711,17 +715,47 @@ export default function AdminPanel() {
       setTimeout(checkPagosPendientes, 1000);
     });
 
+    base44.entities.User.list().then(us => {
+      setUsuariosActivos(us.filter(u => u.role !== "admin" && u.estado === "activo"));
+    });
+
     return () => { unsub(); unsubPagos(); clearTimeout(timeout); };
   }, []);
+
+  if (previewOpen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
+        <Portal 
+          adminPreviewMode={true} 
+          previewEmail={previewUser || (usuariosActivos[0]?.email)} 
+          onExitAdminPreview={() => setPreviewOpen(false)} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
-          <Button variant="outline" size="sm" onClick={() => window.location.href = '/portal?preview=true'}>
-            Ver modo usuario
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={previewUser} onValueChange={setPreviewUser}>
+              <SelectTrigger className="h-8 w-40 text-xs bg-card">
+                <SelectValue placeholder="Usuario vista previa" />
+              </SelectTrigger>
+              <SelectContent>
+                {usuariosActivos.map(u => (
+                  <SelectItem key={u.email} value={u.email}>
+                    {u.full_name || u.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setPreviewOpen(true)}>
+              Ver modo usuario
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-xl mb-6">

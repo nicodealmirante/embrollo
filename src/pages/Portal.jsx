@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import moment from "moment";
 
-export default function Portal() {
+export default function Portal({ adminPreviewMode = false, previewEmail = null, onExitAdminPreview = null }) {
   const [user, setUser] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [pagos, setPagos] = useState([]);
@@ -44,7 +44,7 @@ export default function Portal() {
     setLoading(true);
     try {
       const me = await base44.auth.me();
-      const isPreviewQuery = new URLSearchParams(window.location.search).get("preview") === "true";
+      const isPreviewQuery = adminPreviewMode || new URLSearchParams(window.location.search).get("preview") === "true";
       
       if (me.role === "admin" && !isPreviewQuery) {
         navigate("/admin");
@@ -54,13 +54,18 @@ export default function Portal() {
       let activeUser = me;
       if (me.role === "admin" && isPreviewQuery) {
         setIsPreview(true);
-        const pedAdmin = await base44.entities.Pedido.filter({ usuario_email: me.email });
-        if (pedAdmin.length > 0 || me.estado === "activo") {
-          activeUser = me;
+        if (previewEmail) {
+          const matchedUser = await base44.entities.User.filter({ email: previewEmail });
+          if (matchedUser.length > 0) activeUser = matchedUser[0];
         } else {
-          const users = await base44.entities.User.list();
-          const nonAdminActive = users.filter(u => u.role !== "admin" && u.estado === "activo");
-          if (nonAdminActive.length > 0) activeUser = nonAdminActive[0];
+          const pedAdmin = await base44.entities.Pedido.filter({ usuario_email: me.email });
+          if (pedAdmin.length > 0 || me.estado === "activo") {
+            activeUser = me;
+          } else {
+            const users = await base44.entities.User.list();
+            const nonAdminActive = users.filter(u => u.role !== "admin" && u.estado === "activo");
+            if (nonAdminActive.length > 0) activeUser = nonAdminActive[0];
+          }
         }
       }
 
@@ -157,7 +162,7 @@ export default function Portal() {
           {isPreview && (
             <div className="absolute top-0 inset-x-0 bg-red-600 text-center text-[11px] font-bold py-1 z-10 uppercase tracking-widest text-white shadow-md">
               Vista previa admin ({user.email}) 
-              <button onClick={() => navigate('/admin')} className="ml-3 underline hover:text-red-100">Volver</button>
+              <button onClick={() => { if (onExitAdminPreview) onExitAdminPreview(); else navigate('/admin'); }} className="ml-3 underline hover:text-red-100">Volver al admin</button>
             </div>
           )}
           <div className={`p-5 ${isPreview ? "pt-8" : ""}`}>
@@ -202,7 +207,7 @@ export default function Portal() {
 
         <div className="grid grid-cols-2 gap-2">
           <Button variant="outline" className="h-12 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50" onClick={() => setPagoModalOpen(true)}>
-            <DollarSign className="w-4 h-4" /> Pago
+            <DollarSign className="w-4 h-4" /> Informar pago
           </Button>
           <Button variant="outline" className="h-12 gap-2 rounded-2xl" onClick={() => setHistorialOpen(true)}>
             <ClipboardList className="w-4 h-4" /> Movimientos
@@ -213,8 +218,8 @@ export default function Portal() {
         <div className="bg-card rounded-3xl border border-border p-5 space-y-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pedido rápido</p>
-              <h2 className="text-xl font-black">Generar Pedido</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Nuevo pedido</p>
+              <h2 className="text-xl font-black">Solicitar pedido</h2>
             </div>
             <div className="rounded-2xl bg-primary/10 p-3 text-primary"><PackagePlus className="h-5 w-5" /></div>
           </div>
@@ -257,7 +262,7 @@ export default function Portal() {
           </div>
           <Button onClick={handlePedido} disabled={submitting} className="w-full min-h-12 rounded-2xl text-sm font-bold gap-2">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {submitting ? "Enviando..." : "Enviar Pedido"}
+            {submitting ? "Enviando..." : "Solicitar pedido"}
           </Button>
         </div>
 
