@@ -10,7 +10,6 @@ import { useToast } from "@/components/ui/use-toast";
 const DEFAULTS = {
   torneo_activo: "true",
   torneo_sonidos: "true",
-  torneo_ranking_general_visible: "true",
   torneo_premio_unidades: String(PREMIO_TORNEO_UNIDADES),
   torneo_premio_descuento_deuda: String(PREMIO_TORNEO_DESCUENTO_DEUDA),
 };
@@ -100,10 +99,9 @@ Semana actual: lunes 00:00 a domingo 23:59</p>
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ToggleCard title="Torneo activo" value={config.torneo_activo === "true"} onChange={(v) => setBool("torneo_activo", v)} />
           <ToggleCard title="Sonidos" value={config.torneo_sonidos === "true"} onChange={(v) => setBool("torneo_sonidos", v)} />
-          <ToggleCard title="Mostrar ranking general a usuarios" value={config.torneo_ranking_general_visible === "true"} onChange={(v) => setBool("torneo_ranking_general_visible", v)} />
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -35,22 +35,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
         </div>
       </div>
 
-      {config.torneo_ranking_general_visible === "true" && ranking.length > 0 && (
-        <div className="relative mt-4 rounded-2xl bg-black/10 p-3">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider opacity-90">Ranking Top</p>
-          <div className="space-y-1.5">
-            {ranking.slice(0, 10).map((r) => (
-              <div key={r.email} className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-sm ${r.email === user.email ? 'bg-white/20 font-bold' : ''}`}>
-                <div className="flex items-center gap-2">
-                  <span className="w-5 font-bold opacity-80">#{r.puesto}</span>
-                  <span className="truncate max-w-[140px]">{r.nombre.split(' ')[0]}</span>
-                </div>
-                <span className="font-semibold opacity-90">{r.email === user.email ? Math.round(r.puntaje) + ' pts' : '-'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
