@@ -36,11 +36,11 @@ export default function CalculoTab() {
       setDolar(data.venta);
       
       const resultado = (3800 * data.venta) / 1000;
-      const configItems = await base44.entities.ConfigApp.filter({ clave: "torneo_costo_unidad_admin" });
+      const configItems = await base44.entities.ConfigApp.filter({ clave: "resultado_calculo" });
       if (configItems.length > 0) {
          await base44.entities.ConfigApp.update(configItems[0].id, { valor: String(resultado) });
       } else {
-         await base44.entities.ConfigApp.create({ clave: "torneo_costo_unidad_admin", valor: String(resultado) });
+         await base44.entities.ConfigApp.create({ clave: "resultado_calculo", valor: String(resultado) });
       }
     } catch (err) {
       setError("Error de conexión");

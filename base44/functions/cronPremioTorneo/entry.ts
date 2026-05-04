@@ -56,7 +56,7 @@ function calcularRankingSemanal(users: any[] = [], pedidos: any[] = [], pagos: a
       });
 
       const A = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
-      const B = Number(config.torneo_costo_unidad_admin || 0);
+      const B = Number(config.resultado_calculo || 0);
       const C = Number(user.valor_contado || 0);
       
       const deudaGeneral = calcularSaldoUsuario(user.email, pedidos, pagos, user);

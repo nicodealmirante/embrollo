@@ -30,7 +30,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
           <div className="flex flex-col items-center justify-center bg-black/20 rounded-2xl p-3 min-w-[80px]">
             <Star className="w-5 h-5 text-amber-200 mb-1" />
             <span className="text-2xl font-black leading-none">{Math.round(puntaje)}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider opacity-90 mt-1">Puntos Semanales</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-90 mt-1">Puntos finales</span>
           </div>
         </div>
       </div>
