@@ -42,6 +42,8 @@ function UsuariosTab() {
   const [nuevoPedidoUser, setNuevoPedidoUser] = useState(null);
   const [npCantidad, setNpCantidad] = useState("1");
   const [npObs, setNpObs] = useState("");
+  const [npEstado, setNpEstado] = useState("pendiente");
+  const [npTipoPago, setNpTipoPago] = useState("cuenta");
   const [npSubmitting, setNpSubmitting] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
@@ -163,6 +165,8 @@ function UsuariosTab() {
     setNuevoPedidoUser(user);
     setNpCantidad("1");
     setNpObs("");
+    setNpEstado("pendiente");
+    setNpTipoPago("cuenta");
   };
 
   const cerrarNuevoPedido = () => {
@@ -170,6 +174,8 @@ function UsuariosTab() {
     setNuevoPedidoUser(null);
     setNpCantidad("1");
     setNpObs("");
+    setNpEstado("pendiente");
+    setNpTipoPago("cuenta");
   };
 
 
@@ -205,22 +211,40 @@ function UsuariosTab() {
 
     setNpSubmitting(true);
     try {
+      const valor = npTipoPago === 'contado' ? (nuevoPedidoUser.valor_contado || 0) : (nuevoPedidoUser.valor_cuenta || 0);
+      const total = npEstado === 'entregado' ? parseFloat(npCantidad) * valor : 0;
+      const valorUsado = npEstado === 'entregado' ? valor : 0;
+
       await base44.entities.Pedido.create({
         usuario_email: nuevoPedidoUser.email,
         usuario_nombre: getDisplayName(nuevoPedidoUser),
         fecha: new Date().toISOString(),
-        estado: "pendiente",
-        tipo_pago: "cuenta",
+        estado: npEstado,
+        tipo_pago: npTipoPago,
         cantidad: parseFloat(npCantidad),
-        valor_usado: 0,
-        total: 0,
+        valor_usado: valorUsado,
+        total: total,
         observaciones: npObs.trim(),
       });
+
+      if (npEstado === 'entregado' && npTipoPago === 'contado') {
+        await base44.entities.Pago.create({
+          usuario_email: nuevoPedidoUser.email,
+          usuario_nombre: getDisplayName(nuevoPedidoUser),
+          fecha: new Date().toISOString(),
+          monto: total,
+          metodo: 'efectivo',
+          referencia: 'Pago contado automático',
+          observaciones: `Pedido contado automático`,
+        });
+      }
 
       toast({ title: "Pedido creado", description: `Asignado a ${getDisplayName(nuevoPedidoUser)}` });
       setNuevoPedidoUser(null);
       setNpCantidad("1");
       setNpObs("");
+      setNpEstado("pendiente");
+      setNpTipoPago("cuenta");
       loadData();
     } catch (error) {
       toast({ title: "Error", description: "No se pudo crear el pedido", variant: "destructive" });
@@ -482,6 +506,28 @@ function UsuariosTab() {
                 <p className="text-sm font-semibold">{getDisplayName(nuevoPedidoUser)}</p>
                 <p className="text-xs text-muted-foreground">{nuevoPedidoUser.email}</p>
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Estado</Label>
+                  <Select value={npEstado} onValueChange={setNpEstado}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendiente">Pendiente</SelectItem>
+                      <SelectItem value="entregado">Entregado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Tipo de pago</Label>
+                  <Select value={npTipoPago} onValueChange={setNpTipoPago}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cuenta">A Cuenta</SelectItem>
+                      <SelectItem value="contado">Contado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <div>
                 <Label className="text-xs">Cantidad *</Label>
                 <Input
@@ -554,7 +600,7 @@ function SolicitudesTab() {
     if (tipoPagoEntrega === 'contado') {
       await base44.entities.Pago.create({
         usuario_email: p.usuario_email,
-        usuario_nombre: p.usuario_nombre,
+        usuario_nombre: p.usuario_nombre || getNombreVisible(user),
         fecha: new Date().toISOString(),
         monto: total,
         metodo: 'efectivo',

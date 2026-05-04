@@ -298,7 +298,7 @@ export default function Portal() {
                           <p className={`font-semibold text-sm ${labelClass}`}>{label}</p>
                           {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                         </div>
-                        {!isContado && <p className={`font-bold text-base ${labelClass}`}>${Math.abs(montoVal || 0).toLocaleString()}</p>}
+                        <p className={`font-bold text-base ${labelClass}`}>${Math.abs(montoVal || 0).toLocaleString()}</p>
                       </div>
                     );
                   })}
