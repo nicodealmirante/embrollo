@@ -71,7 +71,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
 
       setUser(activeUser);
       
-      if (activeUser.estado === "activo" || isPreviewQuery) {
+      if (activeUser?.estado === "activo" || isPreviewQuery) {
         const [ped, pag, torneoResp] = await Promise.all([
           base44.entities.Pedido.filter({ usuario_email: activeUser.email }, "-created_date"),
           base44.entities.Pago.filter({ usuario_email: activeUser.email }),
@@ -90,8 +90,11 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
           setTorneoConfig(cfg);
         }
       }
-    } catch {
-      base44.auth.redirectToLogin();
+    } catch (e) {
+      console.error(e);
+      if (!adminPreviewMode) {
+        base44.auth.redirectToLogin();
+      }
     }
     setLoading(false);
   }
@@ -109,6 +112,10 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
   };
 
   const handlePedido = async () => {
+    if (adminPreviewMode) {
+      toast({ title: "Modo vista previa", description: "Acción deshabilitada en la vista previa." });
+      return;
+    }
     const cant = parseFloat(cantidad);
     if (!cant || cant <= 0) {
       toast({ title: "Error", description: "Ingrese una cantidad válida", variant: "destructive" });
@@ -170,7 +177,13 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
               <p className="text-sm opacity-80">Bienvenido/a</p>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setChatOpen(true)}
+                  onClick={() => {
+                    if (adminPreviewMode) {
+                      toast({ title: "Vista previa", description: "Chat deshabilitado." });
+                    } else {
+                      setChatOpen(true);
+                    }
+                  }}
                   className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
                 >
                   <MessageCircle className="w-5 h-5" />
@@ -180,7 +193,15 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
                     </span>
                   )}
                 </button>
-                <button onClick={() => base44.auth.logout()} className="text-xs opacity-70 hover:opacity-100 underline">Salir</button>
+                <button onClick={() => {
+                  if (adminPreviewMode) {
+                    if (onExitAdminPreview) onExitAdminPreview();
+                  } else {
+                    base44.auth.logout();
+                  }
+                }} className="text-xs opacity-70 hover:opacity-100 underline">
+                  {adminPreviewMode ? "Volver" : "Salir"}
+                </button>
               </div>
             </div>
             <h1 className="text-2xl font-black leading-tight">{titulo}</h1>
@@ -206,7 +227,13 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
         )}
 
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="h-12 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50" onClick={() => setPagoModalOpen(true)}>
+          <Button variant="outline" className="h-12 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50" onClick={() => {
+            if (adminPreviewMode) {
+              toast({ title: "Vista previa", description: "Acción deshabilitada." });
+            } else {
+              setPagoModalOpen(true);
+            }
+          }}>
             <DollarSign className="w-4 h-4" /> Informar pago
           </Button>
           <Button variant="outline" className="h-12 gap-2 rounded-2xl" onClick={() => setHistorialOpen(true)}>
