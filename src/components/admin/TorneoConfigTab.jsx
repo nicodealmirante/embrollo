@@ -13,6 +13,7 @@ const DEFAULTS = {
   torneo_ranking_general_visible: "true",
   torneo_premio_unidades: String(PREMIO_TORNEO_UNIDADES),
   torneo_premio_descuento_deuda: String(PREMIO_TORNEO_DESCUENTO_DEUDA),
+  torneo_costo_unidad_admin: "1",
 };
 
 export default function TorneoConfigTab() {
@@ -48,7 +49,7 @@ export default function TorneoConfigTab() {
     setLoading(false);
   }
 
-  const ranking = useMemo(() => calcularRankingSemanal(users, pedidos, pagos), [users, pedidos, pagos]);
+  const ranking = useMemo(() => calcularRankingSemanal(users, pedidos, pagos, config), [users, pedidos, pagos, config]);
   const ganador = ranking[0];
 
   async function saveConfig() {
@@ -90,7 +91,7 @@ export default function TorneoConfigTab() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Torneo semanal</p>
             <h2 className="text-xl font-black">Configuración y ranking</h2>
-            <p className="text-sm text-muted-foreground">Puntaje: ventas entregadas de la semana menos deuda actual.<br/>Semana actual: lunes 00:00 a domingo 23:59</p>
+            <p className="text-sm text-muted-foreground">Puntaje: valor contado del usuario × costo unidad admin × unidades semanales.<br/>Semana actual: lunes 00:00 a domingo 23:59</p>
           </div>
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>
@@ -101,7 +102,7 @@ export default function TorneoConfigTab() {
           <ToggleCard title="Mostrar ranking general a usuarios" value={config.torneo_ranking_general_visible === "true"} onChange={(v) => setBool("torneo_ranking_general_visible", v)} />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <Label className="text-xs">Premio si está al día (unidades)</Label>
             <Input value={config.torneo_premio_unidades} onChange={(e) => setConfig((c) => ({ ...c, torneo_premio_unidades: e.target.value }))} className="mt-1" />
@@ -109,6 +110,10 @@ export default function TorneoConfigTab() {
           <div>
             <Label className="text-xs">Descuento si tiene deuda ($)</Label>
             <Input value={config.torneo_premio_descuento_deuda} onChange={(e) => setConfig((c) => ({ ...c, torneo_premio_descuento_deuda: e.target.value }))} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs text-primary font-semibold">Costo unidad administrador</Label>
+            <Input value={config.torneo_costo_unidad_admin} onChange={(e) => setConfig((c) => ({ ...c, torneo_costo_unidad_admin: e.target.value }))} className="mt-1 border-primary" />
           </div>
         </div>
 
@@ -130,13 +135,13 @@ export default function TorneoConfigTab() {
 
         <div className="space-y-2">
           {ranking.map((item) => (
-            <div key={item.email} className="grid grid-cols-[54px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[54px_1fr_repeat(4,120px)]">
+            <div key={item.email} className="grid grid-cols-[40px_1fr] gap-3 rounded-2xl border bg-background p-3 sm:grid-cols-[40px_1fr_60px_80px_80px_90px]">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-sm font-black">#{item.puesto}</div>
-              <div><p className="font-semibold">{item.nombre}</p><p className="text-xs text-muted-foreground">{item.email}</p></div>
-              <Metric label="Productos" value={item.productosVendidos} />
-              <Metric label="Generado" value={`$${Math.round(item.generado).toLocaleString("es-AR")}`} />
-              <Metric label="Deuda" value={`$${Math.round(item.deuda).toLocaleString("es-AR")}`} />
-              <Metric label="Puntaje" value={`$${Math.round(item.puntaje).toLocaleString("es-AR")}`} />
+              <div className="min-w-0"><p className="font-semibold truncate">{item.nombre}</p><p className="text-xs text-muted-foreground truncate">{item.email}</p></div>
+              <Metric label="Unidades" value={item.productosVendidos} />
+              <Metric label="V.Contado" value={`$${Math.round(item.valorContado).toLocaleString("es-AR")}`} />
+              <Metric label="C.Admin" value={`$${Math.round(item.costoUnidadAdmin).toLocaleString("es-AR")}`} />
+              <Metric label="Puntos" value={Math.round(item.puntaje).toLocaleString("es-AR")} />
             </div>
           ))}
           {ranking.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Todavía no hay usuarios en el torneo.</p>}

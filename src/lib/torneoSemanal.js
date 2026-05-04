@@ -50,7 +50,7 @@ export function calcularPremioTorneo(deuda = 0) {
   };
 }
 
-export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
+export function calcularRankingSemanal(users = [], pedidos = [], pagos = [], config = {}) {
   const inicioSemana = getInicioSemanaArgentina();
 
   return users
@@ -67,26 +67,19 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
       });
 
       const productosVendidos = entregadosSemana.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
-      const generado = entregadosSemana.reduce((s, p) => {
-        let total = Number(p.total) || 0;
-        if (total <= 0) {
-          let valor_usado = Number(p.valor_usado) || 0;
-          if (valor_usado <= 0) {
-            valor_usado = p.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
-          }
-          total = (Number(p.cantidad) || 0) * valor_usado;
-        }
-        return s + total;
-      }, 0);
+      const valorContado = Number(user.valor_contado || 0);
+      const costoUnidadAdmin = Number(config.torneo_costo_unidad_admin || 1);
+      const puntaje = valorContado * costoUnidadAdmin * productosVendidos;
+      
       const deuda = calcularSaldoUsuario(user.email, pedidos, pagos, user);
-      const puntaje = entregadosSemana.length === 0 ? 0 : generado - deuda;
 
       return {
         id: user.id,
         nombre: user.nombre_visible || user.link_titulo || user.full_name || user.email,
         email: user.email,
         productosVendidos,
-        generado,
+        valorContado,
+        costoUnidadAdmin,
         deuda,
         puntaje,
         premioSiGana: calcularPremioTorneo(deuda),
@@ -94,7 +87,6 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
     })
     .sort((a, b) => {
       if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
-      if (b.generado !== a.generado) return b.generado - a.generado;
       return b.productosVendidos - a.productosVendidos;
     })
     .map((item, index) => ({ ...item, puesto: index + 1 }));
