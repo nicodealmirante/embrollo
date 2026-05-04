@@ -7,7 +7,7 @@ import ChatAdmin from "../../components/admin/ChatAdmin";
 import DashboardTab from "../../components/admin/DashboardTab";
 import ConfigTab from "../../components/admin/ConfigTab";
 import CalculoTab from "../../components/admin/CalculoTab";
-import Portal from "../../pages/Portal";
+import VistaPreviaUsuarioModal from "../../components/admin/VistaPreviaUsuarioModal";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -697,9 +697,7 @@ export default function AdminPanel() {
   const [tab, setTab] = useState("solicitudes");
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [miPortalOpen, setMiPortalOpen] = useState(false);
-  const [previewUser, setPreviewUser] = useState("");
+  const [previewUsuarioOpen, setPreviewUsuarioOpen] = useState(false);
   const [usuariosActivos, setUsuariosActivos] = useState([]);
   const { adminName, userName } = useRoleNames();
   const navigate = useNavigate();
@@ -733,27 +731,7 @@ export default function AdminPanel() {
     return () => { unsub(); unsubPagos(); clearTimeout(timeout); };
   }, []);
 
-  if (previewOpen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
-        <Portal 
-          adminPreviewMode={true} 
-          previewEmail={previewUser || (usuariosActivos[0]?.email)} 
-          onExitAdminPreview={() => setPreviewOpen(false)} 
-        />
-      </div>
-    );
-  }
 
-  if (miPortalOpen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
-        <Portal 
-          onExitAdminPreview={() => setMiPortalOpen(false)} 
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -761,23 +739,8 @@ export default function AdminPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" className="h-8 gap-2 font-bold" onClick={() => setMiPortalOpen(true)}>
+            <Button variant="outline" size="sm" className="h-8 gap-2 font-bold" onClick={() => setPreviewUsuarioOpen(true)}>
               <UserCheck className="w-3.5 h-3.5" /> Modo usuario
-            </Button>
-            <Select value={previewUser} onValueChange={setPreviewUser}>
-              <SelectTrigger className="h-8 w-40 text-xs bg-card ml-2">
-                <SelectValue placeholder="Usuario vista previa" />
-              </SelectTrigger>
-              <SelectContent>
-                {usuariosActivos.map(u => (
-                  <SelectItem key={u.email} value={u.email}>
-                    {u.nombre_visible || u.link_titulo || u.full_name || u.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setPreviewOpen(true)}>
-              Ver vista previa
             </Button>
           </div>
         </div>
@@ -838,6 +801,12 @@ export default function AdminPanel() {
         {tab === "config" && <ConfigTab />}
         {tab === "calculo" && <CalculoTab />}
       </div>
+
+      <VistaPreviaUsuarioModal 
+        open={previewUsuarioOpen} 
+        onClose={() => setPreviewUsuarioOpen(false)} 
+        usuariosActivos={usuariosActivos}
+      />
     </div>
   );
 }
