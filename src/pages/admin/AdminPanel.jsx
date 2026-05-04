@@ -865,7 +865,12 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Panel de {adminName}</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
+          <Button variant="outline" size="sm" onClick={() => window.location.href = '/portal?preview=true'}>
+            Ver modo usuario
+          </Button>
+        </div>
 
         <div className="grid grid-cols-2 gap-1 bg-muted p-1 rounded-xl mb-6">
           <button

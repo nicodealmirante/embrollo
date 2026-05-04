@@ -11,6 +11,7 @@ const DEFAULTS = {
   torneo_activo: "true",
   torneo_sonidos: "true",
   torneo_ranking_visible: "true",
+  torneo_ranking_general_visible: "true",
   torneo_premio_unidades: String(PREMIO_TORNEO_UNIDADES),
   torneo_premio_descuento_deuda: String(PREMIO_TORNEO_DESCUENTO_DEUDA),
 };
@@ -95,10 +96,11 @@ export default function TorneoConfigTab() {
           <Trophy className="h-8 w-8 text-amber-500" />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <ToggleCard title="Torneo activo" value={config.torneo_activo === "true"} onChange={(v) => setBool("torneo_activo", v)} />
           <ToggleCard title="Sonidos" value={config.torneo_sonidos === "true"} onChange={(v) => setBool("torneo_sonidos", v)} />
           <ToggleCard title="Ranking visible" value={config.torneo_ranking_visible === "true"} onChange={(v) => setBool("torneo_ranking_visible", v)} />
+          <ToggleCard title="Ranking general visible" value={config.torneo_ranking_general_visible === "true"} onChange={(v) => setBool("torneo_ranking_general_visible", v)} />
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

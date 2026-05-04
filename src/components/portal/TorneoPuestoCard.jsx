@@ -114,7 +114,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
           <p className="mt-1 text-xs text-muted-foreground">{movimiento.texto}</p>
         </div>
 
-        {config.torneo_ranking_visible !== "false" && (
+        {config.torneo_ranking_general_visible !== "false" && (
         <div className="relative mt-4 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Puestos</p>
           {rankingVisible.length === 0 ? (

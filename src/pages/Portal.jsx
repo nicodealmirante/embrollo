@@ -25,6 +25,7 @@ export default function Portal() {
   const [todosPedidos, setTodosPedidos] = useState([]);
   const [todosPagos, setTodosPagos] = useState([]);
   const [torneoConfig, setTorneoConfig] = useState({});
+  const [isPreview, setIsPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cantidad, setCantidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -43,15 +44,32 @@ export default function Portal() {
     setLoading(true);
     try {
       const me = await base44.auth.me();
-      if (me.role === "admin") {
+      const isPreviewQuery = new URLSearchParams(window.location.search).get("preview") === "true";
+      
+      if (me.role === "admin" && !isPreviewQuery) {
         navigate("/admin");
         return;
       }
-      setUser(me);
-      if (me.estado === "activo") {
+
+      let activeUser = me;
+      if (me.role === "admin" && isPreviewQuery) {
+        setIsPreview(true);
+        const pedAdmin = await base44.entities.Pedido.filter({ usuario_email: me.email });
+        if (pedAdmin.length > 0 || me.estado === "activo") {
+          activeUser = me;
+        } else {
+          const users = await base44.entities.User.list();
+          const nonAdminActive = users.filter(u => u.role !== "admin" && u.estado === "activo");
+          if (nonAdminActive.length > 0) activeUser = nonAdminActive[0];
+        }
+      }
+
+      setUser(activeUser);
+      
+      if (activeUser.estado === "activo" || isPreviewQuery) {
         const [ped, pag, torneoResp] = await Promise.all([
-          base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
-          base44.entities.Pago.filter({ usuario_email: me.email }),
+          base44.entities.Pedido.filter({ usuario_email: activeUser.email }, "-created_date"),
+          base44.entities.Pago.filter({ usuario_email: activeUser.email }),
           obtenerDatosTorneo({})
         ]);
         setPedidos(ped);
@@ -135,8 +153,14 @@ export default function Portal() {
       <div className="max-w-md mx-auto px-4 py-6 space-y-5">
 
         {/* Header */}
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm">
-          <div className="p-5">
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm relative">
+          {isPreview && (
+            <div className="absolute top-0 inset-x-0 bg-red-600 text-center text-[11px] font-bold py-1 z-10 uppercase tracking-widest text-white shadow-md">
+              Vista previa admin ({user.email}) 
+              <button onClick={() => navigate('/admin')} className="ml-3 underline hover:text-red-100">Volver</button>
+            </div>
+          )}
+          <div className={`p-5 ${isPreview ? "pt-8" : ""}`}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm opacity-80">Bienvenido/a</p>
               <div className="flex items-center gap-3">
