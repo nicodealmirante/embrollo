@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import EstadoBadge from "../../components/EstadoBadge";
 import moment from "moment";
+import { getNombreVisible } from "@/lib/utils";
 
 function generateToken() {
   return Math.random().toString(36).substr(2, 10) + Math.random().toString(36).substr(2, 10);
@@ -47,7 +48,7 @@ function UsuariosTab() {
   const { toast } = useToast();
   const { userName } = useRoleNames();
 
-  const getDisplayName = (u) => u?.nombre_visible || u?.link_titulo || u?.full_name || u?.email || "—";
+  const getDisplayName = getNombreVisible;
 
   useEffect(() => { loadData(); }, []);
 

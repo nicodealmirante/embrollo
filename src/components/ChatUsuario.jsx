@@ -5,6 +5,7 @@ import { Send, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import moment from "moment";
+import { getNombreVisible } from "@/lib/utils";
 
 export default function ChatUsuario({ user, open, onClose, onUnread }) {
   const [mensajes, setMensajes] = useState([]);
@@ -58,13 +59,13 @@ export default function ChatUsuario({ user, open, onClose, onUnread }) {
     setEnviando(true);
     const msg = await base44.entities.Mensaje.create({
       usuario_email: user.email,
-      usuario_nombre: user.full_name || user.email,
+      usuario_nombre: getNombreVisible(user),
       texto: texto.trim(),
       es_admin: false,
       leido: false,
     });
     // Notificar al admin por WhatsApp (sin bloquear)
-    notificarMensajeWA({ data: { ...msg, usuario_email: user.email, usuario_nombre: user.full_name || user.email, texto: texto.trim(), es_admin: false } }).catch(() => {});
+    notificarMensajeWA({ data: { ...msg, usuario_email: user.email, usuario_nombre: getNombreVisible(user), texto: texto.trim(), es_admin: false } }).catch(() => {});
     setTexto("");
     setEnviando(false);
     loadMensajes();

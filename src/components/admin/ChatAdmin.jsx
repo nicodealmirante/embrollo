@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import moment from "moment";
+import { getNombreVisible } from "@/lib/utils";
 
 export default function ChatAdmin() {
   const [usuarios, setUsuarios] = useState([]);
@@ -47,13 +48,15 @@ export default function ChatAdmin() {
     const todos = await base44.entities.Mensaje.list("-created_date");
     const emailsUnicos = [...new Set(todos.map(m => m.usuario_email))];
     const nl = {};
+    const allUsers = await base44.entities.User.list();
     const lista = emailsUnicos.map(email => {
       const msgs = todos.filter(m => m.usuario_email === email);
       nl[email] = msgs.filter(m => !m.es_admin && !m.leido).length;
       const userMsg = msgs.find(m => !m.es_admin);
+      const matchedUser = allUsers.find(u => u.email === email);
       return {
         email,
-        nombre: userMsg?.usuario_nombre || msgs[0]?.usuario_nombre || email,
+        nombre: matchedUser ? getNombreVisible(matchedUser) : (userMsg?.usuario_nombre || msgs[0]?.usuario_nombre || email),
         ultimoMensaje: msgs[0]?.texto || "",
       };
     });
@@ -74,7 +77,7 @@ export default function ChatAdmin() {
     setEnviando(true);
     const fromChat = usuarios.find(u => u.email === seleccionado);
     const fromAll = todosUsuarios.find(u => u.email === seleccionado);
-    const nombre = fromChat?.nombre || fromAll?.full_name || seleccionado;
+    const nombre = fromAll ? getNombreVisible(fromAll) : (fromChat?.nombre || seleccionado);
     await base44.entities.Mensaje.create({
       usuario_email: seleccionado,
       usuario_nombre: nombre,
@@ -90,15 +93,14 @@ export default function ChatAdmin() {
 
   function iniciarConversacion(user) {
     if (!usuarios.find(u => u.email === user.email)) {
-      setUsuarios(prev => [{ email: user.email, nombre: user.full_name || user.email, ultimoMensaje: "" }, ...prev]);
+      setUsuarios(prev => [{ email: user.email, nombre: getNombreVisible(user), ultimoMensaje: "" }, ...prev]);
     }
     setSeleccionado(user.email);
     setDialogOpen(false);
   }
 
-  const nombreSeleccionado = usuarios.find(u => u.email === seleccionado)?.nombre
-    || todosUsuarios.find(u => u.email === seleccionado)?.full_name
-    || seleccionado;
+  const matchedAll = todosUsuarios.find(u => u.email === seleccionado);
+  const nombreSeleccionado = matchedAll ? getNombreVisible(matchedAll) : (usuarios.find(u => u.email === seleccionado)?.nombre || seleccionado);
 
   return (
     <>
@@ -219,7 +221,7 @@ export default function ChatAdmin() {
                 onClick={() => iniciarConversacion(u)}
                 className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
               >
-                <p className="text-sm font-medium">{u.full_name || u.email}</p>
+                <p className="text-sm font-medium">{getNombreVisible(u)}</p>
                 <p className="text-xs text-muted-foreground">{u.email}</p>
               </button>
             ))}

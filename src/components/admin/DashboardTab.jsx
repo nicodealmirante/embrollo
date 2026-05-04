@@ -5,6 +5,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from "recharts";
 import moment from "moment";
+import { getNombreVisible } from "@/lib/utils";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -51,7 +52,7 @@ export default function DashboardTab() {
   const usuariosActivos = users
     .filter(u => u.role !== "admin")
     .map(u => ({
-      nombre: (u.full_name || u.email).split(" ")[0],
+      nombre: getNombreVisible(u).split(" ")[0],
       total: pedidos
         .filter(p => p.usuario_email === u.email && p.estado === "entregado")
         .reduce((s, p) => s + (p.total || 0), 0),
