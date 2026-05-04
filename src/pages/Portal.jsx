@@ -202,8 +202,14 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
                   )}
                 </button>
                 {user.role === "admin" && !isPreview && (
-                  <button onClick={() => navigate('/admin')} className="text-xs opacity-90 hover:opacity-100 underline font-bold bg-white/10 px-2 py-1 rounded-md">
-                    Admin
+                  <button onClick={() => {
+                    if (onExitAdminPreview) {
+                      onExitAdminPreview();
+                    } else {
+                      navigate('/admin');
+                    }
+                  }} className="text-xs opacity-90 hover:opacity-100 underline font-bold bg-white/10 px-2 py-1 rounded-md">
+                    Ir al admin
                   </button>
                 )}
                 <button onClick={() => {

@@ -698,6 +698,7 @@ export default function AdminPanel() {
   const [mensajesNL, setMensajesNL] = useState(0);
   const [pagosNL, setPagosNL] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [miPortalOpen, setMiPortalOpen] = useState(false);
   const [previewUser, setPreviewUser] = useState("");
   const [usuariosActivos, setUsuariosActivos] = useState([]);
   const { adminName, userName } = useRoleNames();
@@ -744,14 +745,24 @@ export default function AdminPanel() {
     );
   }
 
+  if (miPortalOpen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
+        <Portal 
+          onExitAdminPreview={() => setMiPortalOpen(false)} 
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" className="h-8 gap-2 font-bold" onClick={() => navigate('/portal')}>
-              <UserCheck className="w-3.5 h-3.5" /> Mi Portal
+            <Button variant="secondary" size="sm" className="h-8 gap-2 font-bold" onClick={() => setMiPortalOpen(true)}>
+              <UserCheck className="w-3.5 h-3.5" /> Modo usuario
             </Button>
             <Select value={previewUser} onValueChange={setPreviewUser}>
               <SelectTrigger className="h-8 w-40 text-xs bg-card ml-2">
@@ -766,7 +777,7 @@ export default function AdminPanel() {
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setPreviewOpen(true)}>
-              Ver modo usuario
+              Ver vista previa
             </Button>
           </div>
         </div>
