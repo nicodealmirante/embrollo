@@ -155,7 +155,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
     );
   }
 
-  const titulo = user.link_titulo || user.full_name || user.email;
+  const titulo = user.full_name || user.email;
   const cantidadActual = parseFloat(cantidad) || 0;
   const estimadoCuenta = cantidadActual * (user.valor_cuenta || 0);
   const estimadoContado = cantidadActual * (user.valor_contado || 0);

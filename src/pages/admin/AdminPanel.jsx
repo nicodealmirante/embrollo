@@ -82,7 +82,7 @@ function UsuariosTab() {
 
   const openEdit = (user) => {
     setEditDialog(user);
-    setEditForm({ link_titulo: user.link_titulo || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
+    setEditForm({ full_name: user.full_name || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
   };
 
   const saveEdit = async () => {
@@ -91,7 +91,7 @@ function UsuariosTab() {
     }
     setSaving(true);
     await base44.entities.User.update(editDialog.id, {
-      link_titulo: editForm.link_titulo,
+      full_name: editForm.full_name,
       valor_contado: parseFloat(editForm.valor_contado) || 0,
       valor_cuenta: parseFloat(editForm.valor_cuenta) || 0,
       role: editForm.role,
@@ -169,7 +169,7 @@ function UsuariosTab() {
   };
 
 
-  const usuariosBase = useMemo(() => users.filter(u => u.role !== "admin"), [users]);
+  const usuariosBase = useMemo(() => users, [users]);
 
   const usuariosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -185,9 +185,10 @@ function UsuariosTab() {
   }, [usuariosBase, busqueda, estadoFiltro, saldoFiltro, pedidos, pagos]);
 
   const resumenUsuarios = useMemo(() => {
-    const totalSaldo = usuariosBase.reduce((s, u) => s + getSaldo(u.email), 0);
-    const conDeuda = usuariosBase.filter(u => getSaldo(u.email) > 0).length;
-    const pendientes = usuariosBase.filter(u => u.estado !== "activo").length;
+    const usersNormales = usuariosBase.filter(u => u.role !== "admin");
+    const totalSaldo = usersNormales.reduce((s, u) => s + getSaldo(u.email), 0);
+    const conDeuda = usersNormales.filter(u => getSaldo(u.email) > 0).length;
+    const pendientes = usersNormales.filter(u => u.estado !== "activo").length;
     const pedidosPendientes = pedidos.filter(p => p.estado === "pendiente").length;
     return { totalSaldo, conDeuda, pendientes, pedidosPendientes };
   }, [usuariosBase, pedidos, pagos]);
@@ -280,7 +281,10 @@ function UsuariosTab() {
           <div key={user.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
-                <p className="font-semibold">{user.full_name || "—"}</p>
+                <p className="font-semibold flex items-center gap-2">
+                  {user.full_name || "—"}
+                  {user.role === "admin" && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Admin</span>}
+                </p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
               <div className="text-right shrink-0">
@@ -346,7 +350,7 @@ function UsuariosTab() {
                   +10%
                 </Button>
               )}
-              {user.estado !== "activo" && (
+              {user.estado !== "activo" && user.role !== "admin" && (
                 <Button size="sm" className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => aprobarUsuario(user)}>
                   <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
@@ -365,7 +369,7 @@ function UsuariosTab() {
           <DialogHeader><DialogTitle>Editar — {editDialog?.full_name || editDialog?.email}</DialogTitle></DialogHeader>
           {editDialog && (
             <div className="space-y-3 mt-2">
-              <div><Label className="text-xs">Título del enlace</Label><Input value={editForm.link_titulo} onChange={e => setEditForm(f => ({ ...f, link_titulo: e.target.value }))} placeholder={editDialog.full_name || editDialog.email} className="mt-1" /></div>
+              <div><Label className="text-xs">Nombre visible</Label><Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} placeholder={editDialog.email} className="mt-1" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-xs text-green-700">Valor Contado</Label><Input type="number" value={editForm.valor_contado} onChange={e => setEditForm(f => ({ ...f, valor_contado: e.target.value }))} className="mt-1" /></div>
                 <div><Label className="text-xs text-blue-700">Valor a Cuenta</Label><Input type="number" value={editForm.valor_cuenta} onChange={e => setEditForm(f => ({ ...f, valor_cuenta: e.target.value }))} className="mt-1" /></div>
