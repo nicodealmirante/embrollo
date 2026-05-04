@@ -50,11 +50,6 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
       const me = await base44.auth.me();
       const isPreviewQuery = adminPreviewMode || new URLSearchParams(window.location.search).get("preview") === "true";
       
-      if (me.role === "admin" && !isPreviewQuery) {
-        navigate("/admin");
-        return;
-      }
-
       let activeUser = me;
       if (me.role === "admin" && isPreviewQuery) {
         setIsPreview(true);
@@ -71,6 +66,8 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
             if (nonAdminActive.length > 0) activeUser = nonAdminActive[0];
           }
         }
+      } else if (me.role === "admin") {
+        activeUser = { ...me, estado: "activo" };
       }
 
       setUser(activeUser);
@@ -204,6 +201,11 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
                     </span>
                   )}
                 </button>
+                {user.role === "admin" && !isPreview && (
+                  <button onClick={() => navigate('/admin')} className="text-xs opacity-90 hover:opacity-100 underline font-bold bg-white/10 px-2 py-1 rounded-md">
+                    Admin
+                  </button>
+                )}
                 <button onClick={() => {
                   if (adminPreviewMode) {
                     if (onExitAdminPreview) onExitAdminPreview();

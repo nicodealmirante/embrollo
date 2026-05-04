@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Portal from './pages/Portal';
 import AdminPanel from './pages/admin/AdminPanel';
+import Home from './pages/Home';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -36,7 +37,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/portal" element={<Portal />} />
       <Route path="/admin" element={<AdminPanel />} />
-      <Route path="/" element={<Navigate to="/portal" replace />} />
+      <Route path="/" element={<Home />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

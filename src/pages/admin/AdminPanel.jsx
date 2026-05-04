@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Users, ClipboardList, Plus, Trash2, CheckCircle, Pencil, X, History, Edit, LayoutDashboard, UserCheck, MessageCircle, Settings, Shield, DollarSign, Calculator, Search, Wallet, UserRound, PackagePlus, Filter, XCircle, ExternalLink } from "lucide-react";
 import { listarUsuarios } from "@/functions/listarUsuarios";
@@ -700,6 +701,7 @@ export default function AdminPanel() {
   const [previewUser, setPreviewUser] = useState("");
   const [usuariosActivos, setUsuariosActivos] = useState([]);
   const { adminName, userName } = useRoleNames();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let timeout = null;
@@ -748,8 +750,11 @@ export default function AdminPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Panel de {adminName}</h1>
           <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" className="h-8 gap-2 font-bold" onClick={() => navigate('/portal')}>
+              <UserCheck className="w-3.5 h-3.5" /> Mi Portal
+            </Button>
             <Select value={previewUser} onValueChange={setPreviewUser}>
-              <SelectTrigger className="h-8 w-40 text-xs bg-card">
+              <SelectTrigger className="h-8 w-40 text-xs bg-card ml-2">
                 <SelectValue placeholder="Usuario vista previa" />
               </SelectTrigger>
               <SelectContent>
