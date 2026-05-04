@@ -4,6 +4,15 @@ import { calcularRankingSemanal } from "@/lib/torneoSemanal";
 export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos = [], config = {} }) {
   if (config.torneo_activo === "false") return null;
 
+  if (user?.role === "admin") {
+    return (
+      <div className="relative overflow-hidden rounded-3xl bg-muted/40 border border-border p-5 text-center shadow-sm">
+        <Trophy className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
+        <p className="text-sm font-semibold text-muted-foreground">Los administradores no participan del torneo</p>
+      </div>
+    );
+  }
+
   const ranking = calcularRankingSemanal(users, pedidos, pagos);
   const miPuesto = ranking.find((r) => r.email === user?.email);
   const puesto = miPuesto?.puesto || "-";
