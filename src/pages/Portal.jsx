@@ -123,7 +123,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
     }
     setSubmitting(true);
     await crearPedidoPublico({ useEmail: true, cantidad: cant, observaciones });
-    notificarPedidoWA({ data: { usuario_email: user.email, usuario_nombre: user.full_name || user.email, cantidad: cant, observaciones } }).catch(() => {});
+    notificarPedidoWA({ data: { usuario_email: user.email, usuario_nombre: user.nombre_visible || user.link_titulo || user.full_name || user.email, cantidad: cant, observaciones } }).catch(() => {});
     toast({ title: "Pedido enviado", description: "Tu pedido fue registrado" });
     setSubmitting(false);
     setCantidad("");
@@ -155,7 +155,7 @@ export default function Portal({ adminPreviewMode = false, previewEmail = null, 
     );
   }
 
-  const titulo = user.full_name || user.email;
+  const titulo = user.nombre_visible || user.link_titulo || user.full_name || user.email;
   const cantidadActual = parseFloat(cantidad) || 0;
   const estimadoCuenta = cantidadActual * (user.valor_cuenta || 0);
   const estimadoContado = cantidadActual * (user.valor_contado || 0);

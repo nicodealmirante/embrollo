@@ -47,6 +47,8 @@ function UsuariosTab() {
   const { toast } = useToast();
   const { userName } = useRoleNames();
 
+  const getDisplayName = (u) => u?.nombre_visible || u?.link_titulo || u?.full_name || u?.email || "—";
+
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
@@ -82,16 +84,16 @@ function UsuariosTab() {
 
   const openEdit = (user) => {
     setEditDialog(user);
-    setEditForm({ full_name: user.full_name || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
+    setEditForm({ nombre_visible: user.nombre_visible || user.link_titulo || user.full_name || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
   };
 
   const saveEdit = async () => {
     if (editForm.role === "admin" && editDialog.role !== "admin") {
-      if (!confirm(`¿Convertir a ${editDialog.full_name || editDialog.email} en administrador?`)) return;
+      if (!confirm(`¿Convertir a ${getDisplayName(editDialog)} en administrador?`)) return;
     }
     setSaving(true);
     await base44.entities.User.update(editDialog.id, {
-      full_name: editForm.full_name,
+      nombre_visible: editForm.nombre_visible,
       valor_contado: parseFloat(editForm.valor_contado) || 0,
       valor_cuenta: parseFloat(editForm.valor_cuenta) || 0,
       role: editForm.role,
@@ -99,7 +101,7 @@ function UsuariosTab() {
     if (editForm.ajuste && parseFloat(editForm.ajuste) !== 0) {
       await base44.entities.Pago.create({
         usuario_email: editDialog.email,
-        usuario_nombre: editDialog.full_name,
+        usuario_nombre: getDisplayName(editDialog),
         fecha: new Date().toISOString(),
         monto: parseFloat(editForm.ajuste),
         metodo: "otro",
@@ -119,7 +121,7 @@ function UsuariosTab() {
     const aumento = Math.round(saldo * 0.1);
     await base44.entities.Pago.create({
       usuario_email: user.email,
-      usuario_nombre: user.full_name,
+      usuario_nombre: getDisplayName(user),
       fecha: new Date().toISOString(),
       monto: -aumento,
       metodo: "otro",
@@ -143,7 +145,7 @@ function UsuariosTab() {
     }
     await base44.entities.Pago.create({
       usuario_email: pagoDialog.email,
-      usuario_nombre: pagoDialog.full_name,
+      usuario_nombre: getDisplayName(pagoDialog),
       fecha: new Date().toISOString(),
       monto: parseFloat(pagoForm.monto),
       metodo: pagoForm.metodo,
@@ -176,7 +178,7 @@ function UsuariosTab() {
     return usuariosBase
       .filter(user => {
         const saldo = getSaldo(user.email);
-        const texto = `${user.full_name || ""} ${user.email || ""} ${user.phone || ""} ${user.telefono || ""}`.toLowerCase();
+        const texto = `${user.nombre_visible || ""} ${user.link_titulo || ""} ${user.full_name || ""} ${user.email || ""} ${user.phone || ""} ${user.telefono || ""}`.toLowerCase();
         const estadoOk = estadoFiltro === "todos" || (estadoFiltro === "activo" ? user.estado === "activo" : user.estado !== "activo");
         const saldoOk = saldoFiltro === "todos" || (saldoFiltro === "deuda" ? saldo > 0 : saldo <= 0);
         return (!q || texto.includes(q)) && estadoOk && saldoOk;
@@ -203,7 +205,7 @@ function UsuariosTab() {
     try {
       await base44.entities.Pedido.create({
         usuario_email: nuevoPedidoUser.email,
-        usuario_nombre: nuevoPedidoUser.full_name || nuevoPedidoUser.email,
+        usuario_nombre: getDisplayName(nuevoPedidoUser),
         fecha: new Date().toISOString(),
         estado: "pendiente",
         tipo_pago: "cuenta",
@@ -213,7 +215,7 @@ function UsuariosTab() {
         observaciones: npObs.trim(),
       });
 
-      toast({ title: "Pedido creado", description: `Asignado a ${nuevoPedidoUser.full_name || nuevoPedidoUser.email}` });
+      toast({ title: "Pedido creado", description: `Asignado a ${getDisplayName(nuevoPedidoUser)}` });
       setNuevoPedidoUser(null);
       setNpCantidad("1");
       setNpObs("");
@@ -282,7 +284,7 @@ function UsuariosTab() {
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <p className="font-semibold flex items-center gap-2">
-                  {user.full_name || "—"}
+                  {getDisplayName(user)}
                   {user.role === "admin" && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Admin</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -355,7 +357,7 @@ function UsuariosTab() {
                   <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
               )}
-              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${getDisplayName(user)}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
@@ -366,10 +368,10 @@ function UsuariosTab() {
       {/* Editar usuario dialog */}
       <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Editar — {editDialog?.full_name || editDialog?.email}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Editar — {getDisplayName(editDialog)}</DialogTitle></DialogHeader>
           {editDialog && (
             <div className="space-y-3 mt-2">
-              <div><Label className="text-xs">Nombre visible</Label><Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} placeholder={editDialog.email} className="mt-1" /></div>
+              <div><Label className="text-xs">Nombre visible</Label><Input value={editForm.nombre_visible} onChange={e => setEditForm(f => ({ ...f, nombre_visible: e.target.value }))} placeholder={editDialog.email} className="mt-1" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-xs text-green-700">Valor Contado</Label><Input type="number" value={editForm.valor_contado} onChange={e => setEditForm(f => ({ ...f, valor_contado: e.target.value }))} className="mt-1" /></div>
                 <div><Label className="text-xs text-blue-700">Valor a Cuenta</Label><Input type="number" value={editForm.valor_cuenta} onChange={e => setEditForm(f => ({ ...f, valor_cuenta: e.target.value }))} className="mt-1" /></div>
@@ -402,7 +404,7 @@ function UsuariosTab() {
           <DialogHeader><DialogTitle>Registrar Pago</DialogTitle></DialogHeader>
           {pagoDialog && (
             <div className="space-y-3 mt-2">
-              <p className="text-sm text-muted-foreground">{pagoDialog.full_name || pagoDialog.email}</p>
+              <p className="text-sm text-muted-foreground">{getDisplayName(pagoDialog)}</p>
               <div><Label className="text-xs">Monto *</Label><Input type="number" value={pagoForm.monto} onChange={(e) => setPagoForm(f => ({ ...f, monto: e.target.value }))} className="mt-1" /></div>
               <div><Label className="text-xs">Método</Label>
                 <Select value={pagoForm.metodo} onValueChange={(v) => setPagoForm(f => ({ ...f, metodo: v }))}>
@@ -426,7 +428,7 @@ function UsuariosTab() {
       {/* Historial dialog */}
       <Dialog open={!!historialUser} onOpenChange={() => setHistorialUser(null)}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Historial — {historialUser?.full_name || historialUser?.email}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Historial — {getDisplayName(historialUser)}</DialogTitle></DialogHeader>
           {historialUser && (() => {
             const userPedidos = pedidos.filter(p => p.usuario_email === historialUser.email && p.estado === "entregado");
             const userPagos = pagos.filter(p => p.usuario_email === historialUser.email);
@@ -475,7 +477,7 @@ function UsuariosTab() {
             <div className="space-y-3 mt-1">
               <div className="bg-muted/50 rounded-lg px-3 py-2">
                 <p className="text-xs text-muted-foreground">Usuario</p>
-                <p className="text-sm font-semibold">{nuevoPedidoUser.full_name || nuevoPedidoUser.email}</p>
+                <p className="text-sm font-semibold">{getDisplayName(nuevoPedidoUser)}</p>
                 <p className="text-xs text-muted-foreground">{nuevoPedidoUser.email}</p>
               </div>
               <div>
@@ -752,7 +754,7 @@ export default function AdminPanel() {
               <SelectContent>
                 {usuariosActivos.map(u => (
                   <SelectItem key={u.email} value={u.email}>
-                    {u.full_name || u.email}
+                    {u.nombre_visible || u.link_titulo || u.full_name || u.email}
                   </SelectItem>
                 ))}
               </SelectContent>

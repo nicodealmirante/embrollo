@@ -65,7 +65,7 @@ export function calcularRankingSemanal(users = [], pedidos = [], pagos = []) {
 
       return {
         id: user.id,
-        nombre: user.full_name || user.email,
+        nombre: user.nombre_visible || user.link_titulo || user.full_name || user.email,
         email: user.email,
         productosVendidos,
         generado,

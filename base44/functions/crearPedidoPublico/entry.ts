@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     email = me.email;
     const users = await base44.asServiceRole.entities.User.filter({ email });
     const u = users[0];
-    nombre = u?.full_name || me.full_name || email;
+    nombre = u?.nombre_visible || u?.link_titulo || u?.full_name || me.full_name || email;
     valorContado = u?.valor_contado || 0;
     valorCuenta = u?.valor_cuenta || 0;
   } else {
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     if (users.length) {
       const u = users[0];
       email = u.email;
-      nombre = u.full_name;
+      nombre = u.nombre_visible || u.link_titulo || u.full_name || u.email;
       valorContado = u.valor_contado || 0;
       valorCuenta = u.valor_cuenta || 0;
     } else {

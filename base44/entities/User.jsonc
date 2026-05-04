@@ -18,6 +18,10 @@
       ],
       "default": "pendiente"
     },
+    "nombre_visible": {
+      "type": "string",
+      "title": "Nombre Visible"
+    },
     "link_titulo": {
       "type": "string",
       "title": "T\u00edtulo del enlace"
@@ -41,5 +45,10 @@
       "title": "Tel\u00e9fono (WhatsApp)",
       "description": "Con c\u00f3digo de pa\u00eds, sin + ni espacios. Ej: 5491123456789"
     }
-  }
+  },
+  "required": [
+    "link_titulo",
+    "simplepush_key",
+    "telefono"
+  ]
 }

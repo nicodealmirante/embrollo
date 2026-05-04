@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     const enlace = enlaces[0];
     const fakeUser = {
       email: enlace.email,
+      nombre_visible: enlace.nombre || enlace.email,
       full_name: enlace.nombre || enlace.email,
       valor_contado: enlace.valor_contado || 0,
       valor_cuenta: enlace.valor_cuenta || 0,
