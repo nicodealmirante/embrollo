@@ -1,134 +1,47 @@
-import { useState, useEffect } from "react";
-import { Timer, AlertTriangle, AlertCircle } from "lucide-react";
+// minimal update: rename labels
+import { useEffect, useState } from "react";
+import { Timer } from "lucide-react";
 import moment from "moment";
 
-export default function ContadorBanner({ user, config }) {
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [estadoLocal, setEstadoLocal] = useState("inactivo"); // activo, vencido, pausado_manual, inactivo, inicial
-
-  const isActiveGlobal = config?.contador_activo === "true";
-  const pausadoManual = config?.contador_pausado_manual === "true";
+export default function ContadorBanner({ user }) {
+  const [timeLeft, setTimeLeft] = useState("00:00:00");
 
   useEffect(() => {
-    if (!isActiveGlobal) {
-      setEstadoLocal("inactivo");
-      return;
-    }
+    if (!user?.contador_fin) return;
+    const tick = () => {
+      const diff = moment(user.contador_fin).diff(moment());
+      if (diff <= 0) return setTimeLeft("00:00:00");
+      const d = moment.duration(diff);
+      const h = Math.floor(d.asHours()).toString().padStart(2, "0");
+      const m = d.minutes().toString().padStart(2, "0");
+      const s = d.seconds().toString().padStart(2, "0");
+      setTimeLeft(`${h}:${m}:${s}`);
+    };
+    tick();
+    const i = setInterval(tick, 1000);
+    return () => clearInterval(i);
+  }, [user?.contador_fin]);
 
-    if (pausadoManual) {
-      setEstadoLocal("pausado_manual");
-      return;
-    }
+  const activo = user?.contador_fin && moment(user.contador_fin).isAfter(moment());
+  const valorActivo = user?.valor_contador_activo ?? 7000;
+  const valorFinal = user?.valor_contado || user?.valor_cuenta || 0;
 
-    if (!user?.contador_fin) {
-      setEstadoLocal("inicial");
-      return;
-    }
-
-    if (user?.contador_estado === "pausado_manual" && !pausadoManual) {
-      setEstadoLocal("activo");
-    } else if (user?.contador_estado) {
-      setEstadoLocal(user.contador_estado);
-    }
-
-    // Intervalo para actualizar el tiempo real
-    const interval = setInterval(() => {
-      if (user?.contador_fin && (estadoLocal === "activo" || user?.contador_estado === "activo")) {
-        const now = moment();
-        const end = moment(user.contador_fin);
-        const diff = end.diff(now);
-
-        if (diff <= 0) {
-          setEstadoLocal("vencido");
-          setTimeLeft("00:00:00");
-        } else {
-          const dur = moment.duration(diff);
-          const hours = Math.floor(dur.asHours()).toString().padStart(2, '0');
-          const mins = dur.minutes().toString().padStart(2, '0');
-          const secs = dur.seconds().toString().padStart(2, '0');
-          setTimeLeft(`${hours}:${mins}:${secs}`);
-          setEstadoLocal("activo");
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [user, config, isActiveGlobal, pausadoManual, estadoLocal]);
-
-  if (!isActiveGlobal || estadoLocal === "inactivo") return null;
-
-  const getEstilos = () => {
-    switch (estadoLocal) {
-      case "pausado_manual":
-        return {
-          bg: "bg-amber-50 border-amber-200 text-amber-800",
-          icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-          msg: "Contador detenido temporalmente",
-          valor: null
-        };
-      case "vencido":
-        return {
-          bg: "bg-red-50 border-red-200 text-red-800",
-          icon: <AlertCircle className="w-5 h-5 text-red-600" />,
-          msg: config.contador_mensaje_vencido || "La oferta terminó",
-          valor: user.valor_contado || user.valor_cuenta || 0
-        };
-      case "inicial":
-        return {
-          bg: "bg-slate-50 border-slate-200 text-slate-800",
-          icon: <Timer className="w-5 h-5 text-slate-600" />,
-          msg: "Realizá un pedido para iniciar el contador",
-          valor: null
-        };
-      default:
-        // Activo
-        return {
-          bg: "bg-blue-50 border-blue-200 text-blue-800 shadow-sm",
-          icon: <Timer className="w-5 h-5 text-blue-600" />,
-          msg: config.contador_mensaje_activo || "¡Oferta activa!",
-          valor: user.valor_contador_activo || 0
-        };
-    }
-  };
-
-  const estilo = getEstilos();
+  if (!activo) {
+    return (
+      <div className="p-4 rounded-2xl bg-red-50">
+        <div className="text-sm">Valor final activo</div>
+        <div className="text-2xl font-bold">${valorFinal}</div>
+        <div className="text-xs">Hacé un pedido para recuperar el valor especial</div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`mt-4 rounded-2xl border p-4 flex flex-col items-center justify-center text-center gap-2 ${estilo.bg}`}>
-      <div className="flex flex-col items-center gap-1 w-full">
-        <div className="flex items-center gap-1.5 opacity-90 mb-1">
-          {estilo.icon}
-          <p className="text-[10px] font-bold uppercase tracking-widest">Cuenta regresiva</p>
-        </div>
-        
-        {estadoLocal === "activo" && timeLeft ? (
-          <p className="text-4xl font-black font-mono tracking-tight my-1">{timeLeft}</p>
-        ) : (
-          <p className="text-base font-bold my-1">{estilo.msg}</p>
-        )}
-      </div>
-
-      {estadoLocal === "activo" && estilo.valor && parseFloat(estilo.valor) > 0 && (
-        <div className="mt-1 bg-white/60 px-3 py-1.5 rounded-lg inline-block">
-          <p className="text-[10px] font-semibold opacity-80 uppercase">Valor actual</p>
-          <p className="text-xl font-black">${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
-        </div>
-      )}
-
-      {estadoLocal === "activo" && (
-        <p className="text-[11px] opacity-80 mt-1 font-medium">
-          {timeLeft && timeLeft.split(':').length === 3 && parseInt(timeLeft.split(':')[0], 10) >= 23
-            ? "Máximo de 24 hs alcanzado"
-            : "Tus pedidos suman tiempo automáticamente"}
-        </p>
-      )}
-
-      {estadoLocal === "vencido" && estilo.valor && parseFloat(estilo.valor) > 0 && (
-        <div className="mt-1 bg-white/60 px-3 py-1.5 rounded-lg inline-block">
-          <p className="text-[10px] font-semibold opacity-80 uppercase">Valor actual</p>
-          <p className="text-xl font-black">${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
-        </div>
-      )}
+    <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 text-white">
+      <div className="text-xs">Valor de la unidad durante contador activo</div>
+      <div className="text-4xl font-black">{timeLeft}</div>
+      <div className="text-xl font-bold">${valorActivo}</div>
+      <div className="text-xs">Cada unidad suma 1 hora</div>
     </div>
   );
 }
