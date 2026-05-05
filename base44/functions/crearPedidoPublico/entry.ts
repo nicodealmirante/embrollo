@@ -16,8 +16,10 @@ Deno.serve(async (req) => {
     const users = await base44.asServiceRole.entities.User.filter({ email });
     const u = users[0];
     nombre = u?.nombre_visible || u?.link_titulo || u?.full_name || me.full_name || email;
-    valorContado = u?.valor_contado || 0;
-    valorCuenta = u?.valor_cuenta || 0;
+    const isActivo = u?.contador_estado === "activo" && u?.contador_fin && new Date(u.contador_fin) > new Date();
+    const v = isActivo ? (u?.valor_contador_activo || 0) : (u?.valor_contado || u?.valor_cuenta || 0);
+    valorContado = v;
+    valorCuenta = v;
   } else {
     if (!token) return Response.json({ error: 'Faltan datos' }, { status: 400 });
     // Flujo por token público
@@ -26,8 +28,10 @@ Deno.serve(async (req) => {
       const u = users[0];
       email = u.email;
       nombre = u.nombre_visible || u.link_titulo || u.full_name || u.email;
-      valorContado = u.valor_contado || 0;
-      valorCuenta = u.valor_cuenta || 0;
+      const isActivo = u.contador_estado === "activo" && u.contador_fin && new Date(u.contador_fin) > new Date();
+      const v = isActivo ? (u.valor_contador_activo || 0) : (u.valor_contado || u.valor_cuenta || 0);
+      valorContado = v;
+      valorCuenta = v;
     } else {
       const enlaces = await base44.asServiceRole.entities.EnlacePendiente.filter({ token });
       if (!enlaces.length || !enlaces[0].email) {

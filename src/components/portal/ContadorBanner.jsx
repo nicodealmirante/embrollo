@@ -71,7 +71,7 @@ export default function ContadorBanner({ user, config }) {
           bg: "bg-red-50 border-red-200 text-red-800",
           icon: <AlertCircle className="w-5 h-5 text-red-600" />,
           msg: config.contador_mensaje_vencido || "La oferta terminó",
-          valor: config.contador_valor_vencido
+          valor: user.valor_contado || user.valor_cuenta || 0
         };
       case "inicial":
         return {
@@ -86,7 +86,7 @@ export default function ContadorBanner({ user, config }) {
           bg: "bg-blue-50 border-blue-200 text-blue-800 shadow-sm",
           icon: <Timer className="w-5 h-5 text-blue-600" />,
           msg: config.contador_mensaje_activo || "¡Oferta activa!",
-          valor: config.contador_valor_activo
+          valor: user.valor_contador_activo || 0
         };
     }
   };

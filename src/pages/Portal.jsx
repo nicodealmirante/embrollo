@@ -155,7 +155,11 @@ export default function Portal() {
 
   const titulo = getNombreVisible(user);
   const cantidadActual = parseFloat(cantidad) || 0;
-  const estimadoTotal = cantidadActual * (user.valor_contado || user.valor_cuenta || 0);
+  
+  const isContadorActivo = user.contador_estado === "activo" && user.contador_fin && moment(user.contador_fin).isAfter(moment());
+  const valorActual = isContadorActivo ? (user.valor_contador_activo || 0) : (user.valor_contado || user.valor_cuenta || 0);
+  
+  const estimadoTotal = cantidadActual * valorActual;
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,9 +240,9 @@ export default function Portal() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Valor por unidad</p>
-              <p className="text-2xl font-black text-primary mt-1">{formatMoney(user.valor_contado || user.valor_cuenta || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Este valor se aplica tanto a contado como a cuenta.</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Valor actual</p>
+              <p className="text-2xl font-black text-primary mt-1">{formatMoney(valorActual)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Este valor se aplica a su pedido.</p>
             </div>
             <div>
               <label className="text-xs text-muted-foreground font-medium">Cantidad</label>

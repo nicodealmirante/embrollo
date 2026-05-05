@@ -36,6 +36,11 @@
       "title": "Valor a Cuenta",
       "default": 0
     },
+    "valor_contador_activo": {
+      "type": "number",
+      "title": "Valor con contador activo",
+      "default": 0
+    },
     "contador_manual_horas": {
       "type": "number",
       "title": "Contador del usuario",

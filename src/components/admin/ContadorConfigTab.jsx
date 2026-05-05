@@ -98,16 +98,7 @@ export default function ContadorConfigTab() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <Label className="text-xs text-green-600 font-semibold">Valor mientras contador está activo ($)</Label>
-            <Input type="number" value={config.contador_valor_activo} onChange={(e) => setConfig((c) => ({ ...c, contador_valor_activo: e.target.value }))} className="mt-1 border-green-200" />
-          </div>
-          <div>
-            <Label className="text-xs text-red-600 font-semibold">Valor cuando llega a 0 (vencido) ($)</Label>
-            <Input type="number" value={config.contador_valor_vencido} onChange={(e) => setConfig((c) => ({ ...c, contador_valor_vencido: e.target.value }))} className="mt-1 border-red-200" />
-          </div>
-        </div>
+
 
         <div className="mt-4 space-y-3">
           <div>

@@ -225,7 +225,10 @@ function UsuariosTab() {
 
     setNpSubmitting(true);
     try {
-      const valor = npTipoPago === 'contado' ? (nuevoPedidoUser.valor_contado || 0) : (nuevoPedidoUser.valor_cuenta || 0);
+      let valor = npTipoPago === 'contado' ? (nuevoPedidoUser.valor_contado || 0) : (nuevoPedidoUser.valor_cuenta || 0);
+      if (nuevoPedidoUser.contador_estado === "activo" && nuevoPedidoUser.contador_fin && new Date(nuevoPedidoUser.contador_fin) > new Date()) {
+        valor = nuevoPedidoUser.valor_contador_activo || valor;
+      }
       const total = npEstado === 'entregado' ? parseFloat(npCantidad) * valor : 0;
       const valorUsado = npEstado === 'entregado' ? valor : 0;
 
@@ -682,7 +685,10 @@ function SolicitudesTab() {
     const p = entregaDialog;
     const users = await base44.entities.User.filter({ email: p.usuario_email });
     const user = users[0] || {};
-    const valor = tipoPagoEntrega === 'contado' ? (user.valor_contado || 0) : (user.valor_cuenta || 0);
+    let valor = tipoPagoEntrega === 'contado' ? (user.valor_contado || 0) : (user.valor_cuenta || 0);
+    if (user.contador_estado === "activo" && user.contador_fin && new Date(user.contador_fin) > new Date()) {
+      valor = user.valor_contador_activo || valor;
+    }
     const total = p.cantidad * valor;
 
     await base44.entities.Pedido.update(p.id, {
