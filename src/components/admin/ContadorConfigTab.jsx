@@ -91,9 +91,9 @@ export default function ContadorConfigTab() {
         <div className="mt-4 grid grid-cols-1 gap-3">
           <div className="rounded-2xl border p-4 bg-muted/40">
             <Label className="text-xs font-semibold">Duración del contador</Label>
-            <p className="text-sm font-bold text-primary mt-1">Duración automática: 1 hora por unidad comprada</p>
+            <p className="text-sm font-bold text-primary mt-1">1 unidad suma 1 hora. Máximo: 24 hs.</p>
             <p className="text-xs text-muted-foreground mt-1">
-              (Ej: 1 unidad = 1 hora, 5 unidades = 5 horas).
+              Los pedidos acumulan tiempo automáticamente en el contador del usuario.
             </p>
           </div>
         </div>

@@ -62,18 +62,26 @@ Deno.serve(async (req) => {
       if (usersMatched.length > 0) {
         const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
-        let estado = "activo";
-        if (pausadoManual) estado = "pausado_manual";
+        if (!pausadoManual) {
+          const userObj = usersMatched[0];
+          const ahora = new Date();
+          
+          let finActual = userObj.contador_fin ? new Date(userObj.contador_fin) : ahora;
+          if (finActual < ahora) finActual = ahora;
 
-        const ahora = new Date();
-        // 1 unidad = 1 hora
-        const fin = new Date(ahora.getTime() + cantidad * 60 * 60000);
+          let nuevoFin = new Date(finActual.getTime() + cantidad * 60 * 60000);
+          const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
 
-        await base44.asServiceRole.entities.User.update(usersMatched[0].id, {
-          contador_inicio: ahora.toISOString(),
-          contador_fin: fin.toISOString(),
-          contador_estado: estado
-        });
+          if (nuevoFin > maxFin) {
+            nuevoFin = maxFin;
+          }
+
+          await base44.asServiceRole.entities.User.update(userObj.id, {
+            contador_inicio: userObj.contador_inicio || ahora.toISOString(),
+            contador_fin: nuevoFin.toISOString(),
+            contador_estado: "activo"
+          });
+        }
       }
     }
   } catch (e) {

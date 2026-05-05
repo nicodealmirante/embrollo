@@ -240,20 +240,24 @@ function UsuariosTab() {
         if (getCfg("contador_activo") === "true") {
           const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
-          let estado = "activo";
-          if (pausadoManual) {
-            estado = "pausado_manual";
+          if (!pausadoManual) {
+            const ahora = new Date();
+            let finActual = nuevoPedidoUser.contador_fin ? new Date(nuevoPedidoUser.contador_fin) : ahora;
+            if (finActual < ahora) finActual = ahora;
+
+            let nuevoFin = new Date(finActual.getTime() + parseFloat(npCantidad) * 60 * 60000);
+            const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
+
+            if (nuevoFin > maxFin) {
+              nuevoFin = maxFin;
+            }
+
+            await base44.entities.User.update(nuevoPedidoUser.id, {
+              contador_inicio: nuevoPedidoUser.contador_inicio || ahora.toISOString(),
+              contador_fin: nuevoFin.toISOString(),
+              contador_estado: "activo",
+            });
           }
-
-          const ahora = new Date();
-          // 1 unidad = 1 hora
-          const fin = new Date(ahora.getTime() + parseFloat(npCantidad) * 60 * 60000);
-
-          await base44.entities.User.update(nuevoPedidoUser.id, {
-            contador_inicio: ahora.toISOString(),
-            contador_fin: fin.toISOString(),
-            contador_estado: estado,
-          });
         }
       } catch (e) {
         console.error("Error al resetear contador:", e);

@@ -100,7 +100,11 @@ export default function ContadorBanner({ user, config }) {
       )}
 
       {estadoLocal === "activo" && (
-        <p className="text-[10px] opacity-70 mt-1">Tu contador se calculó según las unidades del pedido (1 hora por unidad)</p>
+        <p className="text-[10px] opacity-70 mt-1">
+          {timeLeft && timeLeft.split(':').length === 3 && parseInt(timeLeft.split(':')[0]) >= 23
+            ? "Máximo de 24 hs alcanzado"
+            : "Tus pedidos suman tiempo automáticamente"}
+        </p>
       )}
 
       {estadoLocal === "vencido" && (
