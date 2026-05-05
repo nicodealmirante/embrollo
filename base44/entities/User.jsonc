@@ -36,6 +36,11 @@
       "title": "Valor a Cuenta",
       "default": 0
     },
+    "contador_manual_horas": {
+      "type": "number",
+      "title": "Contador del usuario",
+      "default": 0
+    },
     "simplepush_key": {
       "type": "string",
       "title": "SimplePush Key"

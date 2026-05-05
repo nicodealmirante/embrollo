@@ -94,7 +94,13 @@ function UsuariosTab() {
 
   const openEdit = (user) => {
     setEditDialog(user);
-    setEditForm({ nombre_visible: user.nombre_visible || user.link_titulo || user.full_name || "", valor_contado: user.valor_contado || 0, valor_cuenta: user.valor_cuenta || 0, ajuste: "", role: user.role || "user" });
+    setEditForm({ 
+      nombre_visible: user.nombre_visible || user.link_titulo || user.full_name || "", 
+      valor_unico: user.valor_contado || user.valor_cuenta || 0, 
+      contador_manual_horas: user.contador_manual_horas || 0,
+      ajuste: "", 
+      role: user.role || "user" 
+    });
   };
 
   const saveEdit = async () => {
@@ -102,10 +108,12 @@ function UsuariosTab() {
       if (!confirm(`¿Convertir a ${getDisplayName(editDialog)} en administrador?`)) return;
     }
     setSaving(true);
+    const valUnico = parseFloat(editForm.valor_unico) || 0;
     await base44.entities.User.update(editDialog.id, {
       nombre_visible: editForm.nombre_visible,
-      valor_contado: parseFloat(editForm.valor_contado) || 0,
-      valor_cuenta: parseFloat(editForm.valor_cuenta) || 0,
+      valor_contado: valUnico,
+      valor_cuenta: valUnico,
+      contador_manual_horas: parseFloat(editForm.contador_manual_horas) || 0,
       role: editForm.role,
     });
     if (editForm.ajuste && parseFloat(editForm.ajuste) !== 0) {
@@ -369,16 +377,22 @@ function UsuariosTab() {
               </div>
             </div>
             
-            {/* Etiqueta de contador */}
-            {user.contador_estado && user.contador_estado !== "inactivo" && (
-              <div className="mb-3 flex items-center gap-1.5 bg-blue-50/50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs">
-                <Timer className="w-3.5 h-3.5 text-blue-600" />
-                <span className="font-semibold text-blue-800">Contador: {user.contador_estado.replace(/_/g, " ")}</span>
-                {user.contador_fin && user.contador_estado === "activo" && (
-                  <span className="text-muted-foreground opacity-80">(vence {moment(user.contador_fin).format("HH:mm")})</span>
-                )}
+            {/* Etiqueta de valor y contador */}
+            <div className="mb-3 flex flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
+                <DollarSign className="w-3.5 h-3.5 text-slate-600" />
+                <span className="font-semibold text-slate-800">Valor: ${user.valor_contado || user.valor_cuenta || 0}</span>
               </div>
-            )}
+              <div className="flex items-center gap-1.5 bg-blue-50/50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs">
+                <Timer className="w-3.5 h-3.5 text-blue-600" />
+                <span className="font-semibold text-blue-800">
+                  Contador: {(!user.contador_fin || moment().isAfter(moment(user.contador_fin))) && user.contador_estado !== "activo" ? "0" : 
+                    (user.contador_estado === "vencido" || (user.contador_fin && moment().isAfter(moment(user.contador_fin)))) ? "vencido" :
+                    user.contador_fin ? `resta ${moment.duration(moment(user.contador_fin).diff(moment())).humanize()}` : "0"
+                  }
+                </span>
+              </div>
+            </div>
 
             {/* Estadísticas de compra */}
             <div className="grid grid-cols-3 gap-2 mb-3">
@@ -472,8 +486,16 @@ function UsuariosTab() {
             <div className="space-y-3 mt-2">
               <div><Label className="text-xs">Nombre visible</Label><Input value={editForm.nombre_visible} onChange={e => setEditForm(f => ({ ...f, nombre_visible: e.target.value }))} placeholder={editDialog.email} className="mt-1" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs text-green-700">Valor Contado</Label><Input type="number" value={editForm.valor_contado} onChange={e => setEditForm(f => ({ ...f, valor_contado: e.target.value }))} className="mt-1" /></div>
-                <div><Label className="text-xs text-blue-700">Valor a Cuenta</Label><Input type="number" value={editForm.valor_cuenta} onChange={e => setEditForm(f => ({ ...f, valor_cuenta: e.target.value }))} className="mt-1" /></div>
+                <div>
+                  <Label className="text-xs text-primary">Valor por unidad</Label>
+                  <Input type="number" value={editForm.valor_unico} onChange={e => setEditForm(f => ({ ...f, valor_unico: e.target.value }))} className="mt-1" />
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Aplica a contado y a cuenta.</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-blue-700">Horas de contador</Label>
+                  <Input type="number" value={editForm.contador_manual_horas} onChange={e => setEditForm(f => ({ ...f, contador_manual_horas: e.target.value }))} className="mt-1" />
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Contador del usuario.</p>
+                </div>
               </div>
               <div>
                 <Label className="text-xs text-red-600">Ajuste de saldo</Label>

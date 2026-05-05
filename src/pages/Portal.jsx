@@ -155,8 +155,7 @@ export default function Portal() {
 
   const titulo = getNombreVisible(user);
   const cantidadActual = parseFloat(cantidad) || 0;
-  const estimadoCuenta = cantidadActual * (user.valor_cuenta || 0);
-  const estimadoContado = cantidadActual * (user.valor_contado || 0);
+  const estimadoTotal = cantidadActual * (user.valor_contado || user.valor_cuenta || 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,17 +235,10 @@ export default function Portal() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-green-200 bg-green-50 p-3 text-center">
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Contado</p>
-                <p className="text-lg font-black text-green-700">{formatMoney(user.valor_contado || 0)}</p>
-                <p className="text-[10px] text-muted-foreground">por unidad</p>
-              </div>
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-center">
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">A Cuenta</p>
-                <p className="text-lg font-black text-blue-700">{formatMoney(user.valor_cuenta || 0)}</p>
-                <p className="text-[10px] text-muted-foreground">por unidad</p>
-              </div>
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Valor por unidad</p>
+              <p className="text-2xl font-black text-primary mt-1">{formatMoney(user.valor_contado || user.valor_cuenta || 0)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Este valor se aplica tanto a contado como a cuenta.</p>
             </div>
             <div>
               <label className="text-xs text-muted-foreground font-medium">Cantidad</label>
@@ -259,15 +251,9 @@ export default function Portal() {
                 {[5, 10, 20].map((n) => <Button key={n} type="button" variant="outline" className="h-9 rounded-xl text-xs" onClick={() => sumarCantidad(n)}>+{n}</Button>)}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border bg-muted/30 p-3">
-                <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground"><Wallet className="h-3 w-3" /> Estimado cuenta</p>
-                <p className="text-base font-black text-primary">{formatMoney(estimadoCuenta)}</p>
-              </div>
-              <div className="rounded-2xl border bg-muted/30 p-3">
-                <p className="text-[11px] font-medium text-muted-foreground">Estimado contado</p>
-                <p className="text-base font-black text-green-700">{formatMoney(estimadoContado)}</p>
-              </div>
+            <div className="rounded-2xl border bg-muted/30 p-4 text-center">
+              <p className="flex justify-center items-center gap-1 text-xs font-medium text-muted-foreground"><Wallet className="h-4 w-4" /> Total Estimado</p>
+              <p className="text-xl font-black text-primary mt-1">{formatMoney(estimadoTotal)}</p>
             </div>
             <div>
               <label className="text-xs text-muted-foreground font-medium">Observaciones (opcional)</label>
