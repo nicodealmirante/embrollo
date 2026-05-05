@@ -99,6 +99,10 @@ export default function ContadorBanner({ user, config }) {
         </div>
       )}
 
+      {estadoLocal === "activo" && (
+        <p className="text-[10px] opacity-70 mt-1">Tu contador se calculó según las unidades del pedido (1 hora por unidad)</p>
+      )}
+
       {estadoLocal === "vencido" && (
         <div className="mt-1">
           <p className="text-base font-bold">{estilo.msg}</p>

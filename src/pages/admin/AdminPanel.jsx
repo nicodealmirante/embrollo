@@ -239,7 +239,6 @@ function UsuariosTab() {
         const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
         if (getCfg("contador_activo") === "true") {
           const pausadoManual = getCfg("contador_pausado_manual") === "true";
-          const duracionMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
 
           let estado = "activo";
           if (pausadoManual) {
@@ -247,7 +246,8 @@ function UsuariosTab() {
           }
 
           const ahora = new Date();
-          const fin = new Date(ahora.getTime() + duracionMin * 60000);
+          // 1 unidad = 1 hora
+          const fin = new Date(ahora.getTime() + parseFloat(npCantidad) * 60 * 60000);
 
           await base44.entities.User.update(nuevoPedidoUser.id, {
             contador_inicio: ahora.toISOString(),

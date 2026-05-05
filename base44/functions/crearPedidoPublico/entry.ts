@@ -60,14 +60,14 @@ Deno.serve(async (req) => {
     if (getCfg("contador_activo") === "true") {
       const usersMatched = await base44.asServiceRole.entities.User.filter({ email });
       if (usersMatched.length > 0) {
-        const durMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
         const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
         let estado = "activo";
         if (pausadoManual) estado = "pausado_manual";
 
         const ahora = new Date();
-        const fin = new Date(ahora.getTime() + durMin * 60000);
+        // 1 unidad = 1 hora
+        const fin = new Date(ahora.getTime() + cantidad * 60 * 60000);
 
         await base44.asServiceRole.entities.User.update(usersMatched[0].id, {
           contador_inicio: ahora.toISOString(),
