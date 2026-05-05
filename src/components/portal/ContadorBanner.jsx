@@ -4,19 +4,24 @@ import moment from "moment";
 
 export default function ContadorBanner({ user, config }) {
   const [timeLeft, setTimeLeft] = useState(null);
-  const [estadoLocal, setEstadoLocal] = useState("inactivo"); // activo, vencido, pausado_sin_stock, inactivo
+  const [estadoLocal, setEstadoLocal] = useState("inactivo"); // activo, vencido, pausado_manual, inactivo, inicial
 
   const isActiveGlobal = config?.contador_activo === "true";
   const pausadoManual = config?.contador_pausado_manual === "true";
 
   useEffect(() => {
-    if (!isActiveGlobal || !user?.contador_inicio) {
+    if (!isActiveGlobal) {
       setEstadoLocal("inactivo");
       return;
     }
 
     if (pausadoManual) {
       setEstadoLocal("pausado_manual");
+      return;
+    }
+
+    if (!user?.contador_fin) {
+      setEstadoLocal("inicial");
       return;
     }
 
@@ -28,7 +33,7 @@ export default function ContadorBanner({ user, config }) {
 
     // Intervalo para actualizar el tiempo real
     const interval = setInterval(() => {
-      if (user?.contador_fin && estadoLocal === "activo") {
+      if (user?.contador_fin && (estadoLocal === "activo" || user?.contador_estado === "activo")) {
         const now = moment();
         const end = moment(user.contador_fin);
         const diff = end.diff(now);
@@ -38,11 +43,11 @@ export default function ContadorBanner({ user, config }) {
           setTimeLeft("00:00:00");
         } else {
           const dur = moment.duration(diff);
-          const hours = Math.floor(dur.asHours());
+          const hours = Math.floor(dur.asHours()).toString().padStart(2, '0');
           const mins = dur.minutes().toString().padStart(2, '0');
           const secs = dur.seconds().toString().padStart(2, '0');
-          setTimeLeft(`${hours > 0 ? hours + ':' : ''}${mins}:${secs}`);
-          setEstadoLocal("activo"); // Forzamos activo si aún no llegó a cero
+          setTimeLeft(`${hours}:${mins}:${secs}`);
+          setEstadoLocal("activo");
         }
       }
     }, 1000);
@@ -68,6 +73,13 @@ export default function ContadorBanner({ user, config }) {
           msg: config.contador_mensaje_vencido || "La oferta terminó",
           valor: config.contador_valor_vencido
         };
+      case "inicial":
+        return {
+          bg: "bg-slate-50 border-slate-200 text-slate-800",
+          icon: <Timer className="w-5 h-5 text-slate-600" />,
+          msg: "Realizá un pedido para iniciar el contador",
+          valor: null
+        };
       default:
         // Activo
         return {
@@ -83,36 +95,38 @@ export default function ContadorBanner({ user, config }) {
 
   return (
     <div className={`mt-4 rounded-2xl border p-4 flex flex-col items-center justify-center text-center gap-2 ${estilo.bg}`}>
-      <div className="flex items-center gap-2 font-bold uppercase tracking-widest text-[11px] opacity-80">
-        {estilo.icon}
-        {estadoLocal === "activo" && timeLeft ? "Tiempo restante: " + timeLeft : estilo.msg}
+      <div className="flex flex-col items-center gap-1 w-full">
+        <div className="flex items-center gap-1.5 opacity-90 mb-1">
+          {estilo.icon}
+          <p className="text-[10px] font-bold uppercase tracking-widest">Cuenta regresiva</p>
+        </div>
+        
+        {estadoLocal === "activo" && timeLeft ? (
+          <p className="text-4xl font-black font-mono tracking-tight my-1">{timeLeft}</p>
+        ) : (
+          <p className="text-base font-bold my-1">{estilo.msg}</p>
+        )}
       </div>
-
-      {estadoLocal === "activo" && timeLeft && (
-        <p className="text-3xl font-black font-mono tracking-tight">{timeLeft}</p>
-      )}
 
       {estadoLocal === "activo" && estilo.valor && parseFloat(estilo.valor) > 0 && (
         <div className="mt-1 bg-white/60 px-3 py-1.5 rounded-lg inline-block">
-          <p className="text-xs font-semibold opacity-80 uppercase">Valor Promocional</p>
-          <p className="text-lg font-black">${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
+          <p className="text-[10px] font-semibold opacity-80 uppercase">Valor actual</p>
+          <p className="text-xl font-black">${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
         </div>
       )}
 
       {estadoLocal === "activo" && (
-        <p className="text-[10px] opacity-70 mt-1">
-          {timeLeft && timeLeft.split(':').length === 3 && parseInt(timeLeft.split(':')[0]) >= 23
+        <p className="text-[11px] opacity-80 mt-1 font-medium">
+          {timeLeft && timeLeft.split(':').length === 3 && parseInt(timeLeft.split(':')[0], 10) >= 23
             ? "Máximo de 24 hs alcanzado"
             : "Tus pedidos suman tiempo automáticamente"}
         </p>
       )}
 
-      {estadoLocal === "vencido" && (
-        <div className="mt-1">
-          <p className="text-base font-bold">{estilo.msg}</p>
-          {estilo.valor && parseFloat(estilo.valor) > 0 && (
-            <p className="text-sm mt-1 font-semibold opacity-90">Precio actual: ${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
-          )}
+      {estadoLocal === "vencido" && estilo.valor && parseFloat(estilo.valor) > 0 && (
+        <div className="mt-1 bg-white/60 px-3 py-1.5 rounded-lg inline-block">
+          <p className="text-[10px] font-semibold opacity-80 uppercase">Valor actual</p>
+          <p className="text-xl font-black">${parseFloat(estilo.valor).toLocaleString("es-AR")}</p>
         </div>
       )}
     </div>

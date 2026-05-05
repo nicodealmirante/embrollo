@@ -64,11 +64,13 @@ export default function Portal() {
     
     if (me?.estado === "activo") {
       try {
-        const [ped, pag, torneoResp] = await Promise.all([
+        const [ped, pag, torneoResp, userActualizado] = await Promise.all([
           base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
           base44.entities.Pago.filter({ usuario_email: me.email }, "-created_date"),
-          obtenerDatosTorneo({})
+          obtenerDatosTorneo({}),
+          base44.entities.User.get(me.id)
         ]);
+        setUser(userActualizado);
         setPedidos(ped);
         setPagos(pag);
         if (torneoResp?.data) {
