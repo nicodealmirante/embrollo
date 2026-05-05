@@ -9,6 +9,7 @@ export default function ContadorBanner({ user, config }) {
   const isActiveGlobal = config?.contador_activo === "true";
   const pausarSinStock = config?.contador_pausar_sin_stock === "true";
   const stock = parseFloat(config?.contador_stock_actual || 0);
+  const pausadoManual = config?.contador_pausado_manual === "true";
 
   useEffect(() => {
     if (!isActiveGlobal || !user?.contador_inicio) {
@@ -16,12 +17,12 @@ export default function ContadorBanner({ user, config }) {
       return;
     }
 
-    if (pausarSinStock && stock <= 0) {
+    if (pausadoManual || (pausarSinStock && stock <= 0)) {
       setEstadoLocal("pausado_sin_stock");
       return;
     }
 
-    if (user?.contador_estado === "pausado_sin_stock" && (!pausarSinStock || stock > 0)) {
+    if (user?.contador_estado === "pausado_sin_stock" && !pausadoManual && (!pausarSinStock || stock > 0)) {
       // Debería continuarlo backend idealmente, pero asumimos "activo" frontend
       setEstadoLocal("activo");
     } else if (user?.contador_estado) {
@@ -60,7 +61,7 @@ export default function ContadorBanner({ user, config }) {
         return {
           bg: "bg-amber-50 border-amber-200 text-amber-800",
           icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-          msg: "Pausado por falta de stock",
+          msg: "Sin stock disponible por el momento",
           valor: null
         };
       case "vencido":

@@ -49,6 +49,7 @@ function UsuariosTab() {
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [saldoFiltro, setSaldoFiltro] = useState("todos");
+  const [globalPausado, setGlobalPausado] = useState(false);
   const { toast } = useToast();
   const { userName } = useRoleNames();
 
@@ -57,15 +58,21 @@ function UsuariosTab() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [usersResp, pedidosData, pagosData] = await Promise.all([
+    const [usersResp, pedidosData, pagosData, configData] = await Promise.all([
       listarUsuarios({}),
       base44.entities.Pedido.list("-created_date", 5000),
       base44.entities.Pago.list("-created_date", 5000),
+      base44.entities.ConfigApp.list().catch(() => [])
     ]);
     const usersData = usersResp.data?.users || [];
     setUsers(usersData);
     setPedidos(pedidosData);
     setPagos(pagosData);
+    
+    const isPausadoManual = configData.find(c => c.clave === "contador_pausado_manual")?.valor === "true";
+    const isPausarSinStock = configData.find(c => c.clave === "contador_pausar_sin_stock")?.valor === "true";
+    const stock = parseFloat(configData.find(c => c.clave === "contador_stock_actual")?.valor || 0);
+    setGlobalPausado(isPausadoManual || (isPausarSinStock && stock <= 0));
   }
 
   const getSaldo = (email) => {
@@ -235,10 +242,11 @@ function UsuariosTab() {
         if (getCfg("contador_activo") === "true") {
           const pausarSinStock = getCfg("contador_pausar_sin_stock") === "true";
           const stock = parseFloat(getCfg("contador_stock_actual") || 0);
+          const pausadoManual = getCfg("contador_pausado_manual") === "true";
           const duracionMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
 
           let estado = "activo";
-          if (pausarSinStock && stock <= 0) {
+          if (pausadoManual || (pausarSinStock && stock <= 0)) {
             estado = "pausado_sin_stock";
           }
 
@@ -294,6 +302,11 @@ function UsuariosTab() {
             <UserRound className="h-5 w-5" />
           </div>
         </div>
+        {globalPausado && (
+          <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-amber-800 text-sm font-bold flex items-center gap-2">
+            ⚠️ Contador pausado por falta de stock. No se iniciarán contadores nuevos.
+          </div>
+        )}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Saldo total</p><p className={`text-lg font-black ${resumenUsuarios.totalSaldo > 0 ? "text-red-600" : "text-green-600"}`}>{formatMoney(resumenUsuarios.totalSaldo)}</p></div>
           <div className="rounded-xl border bg-background p-3"><p className="text-[11px] text-muted-foreground">Con deuda</p><p className="text-lg font-black">{resumenUsuarios.conDeuda}</p></div>

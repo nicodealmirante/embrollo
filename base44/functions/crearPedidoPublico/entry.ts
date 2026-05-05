@@ -63,9 +63,10 @@ Deno.serve(async (req) => {
         const durMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
         const pausarStock = getCfg("contador_pausar_sin_stock") === "true";
         const stock = parseFloat(getCfg("contador_stock_actual") || 0);
+        const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
         let estado = "activo";
-        if (pausarStock && stock <= 0) estado = "pausado_sin_stock";
+        if (pausadoManual || (pausarStock && stock <= 0)) estado = "pausado_sin_stock";
 
         const ahora = new Date();
         const fin = new Date(ahora.getTime() + durMin * 60000);
