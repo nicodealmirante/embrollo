@@ -53,5 +53,33 @@ Deno.serve(async (req) => {
     observaciones: observaciones || '',
   });
 
+  // Lógica de reseteo del contador
+  try {
+    const cfgs = await base44.asServiceRole.entities.ConfigApp.list();
+    const getCfg = (k) => cfgs.find(c => c.clave === k)?.valor;
+    if (getCfg("contador_activo") === "true") {
+      const usersMatched = await base44.asServiceRole.entities.User.filter({ email });
+      if (usersMatched.length > 0) {
+        const durMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
+        const pausarStock = getCfg("contador_pausar_sin_stock") === "true";
+        const stock = parseFloat(getCfg("contador_stock_actual") || 0);
+
+        let estado = "activo";
+        if (pausarStock && stock <= 0) estado = "pausado_sin_stock";
+
+        const ahora = new Date();
+        const fin = new Date(ahora.getTime() + durMin * 60000);
+
+        await base44.asServiceRole.entities.User.update(usersMatched[0].id, {
+          contador_inicio: ahora.toISOString(),
+          contador_fin: fin.toISOString(),
+          contador_estado: estado
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Error contador:", e);
+  }
+
   return Response.json({ pedido });
 });

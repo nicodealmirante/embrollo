@@ -7,6 +7,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Settings, Shield, User, MessageSquare, Trophy } from "lucide-react";
 import WhatsAppConfigTab from "@/components/admin/WhatsAppConfigTab";
 import TorneoConfigTab from "@/components/admin/TorneoConfigTab";
+import ContadorConfigTab from "@/components/admin/ContadorConfigTab";
+import { Timer } from "lucide-react";
 
 export default function ConfigTab() {
   const { adminName, userName } = useRoleNames();
@@ -55,11 +57,19 @@ export default function ConfigTab() {
         >
           <Trophy className="w-3.5 h-3.5" /> Torneo
         </button>
+        <button
+          onClick={() => setSubTab("contador")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "contador" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}
+        >
+          <Timer className="w-3.5 h-3.5" /> Cuenta regresiva
+        </button>
       </div>
 
       {subTab === "whatsapp" && <WhatsAppConfigTab />}
       
       {subTab === "torneo" && <TorneoConfigTab />}
+
+      {subTab === "contador" && <ContadorConfigTab />}
 
       {subTab === "roles" && <div className="space-y-6">
       <div className="bg-card rounded-xl border border-border p-5 space-y-5">

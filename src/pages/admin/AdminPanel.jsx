@@ -12,6 +12,7 @@ import { useRoleNames } from "@/hooks/useRoleNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Timer, TimerOff } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -227,6 +228,33 @@ function UsuariosTab() {
         observaciones: npObs.trim(),
       });
 
+      // Lógica de reinicio de contador al hacer pedido desde Admin
+      try {
+        const configs = await base44.entities.ConfigApp.list().catch(() => []);
+        const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
+        if (getCfg("contador_activo") === "true") {
+          const pausarSinStock = getCfg("contador_pausar_sin_stock") === "true";
+          const stock = parseFloat(getCfg("contador_stock_actual") || 0);
+          const duracionMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
+
+          let estado = "activo";
+          if (pausarSinStock && stock <= 0) {
+            estado = "pausado_sin_stock";
+          }
+
+          const ahora = new Date();
+          const fin = new Date(ahora.getTime() + duracionMin * 60000);
+
+          await base44.entities.User.update(nuevoPedidoUser.id, {
+            contador_inicio: ahora.toISOString(),
+            contador_fin: fin.toISOString(),
+            contador_estado: estado,
+          });
+        }
+      } catch (e) {
+        console.error("Error al resetear contador:", e);
+      }
+
       if (npEstado === 'entregado' && npTipoPago === 'contado') {
         await base44.entities.Pago.create({
           usuario_email: nuevoPedidoUser.email,
@@ -326,8 +354,18 @@ function UsuariosTab() {
                   </p>
                 )}
               </div>
-              
             </div>
+            
+            {/* Etiqueta de contador */}
+            {user.contador_estado && user.contador_estado !== "inactivo" && (
+              <div className="mb-3 flex items-center gap-1.5 bg-blue-50/50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs">
+                <Timer className="w-3.5 h-3.5 text-blue-600" />
+                <span className="font-semibold text-blue-800">Contador: {user.contador_estado.replace(/_/g, " ")}</span>
+                {user.contador_fin && user.contador_estado === "activo" && (
+                  <span className="text-muted-foreground opacity-80">(vence {moment(user.contador_fin).format("HH:mm")})</span>
+                )}
+              </div>
+            )}
 
             {/* Estadísticas de compra */}
             <div className="grid grid-cols-3 gap-2 mb-3">
@@ -376,6 +414,28 @@ function UsuariosTab() {
               {getSaldo(user.email) > 0 && (
                 <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => aplicarAumento(user)}>
                   +10%
+                </Button>
+              )}
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-blue-600 border-blue-300 hover:bg-blue-50" onClick={async () => {
+                if (!confirm("¿Reiniciar contador manualmente?")) return;
+                const cfgs = await base44.entities.ConfigApp.list();
+                const durMin = parseFloat(cfgs.find(c => c.clave === "contador_duracion_minutos")?.valor || 60);
+                const a = new Date();
+                const f = new Date(a.getTime() + durMin * 60000);
+                await base44.entities.User.update(user.id, { contador_inicio: a.toISOString(), contador_fin: f.toISOString(), contador_estado: "activo" });
+                toast({ title: "Contador reiniciado" });
+                loadData();
+              }}>
+                <Timer className="w-3 h-3" /> Reiniciar
+              </Button>
+              {user.contador_estado && user.contador_estado !== "inactivo" && (
+                <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-600 border-red-300 hover:bg-red-50" title="Limpiar contador" onClick={async () => {
+                  if (!confirm("¿Limpiar y detener contador?")) return;
+                  await base44.entities.User.update(user.id, { contador_estado: "inactivo" });
+                  toast({ title: "Contador limpiado" });
+                  loadData();
+                }}>
+                  <TimerOff className="w-3 h-3" />
                 </Button>
               )}
               {user.estado !== "activo" && user.role !== "admin" && (

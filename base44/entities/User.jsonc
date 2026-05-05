@@ -44,6 +44,24 @@
       "type": "string",
       "title": "Tel\u00e9fono (WhatsApp)",
       "description": "Con c\u00f3digo de pa\u00eds, sin + ni espacios. Ej: 5491123456789"
+    },
+    "contador_inicio": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "contador_fin": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "contador_estado": {
+      "type": "string",
+      "enum": [
+        "activo",
+        "vencido",
+        "pausado_sin_stock",
+        "inactivo"
+      ],
+      "default": "inactivo"
     }
   },
   "required": [

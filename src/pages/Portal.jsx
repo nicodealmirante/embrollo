@@ -10,6 +10,7 @@ import NotificacionesConfig from "../components/NotificacionesConfig";
 import TelefonoConfig from "../components/TelefonoConfig";
 import SubirPagoModal from "../components/portal/SubirPagoModal";
 import TorneoPuestoCard from "../components/portal/TorneoPuestoCard";
+import ContadorBanner from "../components/portal/ContadorBanner";
 import { obtenerDatosTorneo } from "@/functions/obtenerDatosTorneo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,6 +209,8 @@ export default function Portal() {
         {torneoConfig.torneo_activo !== "false" && (
           <TorneoPuestoCard user={user} users={todosUsuarios} pedidos={todosPedidos} pagos={todosPagos} config={torneoConfig} />
         )}
+
+        <ContadorBanner user={user} config={torneoConfig} />
 
         <div className="grid grid-cols-2 gap-2 mt-4">
           <Button className="h-14 gap-2 rounded-2xl font-bold shadow-sm" onClick={() => setPedidoModalOpen(true)}>
