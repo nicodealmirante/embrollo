@@ -61,12 +61,10 @@ Deno.serve(async (req) => {
       const usersMatched = await base44.asServiceRole.entities.User.filter({ email });
       if (usersMatched.length > 0) {
         const durMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
-        const pausarStock = getCfg("contador_pausar_sin_stock") === "true";
-        const stock = parseFloat(getCfg("contador_stock_actual") || 0);
         const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
         let estado = "activo";
-        if (pausadoManual || (pausarStock && stock <= 0)) estado = "pausado_sin_stock";
+        if (pausadoManual) estado = "pausado_manual";
 
         const ahora = new Date();
         const fin = new Date(ahora.getTime() + durMin * 60000);

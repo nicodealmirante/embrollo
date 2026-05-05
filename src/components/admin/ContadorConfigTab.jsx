@@ -11,8 +11,6 @@ const DEFAULTS = {
   contador_duracion_minutos: "60",
   contador_valor_activo: "0",
   contador_valor_vencido: "0",
-  contador_pausar_sin_stock: "false",
-  contador_stock_actual: "0",
   contador_pausado_manual: "false",
   contador_mensaje_activo: "¡Oferta especial disponible!",
   contador_mensaje_vencido: "El tiempo expiró. Sigue comprando al precio normal.",
@@ -75,32 +73,25 @@ export default function ContadorConfigTab() {
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ToggleCard title="Contador general activo" value={config.contador_activo === "true"} onChange={(v) => setBool("contador_activo", v)} />
-          <ToggleCard title="Pausar si no hay stock" value={config.contador_pausar_sin_stock === "true"} onChange={(v) => setBool("contador_pausar_sin_stock", v)} />
+          
+          <div className="rounded-2xl border p-4 flex flex-col justify-center bg-background">
+            <Label className="text-xs mb-2">Control manual</Label>
+            {config.contador_pausado_manual === "true" ? (
+              <Button onClick={() => setConfig(c => ({ ...c, contador_pausado_manual: "false" }))} className="bg-green-600 hover:bg-green-700 w-full h-10">
+                Reactivar contador
+              </Button>
+            ) : (
+              <Button onClick={() => setConfig(c => ({ ...c, contador_pausado_manual: "true" }))} variant="destructive" className="w-full h-10">
+                Detener contador
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3">
           <div>
             <Label className="text-xs">Duración del contador (minutos)</Label>
             <Input type="number" value={config.contador_duracion_minutos} onChange={(e) => setConfig((c) => ({ ...c, contador_duracion_minutos: e.target.value }))} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs font-bold text-amber-600">Stock actual general</Label>
-            <div className="flex gap-2 mt-1">
-              <Input type="number" value={config.contador_stock_actual} onChange={(e) => setConfig((c) => ({ ...c, contador_stock_actual: e.target.value }))} className="border-amber-300" />
-              {config.contador_pausado_manual === "true" || parseFloat(config.contador_stock_actual || 0) <= 0 ? (
-                <Button onClick={() => {
-                  const val = prompt("Ingresá el nuevo stock disponible:", "100");
-                  if (val && !isNaN(val)) {
-                    setConfig(c => ({ ...c, contador_stock_actual: val, contador_pausado_manual: "false" }));
-                  }
-                }} className="bg-green-600 hover:bg-green-700 whitespace-nowrap">Restaurar stock</Button>
-              ) : (
-                <Button onClick={() => {
-                  setConfig(c => ({ ...c, contador_stock_actual: "0", contador_pausado_manual: "true", contador_pausar_sin_stock: "true" }));
-                }} variant="destructive" className="whitespace-nowrap">Detener contador</Button>
-              )}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Si llega a 0 y "Pausar" está activo, frena los contadores.</p>
           </div>
         </div>
 

@@ -58,7 +58,7 @@
       "enum": [
         "activo",
         "vencido",
-        "pausado_sin_stock",
+        "pausado_manual",
         "inactivo"
       ],
       "default": "inactivo"

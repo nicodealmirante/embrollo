@@ -70,9 +70,7 @@ function UsuariosTab() {
     setPagos(pagosData);
     
     const isPausadoManual = configData.find(c => c.clave === "contador_pausado_manual")?.valor === "true";
-    const isPausarSinStock = configData.find(c => c.clave === "contador_pausar_sin_stock")?.valor === "true";
-    const stock = parseFloat(configData.find(c => c.clave === "contador_stock_actual")?.valor || 0);
-    setGlobalPausado(isPausadoManual || (isPausarSinStock && stock <= 0));
+    setGlobalPausado(isPausadoManual);
   }
 
   const getSaldo = (email) => {
@@ -240,14 +238,12 @@ function UsuariosTab() {
         const configs = await base44.entities.ConfigApp.list().catch(() => []);
         const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
         if (getCfg("contador_activo") === "true") {
-          const pausarSinStock = getCfg("contador_pausar_sin_stock") === "true";
-          const stock = parseFloat(getCfg("contador_stock_actual") || 0);
           const pausadoManual = getCfg("contador_pausado_manual") === "true";
           const duracionMin = parseFloat(getCfg("contador_duracion_minutos") || 60);
 
           let estado = "activo";
-          if (pausadoManual || (pausarSinStock && stock <= 0)) {
-            estado = "pausado_sin_stock";
+          if (pausadoManual) {
+            estado = "pausado_manual";
           }
 
           const ahora = new Date();
@@ -304,7 +300,7 @@ function UsuariosTab() {
         </div>
         {globalPausado && (
           <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-amber-800 text-sm font-bold flex items-center gap-2">
-            ⚠️ Contador pausado por falta de stock. No se iniciarán contadores nuevos.
+            ⚠️ Contador detenido temporalmente. No se iniciarán contadores nuevos.
           </div>
         )}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -7,8 +7,6 @@ export default function ContadorBanner({ user, config }) {
   const [estadoLocal, setEstadoLocal] = useState("inactivo"); // activo, vencido, pausado_sin_stock, inactivo
 
   const isActiveGlobal = config?.contador_activo === "true";
-  const pausarSinStock = config?.contador_pausar_sin_stock === "true";
-  const stock = parseFloat(config?.contador_stock_actual || 0);
   const pausadoManual = config?.contador_pausado_manual === "true";
 
   useEffect(() => {
@@ -17,13 +15,12 @@ export default function ContadorBanner({ user, config }) {
       return;
     }
 
-    if (pausadoManual || (pausarSinStock && stock <= 0)) {
-      setEstadoLocal("pausado_sin_stock");
+    if (pausadoManual) {
+      setEstadoLocal("pausado_manual");
       return;
     }
 
-    if (user?.contador_estado === "pausado_sin_stock" && !pausadoManual && (!pausarSinStock || stock > 0)) {
-      // Debería continuarlo backend idealmente, pero asumimos "activo" frontend
+    if (user?.contador_estado === "pausado_manual" && !pausadoManual) {
       setEstadoLocal("activo");
     } else if (user?.contador_estado) {
       setEstadoLocal(user.contador_estado);
@@ -51,17 +48,17 @@ export default function ContadorBanner({ user, config }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [user, config, isActiveGlobal, pausarSinStock, stock, estadoLocal]);
+  }, [user, config, isActiveGlobal, pausadoManual, estadoLocal]);
 
   if (!isActiveGlobal || estadoLocal === "inactivo") return null;
 
   const getEstilos = () => {
     switch (estadoLocal) {
-      case "pausado_sin_stock":
+      case "pausado_manual":
         return {
           bg: "bg-amber-50 border-amber-200 text-amber-800",
           icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-          msg: "Sin stock disponible por el momento",
+          msg: "Contador detenido temporalmente",
           valor: null
         };
       case "vencido":
