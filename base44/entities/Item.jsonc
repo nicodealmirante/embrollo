@@ -45,22 +45,17 @@
       }
     },
     "read": {
-      "$or": [
-        {
-          "data.activo": true
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.activo": true
     },
     "update": {
       "user_condition": {
         "role": "admin"
       }
     },
-    "delete": null
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
   }
 }
