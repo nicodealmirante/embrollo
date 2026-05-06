@@ -163,7 +163,7 @@ export default function Portal() {
 
   return (
     <div className="min-h-screen bg-background mx-auto">
-      <div className="max-w-md space-y-5 py-2 px-2">
+      <div className="max-w-md space-y-5 py-2 px-2 mx-auto">
 
         {/* Header */}
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm relative">
