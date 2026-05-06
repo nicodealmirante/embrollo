@@ -21,8 +21,8 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
           <div className="flex items-baseline gap-2 mt-2 text-[hsl(var(--foreground))] ml-8">
             <span className="font-black leading-none text-3xl text-center">Puesto #{puesto}</span>
             <Star className="w-5 h-5 text-amber-200 mt-1 mr-4 ml-5" />
-            <span className="text-2xl font-black leading-none">{Math.round(puntaje)}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider opacity-90 mt-1">PUNTOS</span>
+            <span className="leading-none text-lg font-thin">{Math.round(puntaje)}</span>
+            <span className="text-[10px] uppercase tracking-wider opacity-90 mt-1 font-thin">PUNTOS</span>
           </div>
         </div>
       </div>
