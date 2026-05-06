@@ -14,7 +14,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
   const puntaje = miPuesto?.puntaje || 0;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm py-5 px-10">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm py-4">
       <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
       <div className="relative flex items-center justify-between">
         <div>
