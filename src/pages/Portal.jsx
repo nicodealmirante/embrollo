@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useRoleNames } from "@/hooks/useRoleNames";
 import { crearPedidoPublico } from "@/functions/crearPedidoPublico";
 import { notificarPedidoWA } from "@/functions/notificarPedidoWA";
-import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign, PackagePlus, Plus, Minus, Wallet, Settings } from "lucide-react";
+import { ClipboardList, Loader2, Send, ChevronDown, ChevronUp, MessageCircle, DollarSign, PackagePlus, Plus, Minus, Wallet, Settings, Info } from "lucide-react";
 import ChatUsuario from "../components/ChatUsuario";
 import NotificacionesConfig from "../components/NotificacionesConfig";
 import TelefonoConfig from "../components/TelefonoConfig";
@@ -38,6 +38,7 @@ export default function Portal() {
   const [pagoModalOpen, setPagoModalOpen] = useState(false);
   const [pedidoModalOpen, setPedidoModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { adminName } = useRoleNames();
@@ -337,6 +338,42 @@ export default function Portal() {
           <div className="space-y-4 mt-2">
             <TelefonoConfig user={user} onSaved={loadData} />
             <NotificacionesConfig userEmail={user.email} />
+            
+            <div className="pt-2">
+              <Button variant="outline" className="w-full gap-2 rounded-2xl h-12 font-semibold" onClick={() => setInfoModalOpen(true)}>
+                <Info className="w-4 h-4" /> Funcionamiento: Precios y Torneo
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-5 max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-black">
+              <Info className="w-5 h-5 text-primary" /> ¿Cómo funciona?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 mt-3 text-sm text-muted-foreground">
+            <div>
+              <h3 className="font-bold text-foreground mb-1 text-base">Precios y Contador</h3>
+              <p>Tu cuenta tiene un <strong>precio especial</strong> asignado que se mantiene mientras tu contador esté corriendo.</p>
+              <ul className="list-disc pl-4 mt-2 space-y-1">
+                <li>Por cada unidad que pidas y te sea <strong>entregada</strong>, el contador suma <strong>1 hora</strong> a tu favor (con un máximo acumulable de 24 horas).</li>
+                <li>Si el contador llega a cero, tu precio subirá al <strong>valor final o normal</strong>.</li>
+                <li>Para recuperar tu precio especial y reiniciar el contador, debés realizar y recibir un nuevo pedido.</li>
+              </ul>
+            </div>
+            <div className="border-t pt-4">
+              <h3 className="font-bold text-foreground mb-1 text-base">Torneo Semanal</h3>
+              <p>Participás automáticamente del torneo con tus acciones en la plataforma.</p>
+              <ul className="list-disc pl-4 mt-2 space-y-1">
+                <li>Sumás <strong>puntos</strong> con la cantidad de unidades compradas y los pagos que realices.</li>
+                <li>Al finalizar la semana, quien quede en el puesto <strong>#1</strong> ganará un premio.</li>
+                <li>El premio se acredita automáticamente en tu cuenta, y puede ser desde saldo a favor hasta unidades bonificadas.</li>
+              </ul>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
