@@ -162,7 +162,7 @@ export default function Portal() {
   const estimadoTotal = cantidadActual * valorActual;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mx-auto">
       <div className="max-w-md space-y-5 py-2 px-2">
 
         {/* Header */}
