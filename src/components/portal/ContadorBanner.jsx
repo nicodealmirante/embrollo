@@ -70,9 +70,9 @@ export default function ContadorBanner({ user, config }) {
             <p className="text-[10px] font-bold uppercase tracking-widest">Valor de la unidad durante contador activo</p>
           </div>
           
-          <p className="font-black font-mono tracking-tight my-2 drop-shadow-md text-xl">{timeLeft}</p>
+          <p className="font-black font-mono tracking-tight drop-shadow-md text-xl my-1">{timeLeft}</p>
           
-          <div className="bg-black/20 px-6 py-2 rounded-2xl backdrop-blur-sm">
+          <div className="bg-black/20 rounded-2xl backdrop-blur-sm px-5 py-1">
             <p className="text-3xl font-black">${parseFloat(valorActivo).toLocaleString("es-AR")}</p>
           </div>
           
