@@ -42,7 +42,7 @@ export default function Portal() {
   const navigate = useNavigate();
   const { adminName } = useRoleNames();
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {loadData();}, []);
 
   async function loadData() {
     setLoading(true);
@@ -61,15 +61,15 @@ export default function Portal() {
     }
 
     setUser(me);
-    
+
     if (me?.estado === "activo") {
       try {
         const [ped, pag, torneoResp, userActualizado] = await Promise.all([
-          base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
-          base44.entities.Pago.filter({ usuario_email: me.email }, "-created_date"),
-          obtenerDatosTorneo({}),
-          base44.entities.User.get(me.id)
-        ]);
+        base44.entities.Pedido.filter({ usuario_email: me.email }, "-created_date"),
+        base44.entities.Pago.filter({ usuario_email: me.email }, "-created_date"),
+        obtenerDatosTorneo({}),
+        base44.entities.User.get(me.id)]
+        );
         setUser(userActualizado);
         setPedidos(ped);
         setPagos(pag);
@@ -78,8 +78,8 @@ export default function Portal() {
           setTodosPedidos(torneoResp.data.pedidos || []);
           setTodosPagos(torneoResp.data.pagos || []);
           const cfg = {};
-          (torneoResp.data.configs || []).forEach(c => {
-             if (c.clave) cfg[c.clave] = c.valor;
+          (torneoResp.data.configs || []).forEach((c) => {
+            if (c.clave) cfg[c.clave] = c.valor;
           });
           setTorneoConfig(cfg);
         }
@@ -90,21 +90,21 @@ export default function Portal() {
     setLoading(false);
   }
 
-  const totalPedido = pedidos.filter(p => p.estado !== "cancelado").reduce((s, p) => {
+  const totalPedido = pedidos.filter((p) => p.estado !== "cancelado").reduce((s, p) => {
     let total = Number(p.total) || 0;
     if (total <= 0 && p.estado === "entregado") {
       let valorUsado = Number(p.valor_usado) || 0;
       if (valorUsado <= 0) {
-        valorUsado = p.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
+        valorUsado = p.tipo_pago === "contado" ? Number(user.valor_contado) || 0 : Number(user.valor_cuenta) || 0;
       }
       total = (Number(p.cantidad) || 0) * valorUsado;
     }
     return s + total;
   }, 0);
-  const totalPagado = pagos.filter(p => p.estado !== "rechazado").reduce((s, p) => s + (Number(p.monto) || 0), 0);
+  const totalPagado = pagos.filter((p) => p.estado !== "rechazado").reduce((s, p) => s + (Number(p.monto) || 0), 0);
   const saldo = totalPedido - totalPagado;
-  const pedidosPendientes = pedidos.filter(p => p.estado === "pendiente").length;
-  const ultimoPedido = pedidos.filter(p => p.estado !== "cancelado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0] || null;
+  const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
+  const ultimoPedido = pedidos.filter((p) => p.estado !== "cancelado").sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0] || null;
   const formatMoney = (value) => `$${Math.round(value || 0).toLocaleString("es-AR")}`;
 
   const sumarCantidad = (valor) => {
@@ -133,8 +133,8 @@ export default function Portal() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>);
+
   }
 
   if (!user) return null;
@@ -149,16 +149,16 @@ export default function Portal() {
           <p className="text-xs text-muted-foreground">Conectado como: <strong>{user.email}</strong></p>
           <Button variant="outline" size="sm" onClick={() => base44.auth.logout()}>Salir</Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   const titulo = getNombreVisible(user);
   const cantidadActual = parseFloat(cantidad) || 0;
-  
+
   const isContadorActivo = user.contador_estado === "activo" && user.contador_fin && moment(user.contador_fin).isAfter(moment());
-  const valorActual = isContadorActivo ? (user.valor_contador_activo || 0) : (user.valor_contado || user.valor_cuenta || 0);
-  
+  const valorActual = isContadorActivo ? user.valor_contador_activo || 0 : user.valor_contado || user.valor_cuenta || 0;
+
   const estimadoTotal = cantidadActual * valorActual;
 
   return (
@@ -173,20 +173,20 @@ export default function Portal() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setConfigModalOpen(true)}
-                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
-                >
+                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100">
+                  
                   <Settings className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setChatOpen(true)}
-                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100"
-                >
+                  className="relative rounded-full bg-white/10 p-2 text-primary-foreground opacity-90 transition hover:bg-white/20 hover:opacity-100">
+                  
                   <MessageCircle className="w-5 h-5" />
-                  {chatNoLeidos > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">
+                  {chatNoLeidos > 0 &&
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">
                       {chatNoLeidos}
                     </span>
-                  )}
+                  }
                 </button>
                 <button onClick={() => base44.auth.logout()} className="text-xs opacity-70 hover:opacity-100 underline">
                   Salir
@@ -199,11 +199,11 @@ export default function Portal() {
                 <p className="text-xs uppercase tracking-wide opacity-70">Saldo actual</p>
                 <p className={`mt-1 text-4xl font-black ${saldo > 0 ? "text-red-200" : "text-green-200"}`}>{formatMoney(saldo)}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10 hidden">
                 <p className="text-[11px] opacity-70">Pedidos pendientes</p>
                 <p className="text-xl font-black">{pedidosPendientes}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10 hidden">
                 <p className="text-[11px] opacity-70">Último pedido</p>
                 <p className="text-sm font-bold">{ultimoPedido ? moment(ultimoPedido.fecha).fromNow() : "Sin pedidos"}</p>
               </div>
@@ -211,9 +211,9 @@ export default function Portal() {
           </div>
         </div>
 
-        {torneoConfig.torneo_activo !== "false" && (
-          <TorneoPuestoCard user={user} users={todosUsuarios} pedidos={todosPedidos} pagos={todosPagos} config={torneoConfig} />
-        )}
+        {torneoConfig.torneo_activo !== "false" &&
+        <TorneoPuestoCard user={user} users={todosUsuarios} pedidos={todosPedidos} pagos={todosPagos} config={torneoConfig} />
+        }
 
         <ContadorBanner user={user} config={torneoConfig} />
 
@@ -279,50 +279,50 @@ export default function Portal() {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-2">
-            {pedidos.length === 0 && pagos.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p>
-            ) : (
-              <div className="space-y-2">
+            {pedidos.length === 0 && pagos.length === 0 ?
+            <p className="text-sm text-muted-foreground text-center py-4">Sin movimientos aún</p> :
+
+            <div className="space-y-2">
                 {[
-                  ...pedidos.filter(p => p.estado === "entregado").map(p => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
-                  ...pagos.filter(p => p.referencia !== "Pago contado automático").map(p => ({ ...p, _tipo: "pago", _fecha: p.fecha })),
-                ]
-                  .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
-                  .map((m, i) => {
-                    const isPago = m._tipo === "pago";
-                    const isContado = m._tipo === "contado";
-                    
-                    let montoVal = 0;
-                    if (isPago) {
-                      montoVal = m.monto;
-                    } else {
-                      montoVal = Number(m.total) || 0;
-                      if (montoVal <= 0) {
-                        let valorUsado = Number(m.valor_usado) || 0;
-                        if (valorUsado <= 0) {
-                          valorUsado = m.tipo_pago === "contado" ? (Number(user.valor_contado) || 0) : (Number(user.valor_cuenta) || 0);
-                        }
-                        montoVal = (Number(m.cantidad) || 0) * valorUsado;
-                      }
+              ...pedidos.filter((p) => p.estado === "entregado").map((p) => ({ ...p, _tipo: p.tipo_pago === "contado" ? "contado" : "cuenta", _fecha: p.fecha })),
+              ...pagos.filter((p) => p.referencia !== "Pago contado automático").map((p) => ({ ...p, _tipo: "pago", _fecha: p.fecha }))].
+
+              sort((a, b) => new Date(b._fecha) - new Date(a._fecha)).
+              map((m, i) => {
+                const isPago = m._tipo === "pago";
+                const isContado = m._tipo === "contado";
+
+                let montoVal = 0;
+                if (isPago) {
+                  montoVal = m.monto;
+                } else {
+                  montoVal = Number(m.total) || 0;
+                  if (montoVal <= 0) {
+                    let valorUsado = Number(m.valor_usado) || 0;
+                    if (valorUsado <= 0) {
+                      valorUsado = m.tipo_pago === "contado" ? Number(user.valor_contado) || 0 : Number(user.valor_cuenta) || 0;
                     }
-                    
-                    const isDebe = (!isPago && !isContado) || (isPago && m.monto < 0);
-                    const bgClass = isContado ? "bg-yellow-50 border-yellow-200" : isDebe ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200";
-                    const labelClass = isContado ? "text-yellow-700" : isDebe ? "text-red-700" : "text-green-700";
-                    const label = isContado ? "Contado" : isDebe ? "Debe" : "Pago";
-                    return (
-                      <div key={i} className={`flex items-center justify-between py-3 px-4 rounded-xl border ${bgClass}`}>
+                    montoVal = (Number(m.cantidad) || 0) * valorUsado;
+                  }
+                }
+
+                const isDebe = !isPago && !isContado || isPago && m.monto < 0;
+                const bgClass = isContado ? "bg-yellow-50 border-yellow-200" : isDebe ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200";
+                const labelClass = isContado ? "text-yellow-700" : isDebe ? "text-red-700" : "text-green-700";
+                const label = isContado ? "Contado" : isDebe ? "Debe" : "Pago";
+                return (
+                  <div key={i} className={`flex items-center justify-between py-3 px-4 rounded-xl border ${bgClass}`}>
                         <div>
                           <p className="text-xs text-muted-foreground">{moment(m._fecha).format("DD/MM/YY")}</p>
                           <p className={`font-semibold text-sm ${labelClass}`}>{label}</p>
                           {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                         </div>
                         <p className={`font-bold text-base ${labelClass}`}>${Math.abs(montoVal || 0).toLocaleString()}</p>
-                      </div>
-                    );
-                  })}
+                      </div>);
+
+              })}
               </div>
-            )}
+            }
           </div>
         </DialogContent>
       </Dialog>
@@ -342,6 +342,6 @@ export default function Portal() {
       </Dialog>
       <ChatUsuario user={user} open={chatOpen} onClose={() => setChatOpen(false)} onUnread={setChatNoLeidos} />
       <SubirPagoModal user={user} open={pagoModalOpen} onClose={() => setPagoModalOpen(false)} onSuccess={loadData} />
-    </div>
-  );
+    </div>);
+
 }
