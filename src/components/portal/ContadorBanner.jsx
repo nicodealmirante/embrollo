@@ -76,9 +76,9 @@ export default function ContadorBanner({ user, config }) {
             <p className="text-3xl font-black">${parseFloat(valorActivo).toLocaleString("es-AR")}</p>
           </div>
           
-          <p className="text-[11px] opacity-90 mt-1 font-medium uppercase tracking-wider hidden">
-            Cada unidad suma 1 hora
-          </p>
+          
+
+          
         </div>
       </div>);
 
