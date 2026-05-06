@@ -97,7 +97,7 @@ function UsuariosTab() {
     setEditForm({ 
       nombre_visible: user.nombre_visible || user.link_titulo || user.full_name || "", 
       valor_unico: user.valor_contado || user.valor_cuenta || 0, 
-      contador_manual_horas: user.contador_manual_horas || 0,
+      valor_contador_activo: user.valor_contador_activo || 7000,
       ajuste: "", 
       role: user.role || "user" 
     });
@@ -113,7 +113,7 @@ function UsuariosTab() {
       nombre_visible: editForm.nombre_visible,
       valor_contado: valUnico,
       valor_cuenta: valUnico,
-      contador_manual_horas: parseFloat(editForm.contador_manual_horas) || 0,
+      valor_contador_activo: parseFloat(editForm.valor_contador_activo) || 7000,
       role: editForm.role,
     });
     if (editForm.ajuste && parseFloat(editForm.ajuste) !== 0) {
@@ -227,7 +227,7 @@ function UsuariosTab() {
     try {
       let valor = npTipoPago === 'contado' ? (nuevoPedidoUser.valor_contado || 0) : (nuevoPedidoUser.valor_cuenta || 0);
       if (nuevoPedidoUser.contador_estado === "activo" && nuevoPedidoUser.contador_fin && new Date(nuevoPedidoUser.contador_fin) > new Date()) {
-        valor = nuevoPedidoUser.valor_contador_activo || valor;
+        valor = nuevoPedidoUser.valor_contador_activo || 7000;
       }
       const total = npEstado === 'entregado' ? parseFloat(npCantidad) * valor : 0;
       const valorUsado = npEstado === 'entregado' ? valor : 0;
@@ -490,14 +490,14 @@ function UsuariosTab() {
               <div><Label className="text-xs">Nombre visible</Label><Input value={editForm.nombre_visible} onChange={e => setEditForm(f => ({ ...f, nombre_visible: e.target.value }))} placeholder={editDialog.email} className="mt-1" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs text-primary">Valor por unidad</Label>
-                  <Input type="number" value={editForm.valor_unico} onChange={e => setEditForm(f => ({ ...f, valor_unico: e.target.value }))} className="mt-1" />
-                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Aplica a contado y a cuenta.</p>
+                  <Label className="text-xs text-blue-700">Valor mientras el contador corre</Label>
+                  <Input type="number" value={editForm.valor_contador_activo} onChange={e => setEditForm(f => ({ ...f, valor_contador_activo: e.target.value }))} className="mt-1" />
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Precio especial con contador activo.</p>
                 </div>
                 <div>
-                  <Label className="text-xs text-blue-700">Horas de contador</Label>
-                  <Input type="number" value={editForm.contador_manual_horas} onChange={e => setEditForm(f => ({ ...f, contador_manual_horas: e.target.value }))} className="mt-1" />
-                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Contador del usuario.</p>
+                  <Label className="text-xs text-red-700">Valor cuando el contador llega a 0</Label>
+                  <Input type="number" value={editForm.valor_unico} onChange={e => setEditForm(f => ({ ...f, valor_unico: e.target.value }))} className="mt-1" />
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Precio final.</p>
                 </div>
               </div>
               <div>
@@ -687,7 +687,7 @@ function SolicitudesTab() {
     const user = users[0] || {};
     let valor = tipoPagoEntrega === 'contado' ? (user.valor_contado || 0) : (user.valor_cuenta || 0);
     if (user.contador_estado === "activo" && user.contador_fin && new Date(user.contador_fin) > new Date()) {
-      valor = user.valor_contador_activo || valor;
+      valor = user.valor_contador_activo || 7000;
     }
     const total = p.cantidad * valor;
 
