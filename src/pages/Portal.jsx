@@ -199,14 +199,14 @@ export default function Portal() {
                 <p className="text-xs uppercase tracking-wide opacity-70">Saldo actual</p>
                 <p className={`mt-1 text-4xl font-black ${saldo > 0 ? "text-red-200" : "text-green-200"}`}>{formatMoney(saldo)}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10 hidden">
-                <p className="text-[11px] opacity-70">Pedidos pendientes</p>
-                <p className="text-xl font-black">{pedidosPendientes}</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10 hidden">
-                <p className="text-[11px] opacity-70">Último pedido</p>
-                <p className="text-sm font-bold">{ultimoPedido ? moment(ultimoPedido.fecha).fromNow() : "Sin pedidos"}</p>
-              </div>
+              
+
+
+              
+              
+
+
+              
             </div>
           </div>
         </div>
