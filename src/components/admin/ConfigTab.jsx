@@ -39,12 +39,12 @@ export default function ConfigTab() {
     <div className="space-y-4">
       {/* Sub-tabs */}
       <div className="flex gap-1 bg-muted p-1 rounded-xl">
-        <button
-          onClick={() => setSubTab("roles")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all hidden ${subTab === "roles" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}>
-          
-          <Settings className="w-3.5 h-3.5" /> Roles
-        </button>
+        
+
+
+
+
+        
         <button
           onClick={() => setSubTab("whatsapp")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${subTab === "whatsapp" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`}>
