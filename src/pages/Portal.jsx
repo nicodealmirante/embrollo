@@ -195,9 +195,9 @@ export default function Portal() {
             </div>
             <h1 className="text-2xl font-black leading-tight">{titulo}</h1>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="col-span-2 rounded-2xl bg-white/10 text-center ring-1 ring-white/10 mx-4 py-2">
+              <div className="col-span-2 rounded-2xl bg-white/10 text-center ring-1 ring-white/10 mx-2">
                 <p className="text-xs uppercase tracking-wide opacity-70">Saldo actual</p>
-                <p className={`mt-1 text-4xl font-black ${saldo > 0 ? "text-red-200" : "text-green-200"}`}>{formatMoney(saldo)}</p>
+                <p className={`text-4xl font-black mt-2 ${saldo > 0 ? "text-red-200" : "text-green-200"}`}>{formatMoney(saldo)}</p>
               </div>
               
 
