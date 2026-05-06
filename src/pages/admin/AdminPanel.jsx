@@ -244,34 +244,36 @@ function UsuariosTab() {
         observaciones: npObs.trim(),
       });
 
-      // Lógica de reinicio de contador al hacer pedido desde Admin
-      try {
-        const configs = await base44.entities.ConfigApp.list().catch(() => []);
-        const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
-        if (getCfg("contador_activo") === "true") {
-          const pausadoManual = getCfg("contador_pausado_manual") === "true";
+      // Lógica de reinicio de contador al hacer pedido desde Admin (solo si es entregado)
+      if (npEstado === 'entregado') {
+        try {
+          const configs = await base44.entities.ConfigApp.list().catch(() => []);
+          const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
+          if (getCfg("contador_activo") === "true") {
+            const pausadoManual = getCfg("contador_pausado_manual") === "true";
 
-          if (!pausadoManual) {
-            const ahora = new Date();
-            let finActual = nuevoPedidoUser.contador_fin ? new Date(nuevoPedidoUser.contador_fin) : ahora;
-            if (finActual < ahora) finActual = ahora;
+            if (!pausadoManual) {
+              const ahora = new Date();
+              let finActual = nuevoPedidoUser.contador_fin ? new Date(nuevoPedidoUser.contador_fin) : ahora;
+              if (finActual < ahora) finActual = ahora;
 
-            let nuevoFin = new Date(finActual.getTime() + parseFloat(npCantidad) * 60 * 60000);
-            const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
+              let nuevoFin = new Date(finActual.getTime() + parseFloat(npCantidad) * 60 * 60000);
+              const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
 
-            if (nuevoFin > maxFin) {
-              nuevoFin = maxFin;
+              if (nuevoFin > maxFin) {
+                nuevoFin = maxFin;
+              }
+
+              await base44.entities.User.update(nuevoPedidoUser.id, {
+                contador_inicio: nuevoPedidoUser.contador_inicio || ahora.toISOString(),
+                contador_fin: nuevoFin.toISOString(),
+                contador_estado: "activo",
+              });
             }
-
-            await base44.entities.User.update(nuevoPedidoUser.id, {
-              contador_inicio: nuevoPedidoUser.contador_inicio || ahora.toISOString(),
-              contador_fin: nuevoFin.toISOString(),
-              contador_estado: "activo",
-            });
           }
+        } catch (e) {
+          console.error("Error al resetear contador:", e);
         }
-      } catch (e) {
-        console.error("Error al resetear contador:", e);
       }
 
       if (npEstado === 'entregado' && npTipoPago === 'contado') {
@@ -697,6 +699,38 @@ function SolicitudesTab() {
       valor_usado: valor,
       total,
     });
+
+    // Lógica de reseteo de contador al aprobar pedido
+    if (user && user.id) {
+      try {
+        const configs = await base44.entities.ConfigApp.list().catch(() => []);
+        const getCfg = (k) => configs.find(c => c.clave === k)?.valor;
+        if (getCfg("contador_activo") === "true") {
+          const pausadoManual = getCfg("contador_pausado_manual") === "true";
+
+          if (!pausadoManual) {
+            const ahora = new Date();
+            let finActual = user.contador_fin ? new Date(user.contador_fin) : ahora;
+            if (finActual < ahora) finActual = ahora;
+
+            let nuevoFin = new Date(finActual.getTime() + parseFloat(p.cantidad) * 60 * 60000);
+            const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
+
+            if (nuevoFin > maxFin) {
+              nuevoFin = maxFin;
+            }
+
+            await base44.entities.User.update(user.id, {
+              contador_inicio: user.contador_inicio || ahora.toISOString(),
+              contador_fin: nuevoFin.toISOString(),
+              contador_estado: "activo",
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error al resetear contador:", e);
+      }
+    }
 
     if (tipoPagoEntrega === 'contado') {
       await base44.entities.Pago.create({

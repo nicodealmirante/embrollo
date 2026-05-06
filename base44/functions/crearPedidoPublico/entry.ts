@@ -57,40 +57,5 @@ Deno.serve(async (req) => {
     observaciones: observaciones || '',
   });
 
-  // Lógica de reseteo del contador
-  try {
-    const cfgs = await base44.asServiceRole.entities.ConfigApp.list();
-    const getCfg = (k) => cfgs.find(c => c.clave === k)?.valor;
-    if (getCfg("contador_activo") === "true") {
-      const usersMatched = await base44.asServiceRole.entities.User.filter({ email });
-      if (usersMatched.length > 0) {
-        const pausadoManual = getCfg("contador_pausado_manual") === "true";
-
-        if (!pausadoManual) {
-          const userObj = usersMatched[0];
-          const ahora = new Date();
-          
-          let finActual = userObj.contador_fin ? new Date(userObj.contador_fin) : ahora;
-          if (finActual < ahora) finActual = ahora;
-
-          let nuevoFin = new Date(finActual.getTime() + cantidad * 60 * 60000);
-          const maxFin = new Date(ahora.getTime() + 24 * 60 * 60000);
-
-          if (nuevoFin > maxFin) {
-            nuevoFin = maxFin;
-          }
-
-          await base44.asServiceRole.entities.User.update(userObj.id, {
-            contador_inicio: userObj.contador_inicio || ahora.toISOString(),
-            contador_fin: nuevoFin.toISOString(),
-            contador_estado: "activo"
-          });
-        }
-      }
-    }
-  } catch (e) {
-    console.error("Error contador:", e);
-  }
-
   return Response.json({ pedido });
 });
