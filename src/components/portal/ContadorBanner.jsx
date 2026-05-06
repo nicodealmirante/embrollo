@@ -62,7 +62,7 @@ export default function ContadorBanner({ user, config }) {
 
   if (isActivo && timeLeft) {
     return (
-      <div className="mt-4 overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 to-red-500 text-white p-5 shadow-lg relative">
+      <div className="mt-4 overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg relative px-5 py-2">
         <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
         <div className="relative flex flex-col items-center text-center gap-2">
           <div className="flex items-center gap-1.5 opacity-90">
@@ -80,8 +80,8 @@ export default function ContadorBanner({ user, config }) {
             Cada unidad suma 1 hora
           </p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -96,6 +96,6 @@ export default function ContadorBanner({ user, config }) {
       <p className="text-xs font-medium text-slate-500 mt-1">
         Hacé un pedido para recuperar el valor especial
       </p>
-    </div>
-  );
+    </div>);
+
 }
