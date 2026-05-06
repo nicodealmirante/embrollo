@@ -72,7 +72,7 @@ export default function ContadorBanner({ user, config }) {
           
           <p className="font-black font-mono tracking-tight drop-shadow-md text-xl my-1">{timeLeft}</p>
           
-          <div className="bg-black/20 rounded-2xl backdrop-blur-sm py-1 mx-2 px-1">
+          <div className="bg-black/20 rounded-2xl backdrop-blur-sm px-1 mx-1">
             <p className="text-3xl font-black">${parseFloat(valorActivo).toLocaleString("es-AR")}</p>
           </div>
           
