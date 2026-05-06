@@ -16,7 +16,7 @@ export default function TorneoPuestoCard({ user, users = [], pedidos = [], pagos
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm py-2">
       <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
-      <div className="relative flex items-center justify-between">
+      <div className="relative flex items-center justify-between px-5">
         <div>
           <div className="flex items-baseline gap-2 mt-2 text-[hsl(var(--foreground))] ml-8">
             <span className="font-black leading-none text-3xl text-center">Puesto #{puesto}</span>
