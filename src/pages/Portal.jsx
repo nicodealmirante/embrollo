@@ -163,7 +163,7 @@ export default function Portal() {
 
   return (
     <div className="min-h-screen bg-background mx-auto">
-      <div className="max-w-md space-y-5 py-2 px-2 mx-auto">
+      <div className="max-w-md space-y-5 py-2 mx-auto px-1">
 
         {/* Header */}
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm relative">
@@ -221,7 +221,7 @@ export default function Portal() {
           <Button className="h-14 gap-2 rounded-2xl font-bold shadow-sm" onClick={() => setPedidoModalOpen(true)}>
             <PackagePlus className="w-5 h-5" /> Realizar pedido
           </Button>
-          <Button variant="outline" className="h-14 gap-2 rounded-2xl border-green-300 text-green-700 hover:bg-green-50 font-bold shadow-sm" onClick={() => setPagoModalOpen(true)}>
+          <Button variant="outline" className="h-14 gap-2 rounded-2xl border-green-300 hover:bg-green-50 font-bold shadow-sm text-gray-800" onClick={() => setPagoModalOpen(true)}>
             <DollarSign className="w-5 h-5" /> Informar pago
           </Button>
           <Button variant="outline" className="col-span-2 h-12 gap-2 rounded-2xl font-semibold shadow-sm" onClick={() => setHistorialOpen(true)}>
