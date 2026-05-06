@@ -167,7 +167,7 @@ export default function Portal() {
 
         {/* Header */}
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-sm relative">
-          <div className="pr-4 pl-4 mx-2 pt-1">
+          <div className="pr-4 pl-4 mx-2 pb-2">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm opacity-80">Bienvenido/a</p>
               <div className="flex items-center gap-3">
