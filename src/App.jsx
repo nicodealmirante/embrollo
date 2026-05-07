@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import DolphinLoader from '@/components/DolphinLoader';
 import Portal from './pages/Portal';
 import AdminPanel from './pages/admin/AdminPanel';
 import Home from './pages/Home';
@@ -14,11 +15,7 @@ const AuthenticatedApp = () => {
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <DolphinLoader text="Iniciando la app..." />;
   }
 
   // Handle authentication errors

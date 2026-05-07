@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast";
 import EstadoBadge from "../../components/EstadoBadge";
 import moment from "moment";
 import { getNombreVisible } from "@/lib/utils";
+import DolphinLoader from "@/components/DolphinLoader";
 
 function generateToken() {
   return Math.random().toString(36).substr(2, 10) + Math.random().toString(36).substr(2, 10);
@@ -923,7 +924,7 @@ export default function AdminPanel() {
 
 
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>;
+    return <DolphinLoader text="Cargando panel..." />;
   }
 
   return (

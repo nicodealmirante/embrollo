@@ -6,7 +6,7 @@ import { LayoutDashboard, User } from 'lucide-react';
 import { useRoleNames } from '@/hooks/useRoleNames';
 
 import { base44 } from '@/api/base44Client';
-import { Loader2 } from 'lucide-react';
+import DolphinLoader from '@/components/DolphinLoader';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
@@ -25,11 +25,7 @@ export default function Home() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DolphinLoader text="Cargando..." />;
   }
 
   if (user?.role === 'admin') {
