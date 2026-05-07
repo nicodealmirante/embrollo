@@ -21,6 +21,7 @@ import EstadoBadge from "../../components/EstadoBadge";
 import moment from "moment";
 import { getNombreVisible } from "@/lib/utils";
 import DolphinLoader from "@/components/DolphinLoader";
+import { triggerMolotovExplosion } from "@/utils/explosions";
 
 function generateToken() {
   return Math.random().toString(36).substr(2, 10) + Math.random().toString(36).substr(2, 10);
@@ -476,7 +477,7 @@ function UsuariosTab() {
                   <UserCheck className="w-3 h-3" /> Aprobar {userName}
                 </Button>
               )}
-              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async () => { if (!confirm(`¿Eliminar a ${getDisplayName(user)}? Esta acción no se puede deshacer.`)) return; await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive ml-auto" onClick={async (e) => { if (!confirm(`¿Eliminar a ${getDisplayName(user)}? Esta acción no se puede deshacer.`)) return; triggerMolotovExplosion(e.clientX / window.innerWidth, e.clientY / window.innerHeight); await base44.entities.User.delete(user.id); toast({ title: "Usuario eliminado" }); loadData(); }}>
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
@@ -749,8 +750,9 @@ function SolicitudesTab() {
     loadData();
   };
 
-  const deletePedido = async (id) => {
+  const deletePedido = async (id, e) => {
     if (!confirm("¿Cancelar este pedido?")) return;
+    if (e) triggerMolotovExplosion(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
     await base44.entities.Pedido.update(id, { estado: "cancelado" });
     toast({ title: "Pedido cancelado" });
     loadData();
@@ -763,8 +765,9 @@ function SolicitudesTab() {
     loadData();
   }
 
-  async function rechazarPago(pago) {
+  async function rechazarPago(pago, e) {
     if (!confirm(`¿Rechazar el pago de $${pago.monto?.toLocaleString()} de ${pago.usuario_nombre}?`)) return;
+    if (e) triggerMolotovExplosion(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
     await base44.entities.Pago.update(pago.id, { estado: "rechazado" });
     toast({ title: "Pago rechazado" });
     loadData();
@@ -823,7 +826,7 @@ function SolicitudesTab() {
                 <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => { setEntregaDialog(item); setTipoPagoEntrega("contado"); }}>
                   <CheckCircle className="w-3 h-3" /> Confirmar entrega
                 </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive gap-1" onClick={() => deletePedido(item.id)}>
+                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive gap-1" onClick={(e) => deletePedido(item.id, e)}>
                   <Trash2 className="w-3 h-3" /> Cancelar
                 </Button>
               </>
@@ -832,7 +835,7 @@ function SolicitudesTab() {
                 <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => aprobarPago(item)}>
                   <CheckCircle className="w-3.5 h-3.5" /> Aprobar
                 </Button>
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => rechazarPago(item)}>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={(e) => rechazarPago(item, e)}>
                   <XCircle className="w-3.5 h-3.5" /> Rechazar
                 </Button>
               </>
