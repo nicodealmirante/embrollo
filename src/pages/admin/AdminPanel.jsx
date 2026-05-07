@@ -884,7 +884,10 @@ export default function AdminPanel() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    base44.auth.me().then(me => {
+    Promise.all([
+      base44.auth.me(),
+      new Promise(resolve => setTimeout(resolve, 1000))
+    ]).then(([me]) => {
       if (me.role !== 'admin') {
         navigate('/portal', { replace: true });
       } else {

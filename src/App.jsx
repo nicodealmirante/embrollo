@@ -9,12 +9,19 @@ import DolphinLoader from '@/components/DolphinLoader';
 import Portal from './pages/Portal';
 import AdminPanel from './pages/admin/AdminPanel';
 import Home from './pages/Home';
+import { useState, useEffect } from 'react';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingPublicSettings || isLoadingAuth || !minTimeElapsed) {
     return <DolphinLoader text="Iniciando la app..." />;
   }
 

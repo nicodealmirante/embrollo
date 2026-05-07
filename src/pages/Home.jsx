@@ -14,8 +14,11 @@ export default function Home() {
   const [user, setUser] = useState(null);
   
   useEffect(() => {
-    base44.auth.me()
-      .then(me => {
+    Promise.all([
+      base44.auth.me(),
+      new Promise(resolve => setTimeout(resolve, 1000))
+    ])
+      .then(([me]) => {
         setUser(me);
         setLoading(false);
       })
