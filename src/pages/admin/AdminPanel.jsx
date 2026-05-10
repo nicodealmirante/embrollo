@@ -194,6 +194,19 @@ function UsuariosTab() {
     setNpTipoPago("cuenta");
   };
 
+  const deleteMovimientoHistorial = async (m, e) => {
+    if (!confirm("¿Eliminar este movimiento permanentemente? Afectará el saldo del usuario.")) return;
+    if (e) triggerMolotovExplosion(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
+    if (m._tipo === "pago") {
+      await base44.entities.Pago.delete(m.id);
+    } else {
+      await base44.entities.Pedido.delete(m.id);
+    }
+    toast({ title: "Movimiento eliminado" });
+    loadData();
+    setHistorialUser(null);
+  };
+
 
   const usuariosBase = useMemo(() => users, [users]);
 
@@ -583,7 +596,12 @@ function UsuariosTab() {
                         {!isPago && <p className="text-xs text-muted-foreground">{m.cantidad} unidades</p>}
                         {isPago && m.referencia && <p className="text-xs text-muted-foreground">{m.referencia}</p>}
                       </div>
-                      <p className={`font-bold text-sm ${txt}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                      <div className="flex flex-col items-end gap-1">
+                        <p className={`font-bold text-sm ${txt}`}>{signo}${(monto || 0).toLocaleString()}</p>
+                        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-destructive hover:bg-destructive/10 hover:text-destructive gap-1" onClick={(e) => deleteMovimientoHistorial(m, e)}>
+                          <Trash2 className="w-3 h-3" /> Borrar
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
